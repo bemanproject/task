@@ -3,25 +3,27 @@
 list(
     APPEND
     task_tests
-    lazy
-    promise_type
-    error_types_of
-    state_base
-    with_error
-    sub_visit
-    result_type
-    promise_base
-    completion
-    handle
-    final_awaiter
+    single_thread_context
+    affine_on
     allocator_of
     allocator_support
     any_scheduler
+    completion
+    error_types_of
+    final_awaiter
     find_allocator
+    handle
     inline_scheduler
-    task
+    lazy
     poly
+    promise_base
+    promise_type
+    result_type
     scheduler_of
+    state_base
+    sub_visit
+    task
+    with_error
 )
 
 foreach(test ${task_tests})

@@ -4,6 +4,7 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_PROMISE_TYPE
 #define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_PROMISE_TYPE
 
+#include <beman/task/detail/affine_on.hpp>
 #include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/allocator_support.hpp>
 #include <beman/task/detail/error_types_of.hpp>
@@ -178,7 +179,11 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
             return ::beman::execution::as_awaitable(std::forward<Sender>(sender), *this);
         else
             return ::beman::execution::as_awaitable(
+#if 0
+                ::beman::task::affine_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)),
+#else
                 ::beman::execution::continues_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)),
+#endif
                 *this);
     }
     template <::beman::execution::sender Sender>
