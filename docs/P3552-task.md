@@ -1,7 +1,7 @@
 ---
 title: Add a Coroutine Task Type
-document: P3552R1
-date: 2025-03-16
+document: P3552R2
+date: 2025-05-18
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -1380,7 +1380,7 @@ Howes for comments on drafts of this proposal and general guidance.
 In [version.syn], add a row
 
 ```cpp
-#define __cpp_lib_task YYYMML // @_also in <execution>_@
+#define __cpp_lib_task YYYYMML // @_also in_@ <execution>
 ```
 
 In [execution.syn]{.sref} add declarations for the new classes:
@@ -1389,7 +1389,7 @@ In [execution.syn]{.sref} add declarations for the new classes:
 namespace std::execution {
     ...
   // [exec.with.awaitable.senders]
-  template<class-type Promise>
+  template<@_class-type_@ Promise>
     struct with_awaitable_senders;
 
   @[// [exec.affine.on]{.sref}]{.add}@
@@ -1403,7 +1403,7 @@ namespace std::execution {
   @[class task_scheduler;]{.add}@
 
   @[// [exec.task]{.sref}]{.add}@
-  @[template <class T, class  Environment>]{.add}@ // there is a space between class and Environment!
+  @[template <class T, class Environment>]{.add}@ // there is a space between class and Environment!
   @[class task;]{.add}@
 }
 ```
@@ -1445,7 +1445,7 @@ except that `sndr` is evalutated only once.
     struct @_impls_for_@<affine_on_t>: @_default-impls_@ {
       static constexpr auto @_get-attrs_@ =
         [](const auto& data, const auto& child) noexcept -> decltype(auto) {
-          return @_JOIN-ENV_@(_SCHED-ATTRS_@(data), @_FWD-ENV_@(get_env(child)));
+          return @_JOIN-ENV_@(@_SCHED-ATTRS_@(data), @_FWD-ENV_@(get_env(child)));
         };
     };
   }
@@ -1473,7 +1473,7 @@ except that `sndr` is evalutated only once.
 namespace std::execution {
   class inline_scheduler {
     class @_inline-sender_@; // exposition-only
-    template <receiver R>
+    template <receiver Rcvr>
     class @_inline-state_@;  // exposition-only
 
   public:
@@ -1508,18 +1508,18 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
     has type `inline_scheduler`  and is potentially-throwing if and only if `@_sndr_@` is potentially-throwing.
 
 ```cpp
-template <receiver R>
+template <receiver Rcvr>
 class @_inline-state_@;
 ```
 
 [4]{.pnum} Let `@_o_@` be a non-`const` lvalue of type `@_inline-state_@<Rcvr>`, and
-    let `REC(@_o_@)` be a non-`const` lvalue reference to an instance of type `Rcvr`
+    let `RCVR(@_o_@)` be a non-`const` lvalue reference to an instance of type `Rcvr`
     that was initialized with the expression `@_rcvr_@` passed to an invocation
     of `connect` that returned `@_o_@`. Then:
 
-- [4.1]{.pnum} The object to which `REC(@_o_@)` refers remains valid for the lifetime
+- [4.1]{.pnum} The object to which `RCVR(@_o_@)` refers remains valid for the lifetime
     of the object to which `@_o_@` refers.
-- [4.2]{.pnum} The expression `start(@_o_@)` is equivalent to `set_value(std::move(REC(@_o_@)))`.
+- [4.2]{.pnum} The expression `start(@_o_@)` is equivalent to `set_value(std::move(RCVR(@_o_@)))`.
 
 ## `execution::task_scheduler` [exec.task.scheduler]
 
@@ -1527,7 +1527,7 @@ class @_inline-state_@;
 namespace std::execution {
   class task_scheduler {
     class @_sender_@; // exposition-only
-    template <receiver R>
+    template <receiver Rcvr>
     class @_state_@;  // exposition-only
 
   public:
@@ -1620,8 +1620,8 @@ class task_scheduler::@_sender_@ {
 public:
   using sender_concept = sender_t;
 
-  template <receiver R>
-  @_state_@<R> connect(R&& rcvr);
+  template <receiver Rcvr>
+  @_state_@<Rcvr> connect(Rcvr&& rcvr);
 };
 ```
 
@@ -1645,15 +1645,15 @@ completion_signatures<
     that.
 
 ```cpp
-template<receiver R>
-task_scheduler::@_state_@<R> task_scheduler::@_sender_@::connect(R&& rcvr);
+template<receiver Rcvr>
+task_scheduler::@_state_@<Rcvr> task_scheduler::@_sender_@::connect(Rcvr&& rcvr);
 ```
 
-[13]{.pnum} _Effects_: Creates a `@_sender_@<R>` initialized with
-    `connect(@_SENDER_@(*this), std::forward<R>(rcvr))`.
+[13]{.pnum} _Effects_: Creates a `@_sender_@<Rcvr>` initialized with
+    `connect(@_SENDER_@(*this), std::forward<Rcvr>(rcvr))`.
 
 ```cpp
-template <receiver R>
+template <receiver Rcvr>
 class task_scheduler::@_state_@ {
 public:
   using operation_state_concept = operation_state_t;
@@ -1663,13 +1663,13 @@ public:
 ```
 
 [14]{.pnum} `@_state_@` is an exposition-only class tmplate whose specializations
-    model `operation_state` [exec.opstate]{.sref}. Let `R` be a type that models
-    `receiver`, let `rcvr` be an object of type`R`, [exec.recv]{.sref},
-    and let `st` be an object of type `@_state_@<R>`. `@_STATE_@(st)` is the object
+    model `operation_state` [exec.opstate]{.sref}. Let `Rcvr` be a type that models
+    `receiver`, let `rcvr` be an object of type`Rcvr`, [exec.recv]{.sref},
+    and let `st` be an object of type `@_state_@<Rcvr>`. `@_STATE_@(st)` is the object
     the object `st` got intialised with.
 
 ```cpp
-void task_scheduler::@_state_@<R>::start() & noexcept;
+void task_scheduler::@_state_@<Rcvr>::start() & noexcept;
 ```
 
 [15]{.pnum} _Effects_: Equivalent to `start(@_STATE_@(*this))`.
@@ -1692,7 +1692,7 @@ namespace std::execution {
   template <class T, class Environment>
   class task {
     // [task.state]
-    template <receiver R>
+    template <receiver Rcvr>
     class @_state_@; // @_exposition only_@
 
   public:
@@ -1705,8 +1705,8 @@ namespace std::execution {
     task(task&&) noexcept;
     ~task();
 
-    template <receiver R>
-    @_state_@<R> connect(R&& recv);
+    template <receiver Rcvr>
+    @_state_@<Rcvr> connect(Rcvr&& rcvr);
 
   private:
     coroutine_handle<promise_type> @_handle_@; // @_exposition only_@
@@ -1758,26 +1758,26 @@ task(task&& other) noexcept;
 ```
 
 ```cpp
-template <receiver R>
-@_state_@<R> connect(R&& recv);
+template <receiver Rcvr>
+@_state_@<Rcvr> connect(Rcvr&& rcvr);
 ```
 
 [3]{.pnum} _Precondition_ `bool(@_handle_@)` is true.
 
-[4]{.pnum} _Returns:_ `@_state_@<R>{ exchange(@_handle_@, {}), forward<R>(recv) };`
+[4]{.pnum} _Returns:_ `@_state_@<Rcvr>{ exchange(@_handle_@, {}), forward<Rcvr>(rcvr) };`
 
 ### Class template task::state [task.state]
 
 ```cpp
 namespace std::execution {
   template <class T, class Environment>
-    template <receiver R>
+    template <receiver Rcvr>
   class task<T, Environment>::@_state_@ { // @_exposition only_@
   public:
     using operation_state_concept = operation_state_t;
 
     coroutine_handle<promise_type> @_handle_@;  // @_exposition only_@
-    remove_cvref_t<R>              @_rcvr_@;    // @_exposition only_@
+    remove_cvref_t<Rcvr>           @_rcvr_@;    // @_exposition only_@
     @_see below_@                      @_own-env_@; // @_exposition only_@
     Environment                    @_environment_@; // @_exposition only_@
 
@@ -1791,7 +1791,7 @@ namespace std::execution {
 ```
 
 [1]{.pnum} Let `Env` be the type of the receiver's environment
-    `decltype(get_env(declval<R>()))`. The type of `@_env_@` is
+    `decltype(get_env(declval<Rcvr>()))`. The type of `@_own-env_@` is
     `Environment::template env_type<Env>` if this type is valid and
     `empty_env` otherwise.
 
@@ -1926,7 +1926,7 @@ namespace std::execution {
     `connect(tsk, rcvr)`.
 - [1.3]{.pnum} `@_SCHED_@(prom)` is an object of type `Scheduler` which
     is associated with `prom`.
-- [1.4] `ErrorVariant` is a `variant<remove_cvref_t<E>...>`, with duplicate
+- [1.4]{.pnum} `ErrorVariant` is `variant<remove_cvref_t<E>...>`, with duplicate
     types removed, where `E...` are the parameter types of the
     elements in `Errors`.
 
@@ -2031,15 +2031,15 @@ void unhandled_stopped();
 - [13.4]{.pnum} For any other query `q` and arguments `a...` a
     call to `env.query(q, a...)` returns
     <br/>`@_STATE_@(*this).@_get-environment_@().query(q, a...)` if this expression
-    is well-formed and `forwarding_query(q)` is well-formed.  Otherwise
-    `env.query(q, a...)` is ill-formed.
+    is well-formed and `forwarding_query(q)` is well-formed.
+- [13.5]{.pnum} Otherwise `env.query(q, a...)` is ill-formed.
 
 ```cpp
 template <class... Args>
 void* operator new(size_t size, const Args&... args);
 ```
 
-[13]{.pnum} If there is no parameter with type `allocator_arg_t`
+[14]{.pnum} If there is no parameter with type `allocator_arg_t`
     then let `alloc` be `Allocator()`; otherwise, if there is no
     parameter following the first `allocator_arg_t` parameter then
     the program is ill-formed; otherise, let `arg_next` be the
@@ -2050,25 +2050,25 @@ void* operator new(size_t size, const Args&... args);
     where `U` is an unspecified type whose size and alignmnet are both
     `__STDCPP_DEFAULT_NEW_ALIGNMENT__`.
 
-[14]{.pnum} _Mandates:_ `allocator_traits<PAlloc>::pointer` is a pointer
+[15]{.pnum} _Mandates:_ `allocator_traits<PAlloc>::pointer` is a pointer
     type.
 
-[15]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
+[16]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
     with `alloc`. Uses `palloc` to allocate storage for the smallest
     array of `U` sufficient to provide stroage for coroutine state
     of size `size`, and unspecified additional state neccessary to
     ensure that `operator delete` can later deallocate this memory
     block with an allocator equal to `palloc`.
 
-[16]{.pnum} _Returns:_ A pointer to the allocated storage.
+[17]{.pnum} _Returns:_ A pointer to the allocated storage.
 
 ```cpp
 void operator delete(void* pointer, size_t size) noexcept;
 ```
 
-[17]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
+[18]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
     of the above overload of `operator new` with a size argument
     equal to `size`.
 
-[18]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
+[19]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
     using an allocator equivalent to that used to allocate it.
