@@ -6,6 +6,9 @@ set(ALL_EXAMPLES
     escaped-exception
     co_await-result
     friendly
+    issue-affine_on
+    issue-frame-allocator
+    issue-start-reschedules
     issue-symmetric-transfer
     loop
     stop
