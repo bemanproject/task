@@ -6,11 +6,11 @@ BUILDDIR = build
 PRESET  = gcc-debug
 UNAME = $(shell uname -s)
 ifeq ($(UNAME),Darwin)
-    PRESET  = appleclang-debug
+    PRESET  = appleclang-release
 endif
 BUILD = $(BUILDDIR)/$(PRESET)
 
-default: doc
+default: test
 
 doc:
 	cd docs; $(MAKE)

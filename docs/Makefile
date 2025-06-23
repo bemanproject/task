@@ -2,8 +2,7 @@
 
 default: doc
 
-doc: P3552-task.html
-	cp generated/P3552-task.html generated/D3552-task.html
+doc: P3552-task.html issues.html
 
 wg21/Makefile:
 	git clone https://github.com/mpark/wg21.git
