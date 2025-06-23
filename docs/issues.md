@@ -397,6 +397,8 @@ Concern raised:
 > I would prefer a language change to avoid the need for the hack using
 > `co_yield with_error(x)`.
 
+TODO turn into text
+
 - yes - a future revision of the C++ standard may provide facilities
     which result in a better design for pretty much anything.
 - assuming such a language change gets proposed reasonably early (there
