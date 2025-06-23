@@ -87,20 +87,36 @@ Concern raised:
 
 Example (see `issue-symmetric-transfer.cpp`):
 
+```c++
+template <typename Env>
+task<void, Env> test() {
     for (std::size_t i{}; i < 1000000; ++i) {
         co_await std::invoke([]()->std::execution::task<> {
             co_await std::execution::just();
         });
     }
+}
+```
 
 TODO - turn into text
 
+Depending on the choice of `Env` this code may stack overflow:
+
+- Using the default environment with a scheduler enqueuing tasks
+    will not cause an overflow but does schedule each task (see
+    below).
+- Using an environment a scheduler immediately starting work like
+    `inline_scheduler` or the default environment with such a
+    scheduler may cause a stack overflow.
+
 - Agreed: like other senders, `task` doesn't have an awaitable
     interface.
-- To guarantee scheduler affinity, it may be necessary to reschedule.
+- To guarantee scheduler affinity, it may be necessary to reschedule,
+    i.e., the whether symmetric transfer could be used is conditional.
 - With scheduler affinity there isn't an issue (also see below).
-- I don't think an implementation is prohibited from providing a
-    an awaiter interface and taking advantage of symmetric transfer.
+- I don't think an implementation is prohibited from providing
+    an awaiter interface and taking advantage of symmetric transfer:
+    how does the user tell?
 
 ## Unusual Allocator Customisation
 
@@ -113,7 +129,50 @@ Concern raised:
 > first or second position), A bit vage - I'm not sure what's the
 > suggested design here, but I suspect this can be fixed.
 
-TODO add example and response
+TODO turn into text
+
+Example (see `issue-frame-allocator.cpp`):
+
+```c++
+template <typename Env>
+ex::task<int, Env> test(int i, auto&&...) {
+    co_return co_await ex::just(i);
+}
+
+struct default_env {};
+struct allocator_env {
+    using allocator_type = std::pmr::polymorphic_allocator<>;
+};
+```
+
+Depending on how the coroutine is invoked this may fail to compile:
+
+- `test<default_env>(17)`: OK - use default allocator
+- `test<default_env>(17, std::allocator_arg, std::allocator<int>())`: OK - allocator is convertible
+- `test<default_env>(17, std::allocator_arg, std::pmr::polymorphic_allocator<>())`: compile-time error
+- `test<alloctor_env>(17, std::allocator_arg, std::pmr::polymorphic_allocator<>())`: OK
+
+### Issue: Flexible Allocator Position
+
+- `generator` only allows the `std::allocator_arg`/allocator pair as
+    leading parameters
+- `task` allows them to go anywhere
+- allowing arbitrary positions is intentional
+    - otherwise the implementer of a coroutine decides allocator use
+    - alternative 1: the coroutine could be implemented twice
+    - alternative 2: the coroutine could determine presence of allocator
+    - a trailing `auto&&...` is preferable
+    - arguably `generator` is "broken" in that sense => needs paper to improve
+- the use of `allocator_arg` in other than the first parameter is inconsistent
+    with all other uses, though
+
+### Issue: Unconfigured Allocator Leads To Compiler-Time Error
+
+- `generator` allows to use an arbitrary allocator without configuration
+- omission: task could always use allocator argument for the coroutine
+    frame but not expose it downstream when no allocator is configured
+- doing so could be done later (things which currently don't compile start
+    compiling) or as an NB comment
 
 ## `affine_on` Underspecified
 
@@ -124,7 +183,48 @@ Concern raised:
 > operatiom map onto a scheduler and how does it determine whether
 > or not it needs to reschedule?),
 
-TODO add example and response
+TODO turn into text
+
+Example (see `issue-affine_on.cpp`):
+
+```c++
+template <ex::sender Sender>
+ex::task<> test(Sender&& sender) {
+    co_await std::move(sender);
+}
+```
+
+The `co_await` awaits the result of `task`'s
+`promise_type::await_transform` which returns the result of
+`affine_on(sender, sched)` for the parameter `sender` and the
+scheduler `sched` associated with the `task`. `affine_on`
+in turn conditionally returns `sender` if it can determine that
+`sender` completes on the execution agent associated with `sched`
+or `continues_on(sender, sched)`:
+
+- Does `ex::sync_wait(test(ex::just()))` result the an operation
+    being scheduled? It can be statically determined that (the default)
+    `just()` doesn't change the execution agent
+- Does this use result in an operation being scheduled?
+
+    ```c++
+    ex::sync_wait(test(
+          ex::read_env(ex::get_scheduler)
+        | ex::let_value([](auto sched){ return ex::starts_on(sched, ex::just()); })
+    ));
+    ```
+
+    It can be dynamically determined that the completion scheduler is
+    identical to the expected scheduler and no scheduling is needed.
+- The specification is deliberately kept vague to allow future changes
+    to the behavior when implementation can detect more cases where no
+    scheduling is needed.
+- That direction was discussed in Hagenberg.
+- There [P3206](https://wg21.link/P3206) to define a corresponding interface.
+- Implementation can do something like that for standard library senders.
+- Implementations can be required to do some of these optimisations in future
+    revisions of the standard.
+- Note that avoiding scheduling work increases the chances of stack overflow.
 
 ## Starting A `task` Reschedules
 
@@ -133,7 +233,46 @@ Concern raised:
 > calling a task coroutine unconditionally schedules onto
 > its scheduler (a large performance bottleneck),
 
-TODO add example and response
+Example (see `issue-start-reschedules.cpp`):
+
+```cpp
+ex::task<int> test(auto sched) {
+    std::cout << "init =" << std::this_thread::get_id() << "\n";
+    co_await ex::starts_on(sched, scheduler(), ex::just());
+    std::cout << "final=" << std::this_thread::get_id() << "\n";
+}
+```
+
+TODO turn into text
+
+- assuming an execution agent with only one thread is used, the
+    two thread ids need to be identical for scheduler affinity:
+    this is the affinity invariant of `task`
+- `ex::sync_wait(test(pool2.get_scheduler()))`: no scheduling needed
+    as the `task` is started on the same thread as the one used by
+    the `run_loop` within `sync_wait`.
+- `ex::sync_wait(ex::starts_on(pool1.get_scheduler(), test(pool2.get_scheduler())))`:
+    also no scheduling needed as `starts_on` provides a receiver with the same
+    scheduler it starts the child on.
+- the specification doesn't explicitly say that the `initial_suspend()`
+    awaiter reschedules but it specifies the that it resumes on the
+    scheduler's execution agent.
+- it seems to contradict the idea of scheduler affinity if the
+    thread ids printed in the example could be different, i.e., if it
+    is allowed to resume on a different execution agent than that
+    corresponding to `get_scheduler(get_env(rcvr))` for receiver
+    `rcvr` the task is connected to
+- if it is never possible that the execution agent on which the `task`
+    gets started mismatches the execution agent(s) from the receiver,
+    no scheduling for the initial resumption is needed but I don't
+    if that is guaranteed
+- my current implementation reschedules when the awaiter returned from
+    `initial_suspend()` resumes: doing so _may_ be unnecessary
+- I don't see how the coroutine could see what scheduler it is
+    started on, i.e., I don't know how the rescheduling can be avoided
+- if there is a way, however, the specification doesn't enforce
+    rescheduling as long as the coroutine resumes on the correct
+    scheduler
 
 ## The Environment Design Is Odd
 
@@ -142,17 +281,59 @@ Concern raised:
 > the design of the `Environment` template parameter seems weird -
 > it's trying to be a trait-like class but also a `queryable`,
 
-TODO add example and response
+TODO add example? turn into text
+
+- the `Enviroment` (i.e, second) template parameter has sort of
+    dual use:
+    1. It provides configurations for various types (`allocator_type`,
+        `scheduler_type`, `stop_source_type`, `error_type`)
+    2. An object of the type is created which is either initialized
+        with the receiver's environment or, if that isn't possibly,
+        default initialized. This object is then used to satisfy
+        queries if available. The actual logic is a bit more complicated,
+        actually, to allow capturing state depending on the receiver's
+        enironment type.
+- the functionality could be separated by naming the parameter `Configuration`
+    which may optionally provide an `environement_type` in addition to the
+    other type configurations
+- this change would slightly change the use but I think it would retain the
+    spirit of the current design
+- both approaches work
 
 ## Shadowing The Environment Allocator Is Questionable
 
 Concern raised:
 
-> I'm unsure wehther the shadowing of the `get_allocator` query
+> I'm unsure whether the shadowing of the `get_allocator` query
 > on the parent environment with the coroutine promise's allocator
 > is the behavior we really wnat here.,
 
-TODO add example and response
+TODO add example? turn into text
+
+- creating a coroutine (calling the coroutine function) chooses the
+    allocotor for the coroutine frame, either explicitly specified or
+    implicitly determined. Either way the coroutine frame is allocated
+    when the function is called.
+- the fundamental idea of the allocator model is that children of an
+    entity use the same allocator as their parent unless an allocator
+    is explicitly specified for a child.
+- the `co_await`ed entities are children of the coroutine and should
+    share the coroutine's allocator
+- further, to forward the allocator from the receiver's environment in
+    an environment, its static type needs to be convertible to the
+    coroutine's allocator type: the coroutine's environment types are
+    determined when the coroutine is created at which point the receiver
+    isn't known, yet
+- on the flip side, the receiver's environment can contain the configuration
+    from the user of a work-graph which is likely better informed about
+    the allocator
+- the allocator from the receiver's environment could be forwarded if the
+    `task`'s allocator can be initialized with it, e.g., because the `task`
+    use `std::pmr::polymorphic_allocator<>`.
+- it isn't a priori clear what should happen if the receiver's environment
+    has an allocator which can't be converted to the `task`'s environment:
+    at least ignoring a mismatching allocator or producing a compile time
+    error are options.
 
 ## No Completion Scheduler
 
@@ -164,7 +345,24 @@ Concern raised:
 > context - so you schedule when entering a coroutine and schedule
 > when resuming - very inefficient,
 
-TODO add example and response
+TODO add example? turn into text
+
+- `get_completion_scheduler(env)` is a query operating on the sender's
+    enviroment, i.e., it would operate on the `task`'s enironment.
+- a `task` is created without any information of scheduling at all:
+    the only state it gets are the arguments passed to the coroutine
+    [factory] function and what the coroutine uses for scheduling is
+    unknown!
+- Once the `task` is `connect`ed to a receiver, the resulting operation
+    state could be inspected for its complection scheduler - if queries
+    were defined on operation states
+- I believe a similar issue exists in other contexts where a sender can't
+    tell on which scheduler it may complete until it is actually `connect`ed
+    to a receiver.
+- If there is a meaningful way to determine the completion scheduler for a
+    `task` I'd consider the omission of a `get_completion_scheduler` query
+    an error which should be corrected. As of know I don't know what a
+    reasonable result may be.
 
 ## A Stop Source Always Needs To Be Created
 
@@ -177,16 +375,38 @@ Concern raised:
 > `inplace_stop_token` then it should just be passed through and have
 > no space overhead in the promise.
 
-TODO add example and response
+TODO add example? turn into text
+
+- the stop source is an exposition-only member of the `promise_type`
+    and I don't think the existance of such a member has any implication
+    on whether such an object needs to exist or where it is created
+- an implementation can (and probably should) create the stop source in
+    the operation state object when `connect`ed to a receiver with an
+    an environment with a mismatching stop token.
+- if there is a concern with that the specification is unnecessarily
+    restrictive, it should be fixed to use a specifiation macro
+    similar to other specification macros used which refer to
+    entities in the operation state
+- there is certainly no design intend to create unnecessary stop sources
+    and I don't think the specification implies that it is required
 
 ## A Future Coroutine Feature Could Avoid `co_yield` For Errors
 
 Concern raised:
 
-> I would prefer a language change to avoid the hack using
+> I would prefer a language change to avoid the need for the hack using
 > `co_yield with_error(x)`.
 
-TODO add example and response
+- yes - a future revision of the C++ standard may provide facilities
+    which result in a better design for pretty much anything.
+- assuming such a language change gets proposed reasonably early (there
+    are no existing `task` implementations and there is certainly none
+    which promises ABI stability for the next few years) a corresponding
+    change can be taken into account such that a future revision can
+    actually change the interface
+- I don't know what the shape of the envisioned language change is but
+    it seems to be a pure extension which can hopefully be integrated
+    with the existing design
 
 ## There Is No Hook To Capture/Restore TLS
 
@@ -205,7 +425,7 @@ Concern raised:
 > to suspending and restoring them prior to resuming the coroutine.
 > There is currently no way to actually do that.
 
-TODO add example and response
+TODO add example and turn into text
 
 - using a custom scheduler with a custom implementation of
     `affine_on` allows this functionality (via the domain)
