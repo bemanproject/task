@@ -17,6 +17,7 @@ set(ALL_EXAMPLES
     escaped-exception
     co_await-result
     friendly
+    issue-symmetric-transfer
     loop
     stop
     alloc
