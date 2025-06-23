@@ -3,6 +3,12 @@
 set(ALL_EXAMPLES co_await-task)
 set(ALL_EXAMPLES
     affinity
+    escaped-exception
+    co_await-result
+    friendly
+    issue-symmetric-transfer
+    loop
+    stop
     alloc
     c++now-affinity
     c++now-allocator
