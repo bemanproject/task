@@ -19,8 +19,8 @@ int main() {
     struct allocator_env {
         using allocator_type = std::pmr::polymorphic_allocator<>;
     };
-    ex::sync_wait(test<default_env>(17)); // OK: no allocator
+    ex::sync_wait(test<default_env>(17));                                            // OK: no allocator
     ex::sync_wait(test<default_env>(17, std::allocator_arg, std::allocator<int>())); // OK: allocator is convertible
-    //ex::sync_wait(test<default_env>(17, std::allocator_arg, std::pmr::polymorphic_allocator<>())); // error
+    // ex::sync_wait(test<default_env>(17, std::allocator_arg, std::pmr::polymorphic_allocator<>())); // error
     ex::sync_wait(test<allocator_env>(17, std::allocator_arg, std::pmr::polymorphic_allocator<>())); // OK but unusual
 }
