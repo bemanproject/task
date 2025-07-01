@@ -53,7 +53,7 @@ the respective issue):
 - comment: how to guarantee affinity? seems to require an additional coroutine
 - don't do?
 
-## affine_on has no default spec
+## `affine_on` has no default spec
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-is-missing-a-specification-for-a-default-implementation)
 [DK](https://github.com/bemanproject/task/blob/issues/docs/issues.md#affine_on-underspecified)
@@ -62,7 +62,7 @@ the respective issue):
 - fix: say something specific
 - comment: we don't have the tools to say what implementations can do for known senders
 
-## affine_on semantics unclear
+## `affine_on` semantics unclear
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-semantics-are-not-clear)
 
@@ -70,14 +70,14 @@ the respective issue):
 - fix: two versions
 - comment: I think I had the 2nd in mind 
 
-## affine_on shape
+## `affine_on` shape
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-might-not-have-the-right-shape)
 
 - `affine_on` should just depend on the receiver's `get_scheduler()`.
 - comment: agreed - that is design, though
 
-## affine_on: schedule vs. stop token
+## `affine_on` schedule vs. stop token
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-should-probably-not-forward-stop-requests-to-reschedule-operation)
 
@@ -86,7 +86,7 @@ the respective issue):
 - comment: in case of `set_stopped()` the coroutine doesn't resume; for `set_error(e)` other reasons may exist
 - comment: however, I don't object to this direction 
 
-## affine_on vs. other algorithms
+## `affine_on` vs. other algorithms
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#we-should-probably-define-customsiations-for-affine_on-for-some-other-senders)
 
@@ -189,4 +189,4 @@ the respective issue):
 
 - legacy APIs may need TLS to be set appropriately
 - objective: capture TLS before async, restore after
-- fix: use custom affine_on with wrapped scheduler, delegating
+- fix: use custom `affine_on` with wrapped scheduler, delegating
