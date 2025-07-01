@@ -87,11 +87,78 @@ The wording for `task<...>::promise_type::initial_suspend` in
 > `auto initial_suspend() noexcept;`
 >
 > _Returns:_ An awaitable object of unspecified type ([expr.await])
+> whose member functions arrange for
+>
+> - the calling coroutine to be suspended,
+> - the coroutine to be resumed on an execution agent of the execution
+>     resource associated with `SCHED(*this)`.
+
+In particular the second bullet can be interpreted to mean that the
+task gets resumed immediately. That wouldn't actually work because
+`SCHED(*this)` only gets initialized when the `task` gets `connect`ed
+to a suitable receiver. The intention of the current specification
+is to establish the invariant that the coroutine is running on the
+correct scheduler when the coroutine is resumed. The mechanisms
+used to achieve that are not detailed to avoid requiring that it
+gets scheduled. The formulation should, at least, be improved to
+clarify that the coroutine isn't resumed immediates, possibly using
+
+> - the coroutine [to be resumed]{.rm}[resuming]{.add} on an execution
+>     agent of the execution resource associated with `SCHED(*this)`
+>     [when it gets resumed]{.add}.
+
+The proposed fix from the issue is to specify that `initial_suspend()`
+always returns `suspend_always{}` and require that `start(...)`
+calls `handle.resume()` to resume the coroutine on the appropriate
+scheduler after `SCHED(*this)` has been initialized. The corresponding
+change would be
+
+> Change [task.promise] paragraph 6:
+>
+> `auto initial_suspend() noexcept;`
+>
+::: rm
+> _Returns:_ An awaitable object of unspecified type ([expr.await])
 > whose member functions arrange for:
 >
 > - the calling coroutine to be suspended,
 > - the coroutine to be resumed on an execution agent of the execution
->     resource associated with `@_SCHED_@(*this)`.
+>     resource associated with `SCHED(*this)`.
+:::
+::: add
+> _Returns:_ `suspend_always{}`.
+:::
+
+The suggestion is to ensure that the task gets resumed on the
+correct associated context via added requirements on the receiver's
+`get_scheduler()` (see below).
+
+## Task Should Not Unconditionally Reschedule When Control Enters The Coroutine
+
+The specification of `initial_suspend()` (assuming it is rephrased
+to not resume the coroutine immediately) doesn't really say it
+unconditionally reschedules. It merely says that an awaiter is
+returned which arranges for the coroutine to get resumed on the
+correct scheduler. In general, i.e., when the coroutine gets resumed
+via `start(os)` on an operation state `os` obtained from `connect(tsk, rcvr)`
+it will need to reschedule. However, an implementation can have
+additional information, e.g., when using `co_await tsk`: the
+implementation knows that the `co_await`ing coroutine is executing
+on the same scheduler as the one given to `tsk` (via the environment
+of some receiver) and it could resume the coroutine bypassing any
+scheduling (e.g., using whatever is used to support symmetric
+transfer; see below).
+
+A possible alternative is to require that `start(op)`, where `op`
+is the result of `connect(sndr, rcvr)`, is invoked on an execution
+agent associated with `get_scheduler(get_env(rcvr))`, at least when
+`sndr` is a `task<...>`. Such a requirement could be desirable more
+general but it would also be part of the general sender/receiver
+contract. The current specification in
+[[exec.async.ops](https://eel.is/c++draft/exec.async.ops)] doesn't
+have a corresponding constraint. `task<...>` is a sender and
+where it can be used with standard library algorithms this constraint
+would hold.
 
 ## No Support For Symmetric Transfer
 
