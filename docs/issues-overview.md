@@ -75,7 +75,7 @@ the respective issue):
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-might-not-have-the-right-shape)
 
 - `affine_on` should just depend on the receiver's `get_scheduler()`.
-- comment: agreed - that is design, though
+- comment: agreed; that is design, though
 
 ## `affine_on` schedule vs. stop token
 
@@ -145,11 +145,11 @@ the respective issue):
 - fix: have the stop source in promise and only when needed
 - comment: I think that is already allowed; maybe should be clarified, recommended practice?
 
-## stop_token default constructible
+## `stop_token` default constructible
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_type-wording-assumes-that-stop-token-is-default-constructible)
 
-- the exposition-only member for stop_token require default constructible
+- the exposition-only member for `stop_token` require default constructible
 - fix: don't have it: get it from env or stop source
 - comment: I think that is alrady allowed
 
@@ -159,15 +159,15 @@ the respective issue):
 
 - frame should be destroyed before completing
 - fix: result in state, destroy before completing
-- comment: that is what I had hoped to say - may need wording fix
+- comment: that is what I had hoped to say; may need wording fix
 
 ## inefficient env
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_typeget_env-seems-to-require-an-inefficient-implementation)
 [DK](https://github.com/bemanproject/task/blob/issues/docs/issues.md#the-environment-design-is-odd)
 
-- own_env must copy lots of state
-- comment: own_env just allows a potential type-erase entity to be workable, primarily it is env
+- `own_env` must copy lots of state
+- comment: `own_env` just allows a potential type-erase entity to be workable, primarily it is env
 
 ## no completion scheduler
 
