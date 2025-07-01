@@ -16,9 +16,10 @@ toc: false
 
 After the [task proposal](https://wg21.link/p3552) was voted to be
 forwarded to plenary for inclusion into C++26 a number of issues
-were brought. The reported issues came mostly as an immediate
-reaction and both the description may be incomplete as well as the
-list. This paper tries to address these known issues.
+were brought up. The issues were either reported as an immediate
+reaction to the review. The description of individual issues may
+be incomplete and the list of issues may be incomplete. This paper
+tries to address these known issues.
 
 # Change History
 
@@ -26,10 +27,10 @@ list. This paper tries to address these known issues.
 
 # General
 
-Non-trivial components can always improved in some way. The same
+Non-trivial components can always be improved in some way. The same
 is true for `std::execution::task`. If we wait until we have something
-everybody is satisfied with, we will hardly ever get anything at
-all.  The key question is whether the current specification works
+everybody is fully satisfied with, we will hardly ever get anything
+at all.  The key question is whether the current specification works
 or if there are fatal flaws making it a bad choice. For the `task`
 proposal as it currently is, I see two questions:
 
@@ -48,23 +49,24 @@ is unacceptable.
 One statement from the planary was that `task` is the obvious name
 for a coroutine task and we should get it right. There are certainly
 improvements which can be applied. Although I'm not aware of anything
-concrete beyond the raised issues there is certainly potential
+concrete beyond the raised issues there is certainly potential for
 improvements. If the primary concern is that there may be better
 task interfaces in the future and a better `task` should get the
 name `task`, it seems reasonable to rename the component. The
 original name used for the component was `lazy` and feedback from
 Hagenberg was to rename it `task`.
 
-For a different name, my proposal would be something like `task26`
+For a different name, the proposal would be something like `task26`
 and to similarly name future revisions with a version number. This
 way the name `task` would be reserved until the design stablizes.
 This direction would allow making a coroutine task available now
 without concerns about using the good name for a version which is
-inferior to a future design.
+inferior to a future design. If the component should be renamed it
+is up to LEWG to acutally pick a name.
 
 It is also worth pointing out that it is possible to have more than
 one coroutine task component. Due to the design of coroutines and
-sender/receiver they can interoperate.
+sender/receiver different coroutine tasks can interoperate.
 
 # The Concerns
 
@@ -76,6 +78,20 @@ originaly, e.g., because it was stated in a different language). I
 became aware of all but one of these concerns after the poll by LWG
 to forward the proposal for inclusion into C++26.  The rest of this
 section discusses these concerns:
+
+## Task Is Not Actually Lazily Started
+
+The wording for `task<...>::promise_type::initial_suspend` in
+[task.promise] p6 may imply that a `task` is eagerly started:
+
+> `auto initial_suspend() noexcept;`
+>
+> _Returns:_ An awaitable object of unspecified type ([expr.await])
+> whose member functions arrange for:
+>
+> - the calling coroutine to be suspended,
+> - the coroutine to be resumed on an execution agent of the execution
+>     resource associated with `@_SCHED_@(*this)`.
 
 ## No Support For Symmetric Transfer
 
