@@ -17,6 +17,10 @@ the respective issue):
 - fix: `initial_suspend() -> suspend_always` and constraint start
 - commment: rephrase to clarify it is resumed later
 
+=> say it always suspend (steal wording from suspend_always) but don't nail down suspend_always + change op_state.start(): calls handle.resume() on an execution agent associated with SCHED(prom)
+
+- we may want to require that the awaiter operations are not potentially throwing/noexcept
+
 ## Initial resume shouldn't reschedule
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-should-not-unconditionally-reschedule-when-control-enters-the-coroutine)
@@ -27,6 +31,13 @@ the respective issue):
 - fix: constrain `start(rcvr)` to be called on `get_scheduler(get_env(rcvr))` instead
 - comment: the description from `initial_suspend()` merely lays out what needs to hold => that's OK
 
+=> Change op_state.start() to handle.resume() on the correct execution agent.
+
+- this change isn't really task but could be a different paper
+- we are not saying anything about schedule - we just say where we aer executing
+- maybe add a recommended practice about task constructed from task
+- co_await on a task should never call schedule
+
 ## Shouldn't reschedule after `co_await`ing task
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-awaiting-another-task-should-not-reschedule-on-resumption)
@@ -34,6 +45,21 @@ the respective issue):
 - `await_transform` uses `affine_on` without enough context information => reschedule
 - fix: specify a custom `affine_on` for `task` and arrange for various things
 - comment: how can a user tell what exactly happened? the `co_await`ing `task` and the `co_await`ed task are from the implementation
+
+=> define affine_on such that it start on the receiver's get_scheduler
+- LB: I'm imagining
+- it turns out that task doen't have any default parameters!
+- inline_scheduler should have a customization of affine_on and we drop the special case
+- affine_on on the task could be specialized via the task's domain: it just returns the task
+
+- get_scheduler is where the operation is started
+- affine_on should just take one argument and use get_scheduler but that requires that start is called on get_scheduler's scheduler
+
+[unrelated:
+- get_scheduler: where we got started
+- get_delegation_scheduler: where to start new work
+- get_completion_scheduler: where things complet
+]
 
 ## No symmetric transfer
 
@@ -62,6 +88,8 @@ the respective issue):
 - fix: say something specific
 - comment: we don't have the tools to say what implementations can do for known senders
 
+=> get a continues_on p5-like paragraph which calls continues_on
+
 ## `affine_on` semantics unclear
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-semantics-are-not-clear)
@@ -70,12 +98,17 @@ the respective issue):
 - fix: two versions
 - comment: I think I had the 2nd in mind 
 
+=> allow affine_on to complete inline regardless that's the difference to continues_on
+   in addition it can be customized separately
+
 ## `affine_on` shape
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-might-not-have-the-right-shape)
 
 - `affine_on` should just depend on the receiver's `get_scheduler()`.
 - comment: agreed; that is design, though
+
+=> starts on get_scheduler, complete on the passed scheduler (which may get dropped)
 
 ## `affine_on` schedule vs. stop token
 
@@ -85,6 +118,11 @@ the respective issue):
 - fix: suppress stop token
 - comment: in case of `set_stopped()` the coroutine doesn't resume; for `set_error(e)` other reasons may exist
 - comment: however, I don't object to this direction 
+
+=> this requirement needs to align with what continues_on does
+- the actual conclusion is: affine_on may need to do what continues_on does
+- unless continues_on's schedule operation should also not be cancelable
+- alternatively we could call continues_on with an adapted scheduler
 
 ## `affine_on` vs. other algorithms
 
@@ -118,6 +156,10 @@ the respective issue):
 - fix: use type-erased allocator in that case like generator
 - comment: that's an oversight; I didn't realize generator does that
 
+=> write up the pros and cons
+- we could construct environment with the allocator so the user can choose which allocator to use
+- use the coroutine_traits to determine the promise_type based on the allocator?
+
 ## allocator_arg more permissive
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#handling-of-allocator_arg-is-more-permissive-than-for-stdgenerator)
@@ -126,6 +168,8 @@ the respective issue):
 - generator requires allocator in first position
 - fix: should generator be generalized?
 - comment: yes but not for C++26
+
+=> coroutines can forward - write design discussion
 
 ## hiding parent's allocator
 
