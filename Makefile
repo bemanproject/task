@@ -10,7 +10,7 @@ ifeq ($(UNAME),Darwin)
 endif
 BUILD = $(BUILDDIR)/$(PRESET)
 
-default: doc
+default: compile
 
 doc:
 	cd docs; $(MAKE)

@@ -13,12 +13,12 @@ template <typename Env>
 ex::task<int, Env> test(int i, auto&&...) {
     co_return co_await ex::just(i);
 }
-
-int main() {
     struct default_env {};
     struct allocator_env {
         using allocator_type = std::pmr::polymorphic_allocator<>;
     };
+
+int main() {
     ex::sync_wait(test<default_env>(17));                                            // OK: no allocator
     ex::sync_wait(test<default_env>(17, std::allocator_arg, std::allocator<int>())); // OK: allocator is convertible
     // ex::sync_wait(test<default_env>(17, std::allocator_arg, std::pmr::polymorphic_allocator<>())); // error
