@@ -21,6 +21,7 @@ int main() {
         using scheduler_type = ex::inline_scheduler;
     };
     [[maybe_unused]] inline_env ev{};
+    [[maybe_unused]] inline_env::scheduler_type sched{};
     ex::sync_wait(test<affine_env>()); // OK
     // ex::sync_wait(test<inline_env>()); // error: stack overflow
 }
