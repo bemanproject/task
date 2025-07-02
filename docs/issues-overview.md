@@ -96,7 +96,7 @@ the respective issue):
 
 - the wording is unclear
 - fix: two versions
-- comment: I think I had the 2nd in mind 
+- comment: I think I had the 2nd in mind
 
 => allow affine_on to complete inline regardless that's the difference to continues_on
    in addition it can be customized separately
@@ -117,7 +117,7 @@ the respective issue):
 - non-success completions don't guarantee affinity invariant
 - fix: suppress stop token
 - comment: in case of `set_stopped()` the coroutine doesn't resume; for `set_error(e)` other reasons may exist
-- comment: however, I don't object to this direction 
+- comment: however, I don't object to this direction
 
 => this requirement needs to align with what continues_on does
 - the actual conclusion is: affine_on may need to do what continues_on does

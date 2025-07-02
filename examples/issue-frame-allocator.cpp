@@ -13,10 +13,10 @@ template <typename Env>
 ex::task<int, Env> test(int i, auto&&...) {
     co_return co_await ex::just(i);
 }
-    struct default_env {};
-    struct allocator_env {
-        using allocator_type = std::pmr::polymorphic_allocator<>;
-    };
+struct default_env {};
+struct allocator_env {
+    using allocator_type = std::pmr::polymorphic_allocator<>;
+};
 
 int main() {
     ex::sync_wait(test<default_env>(17));                                            // OK: no allocator
