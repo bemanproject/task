@@ -27,7 +27,7 @@ using inline_scheduler = ::beman::task::detail::inline_scheduler;
 using into_optional_t  = ::beman::task::detail::into_optional_t;
 using ::beman::task::detail::into_optional;
 
-using ::beman::task::detail::default_context;
+//-dk:TODO remove using ::beman::task::detail::default_environment;
 using ::beman::task::detail::with_error;
 } // namespace beman::task
 
@@ -45,9 +45,9 @@ using into_optional_t  = ::beman::task::detail::into_optional_t;
 using ::beman::task::detail::into_optional;
 
 using ::beman::task::detail::change_coroutine_scheduler;
-using ::beman::task::detail::default_context;
+//-dk:TODO using ::beman::task::detail::default_environment;
 using ::beman::task::detail::with_error;
-template <typename T = void, typename Context = ::beman::task::default_context>
+template <typename T = void, typename Context = ::beman::task::detail::default_environment>
 using task = ::beman::task::detail::task<T, Context>;
 } // namespace beman::execution
 

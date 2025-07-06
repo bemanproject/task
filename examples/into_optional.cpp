@@ -51,16 +51,16 @@ template <ex::sender S>
 auto my_into_optional(S&& s) {
     return ex::into_variant(s) | ex::then([](auto&&...) { return std::optional<int>(); })
 #if 0
-    //-dk:TODO see if this code is needed or can be removed
-         | ex::then([]<typename...A, typename... B>(
-            std::variant<std::tuple<A...>, std::tuple<B...>> r) {
-                if constexpr (sizeof...(A) != 0u) {
-                    return to_optional<A...>(r);
-                }
-                else {
-                    return to_optional<B...>(r);
-                }
-        })
+     //-dk:TODO see if this code is needed or can be removed
+          | ex::then([]<typename...A, typename... B>(
+             std::variant<std::tuple<A...>, std::tuple<B...>> r) {
+                 if constexpr (sizeof...(A) != 0u) {
+                     return to_optional<A...>(r);
+                 }
+                 else {
+                     return to_optional<B...>(r);
+                 }
+         })
 #endif
         ;
 }

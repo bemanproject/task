@@ -8,6 +8,8 @@
 #endif
 #include <cassert>
 
+namespace ex = ::beman::execution;
+
 // ----------------------------------------------------------------------------
 
 namespace {
@@ -29,6 +31,7 @@ struct value_receiver {
     void set_value(int v) && noexcept { value = v; }
     void set_value(auto&&...) && noexcept { unreachable("unexpected set_value called"); }
     void set_error(auto&&) && noexcept { unreachable("set_error unexpectedly called"); }
+    void set_stopped() && noexcept { unreachable("set_stopped unexpectedly called"); }
 };
 static_assert(::beman::execution::receiver<value_receiver>);
 
@@ -38,6 +41,7 @@ struct void_receiver {
     void  set_value() && noexcept { flag = true; }
     void  set_value(auto&&...) && noexcept { unreachable("unexpected set_value called"); }
     void  set_error(auto&&) && noexcept { unreachable("set_error unexpectedly called"); }
+    void  set_stopped() && noexcept { unreachable("set_stopped unexpectedly called"); }
 };
 static_assert(::beman::execution::receiver<value_receiver>);
 
@@ -47,43 +51,52 @@ struct error_receiver {
     void set_value(auto&&...) && noexcept { unreachable("unexpected set_value called"); }
     void set_error(auto&&) && noexcept { unreachable("unexpected set_error called"); }
     void set_error(int e) && noexcept { error = e; }
+    void set_stopped() && noexcept { unreachable("set_stopped unexpectedly called"); }
 };
 static_assert(::beman::execution::receiver<error_receiver>);
 
 void test_stopped() {
-    beman::task::detail::result_type<beman::task::detail::stoppable::yes, int> result{};
+    beman::task::detail::
+        result_type<beman::task::detail::stoppable::yes, void, ex::completion_signatures<ex::set_error_t(int)>>
+            result{};
 
     bool flag{false};
-    result.complete(stopped_receiver{flag});
+    result.result_complete(stopped_receiver{flag});
     assert(flag == true);
 }
 
 void test_value() {
     {
-        beman::task::detail::result_type<beman::task::detail::stoppable::no, int, int> result{};
+        beman::task::detail::
+            result_type<beman::task::detail::stoppable::yes, int, ex::completion_signatures<ex::set_error_t(int)>>
+                result{};
         result.set_value(' ');
 
         int value{};
-        result.complete(value_receiver{value});
+        result.result_complete(value_receiver{value});
         assert(value == ' ');
     }
     {
-        beman::task::detail::result_type<beman::task::detail::stoppable::no, ::beman::task::detail::void_type, int>
-            result{};
+        beman::task::detail::
+            result_type<beman::task::detail::stoppable::yes, void, ex::completion_signatures<ex::set_error_t(int)>>
+                result{};
         result.set_value(::beman::task::detail::void_type());
         bool flag{false};
-        result.complete(void_receiver{flag});
+        result.result_complete(void_receiver{flag});
         assert(flag == true);
     }
 }
 
 void test_error() {
     struct type {};
-    beman::task::detail::result_type<beman::task::detail::stoppable::no, int, type, int> result{};
+    beman::task::detail::result_type<beman::task::detail::stoppable::yes,
+                                     int,
+                                     ex::completion_signatures<ex::set_error_t(type), ex::set_error_t(int)>>
+        result{};
     result.set_error(17);
 
     int error{};
-    result.complete(error_receiver{error});
+    result.result_complete(error_receiver{error});
     assert(error == 17);
 }
 

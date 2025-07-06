@@ -1,32 +1,33 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+set(ALL_EXAMPLES co_await-task)
 set(ALL_EXAMPLES
-    task_scheduler
-    environment
-    c++now-basic
-    c++now-result-types
-    c++now-errors
-    c++now-cancel
-    c++now-return
-    c++now-with_error
-    c++now-allocator
-    c++now-stop_token
-    c++now-query
-    c++now-affinity
     affinity
-    escaped-exception
-    co_await-result
-    friendly
-    loop
-    stop
     alloc
+    c++now-affinity
+    c++now-allocator
+    c++now-basic
+    c++now-cancel
+    c++now-errors
+    c++now-query
+    c++now-result-types
+    c++now-return
+    c++now-stop_token
+    c++now-with_error
+    co_await-result
+    co_await-task
     container
-    hello
-    query
-    async-lock
+    environment
     error
+    escaped-exception
+    friendly
+    hello
     into_optional
+    loop
+    query
     result_example
+    stop
+    task_scheduler
 )
 
 message("Examples to be built: ${ALL_EXAMPLES}")

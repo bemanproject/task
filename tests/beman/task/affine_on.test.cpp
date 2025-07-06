@@ -38,7 +38,7 @@ int main() {
     static_assert(ex::sender<decltype(s)>);
     [[maybe_unused]] auto st(ex::connect(std::move(s), receiver{}));
 #if 0
-    ex::sync_wait(beman::task::affine_on(ex::just(42), context.get_scheduler())
+     ex::sync_wait(beman::task::affine_on(ex::just(42), context.get_scheduler())
 #else
     ex::sync_wait(beman::execution::continues_on(ex::just(42), context.get_scheduler())
 #endif

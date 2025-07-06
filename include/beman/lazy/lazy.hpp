@@ -9,12 +9,12 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy {
-template <typename T = void, typename Context = ::beman::task::default_context>
+template <typename T = void, typename Context = ::beman::task::detail::default_environment>
 using lazy = ::beman::task::detail::task<T, Context>;
 }
 
 namespace beman::execution {
-template <typename T = void, typename Context = ::beman::task::default_context>
+template <typename T = void, typename Context = ::beman::task::detail::default_environment>
 using lazy [[deprecated("beman::execution::lazy has been renamed to beman::execution::task")]] =
     ::beman::execution::task<T, Context>;
 }

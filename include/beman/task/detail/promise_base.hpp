@@ -4,7 +4,7 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_BASE
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_BASE
 
-#include <beman/task/detail/result_type.hpp>
+#include <beman/task/detail/state_base.hpp>
 #include <beman/execution/execution.hpp>
 #include <cstddef>
 #include <concepts>
@@ -19,13 +19,8 @@ namespace beman::task::detail {
  * \headerfile beman/task/task.hpp <beman/task/task.hpp>
  * \internal
  */
-template <::beman::task::detail::stoppable Stop, typename Value, typename ErrorCompletions>
-class promise_base;
-
-template <::beman::task::detail::stoppable Stop, typename Value>
-    requires(not ::std::same_as<Value, void>)
-class promise_base<Stop, Value, ::beman::execution::completion_signatures<>>
-    : public ::beman::task::detail::result_type<Stop, Value> {
+template <::beman::task::detail::stoppable Stop, typename Value, typename Environment>
+class promise_base {
   public:
     /*
      * \brief Set the value result.
@@ -33,43 +28,31 @@ class promise_base<Stop, Value, ::beman::execution::completion_signatures<>>
      */
     template <typename T>
     void return_value(T&& value) {
-        this->set_value(::std::forward<T>(value));
+        this->get_state()->set_value(::std::forward<T>(value));
     }
-};
 
-template <::beman::task::detail::stoppable Stop, typename Value, typename... Error>
-    requires(not ::std::same_as<Value, void>)
-class promise_base<Stop, Value, ::beman::execution::completion_signatures<::beman::execution::set_error_t(Error)...>>
-    : public ::beman::task::detail::result_type<Stop, Value, Error...> {
   public:
-    /*
-     * \brief Set the value result.
-     * \internal
-     */
-    template <typename T>
-    void return_value(T&& value) {
-        this->set_value(::std::forward<T>(value));
-    }
+    auto set_state(::beman::task::detail::state_base<Value, Environment>* s) noexcept -> void { this->state_ = s; }
+    auto get_state() const noexcept -> ::beman::task::detail::state_base<Value, Environment>* { return this->state_; }
+
+  private:
+    ::beman::task::detail::state_base<Value, Environment>* state_{};
 };
 
-template <typename ::beman::task::detail::stoppable Stop>
-class promise_base<Stop, void, ::beman::execution::completion_signatures<>>
-    : public ::beman::task::detail::result_type<Stop, void_type> {
+template <typename ::beman::task::detail::stoppable Stop, typename Environment>
+class promise_base<Stop, void, Environment> {
   public:
     /*
      * \brief Set the value result although without any value.
      */
-    void return_void() { this->set_value(void_type{}); }
-};
+    void return_void() { this->get_state()->set_value(void_type{}); }
 
-template <typename ::beman::task::detail::stoppable Stop, typename... Error>
-class promise_base<Stop, void, ::beman::execution::completion_signatures<::beman::execution::set_error_t(Error)...>>
-    : public ::beman::task::detail::result_type<Stop, void_type, Error...> {
   public:
-    /*
-     * \brief Set the value result although without any value.
-     */
-    void return_void() { this->set_value(void_type{}); }
+    auto set_state(::beman::task::detail::state_base<void, Environment>* s) noexcept -> void { this->state_ = s; }
+    auto get_state() const noexcept -> ::beman::task::detail::state_base<void, Environment>* { return this->state_; }
+
+  private:
+    ::beman::task::detail::state_base<void, Environment>* state_{};
 };
 } // namespace beman::task::detail
 

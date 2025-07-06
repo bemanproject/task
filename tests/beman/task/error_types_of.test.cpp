@@ -9,7 +9,7 @@
 // ----------------------------------------------------------------------------
 
 namespace {
-struct default_context {};
+struct default_environment {};
 template <typename... E>
 struct error_context {
     using error_types = beman::execution::completion_signatures<beman::execution::set_error_t(E)...>;
@@ -18,7 +18,7 @@ struct error_context {
 
 int main() {
     static_assert(
-        std::same_as<beman::task::detail::error_types_of_t<default_context>,
+        std::same_as<beman::task::detail::error_types_of_t<default_environment>,
                      beman::execution::completion_signatures<beman::execution::set_error_t(std::exception_ptr)>>);
     static_assert(std::same_as<beman::task::detail::error_types_of_t<error_context<>>,
                                beman::execution::completion_signatures<>>);

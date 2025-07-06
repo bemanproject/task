@@ -24,14 +24,13 @@ class handle {
 
   public:
     explicit handle(P* p) : h(p) {}
-    void reset() { this->h.reset(); }
+    auto reset() -> void { this->h.reset(); }
     template <typename... A>
-    void start(A&&... a) noexcept {
-        this->h->start(::std::forward<A>(a)...);
+    auto start(A&&... a) noexcept -> auto {
+        return this->h->start(::std::forward<A>(a)...);
     }
-    template <::beman::execution::receiver Receiver>
-    void complete(Receiver&& receiver) {
-        this->h->complete(::std::forward<Receiver>(receiver));
+    auto release() -> ::std::coroutine_handle<P> {
+        return ::std::coroutine_handle<P>::from_promise(*this->h.release());
     }
 };
 

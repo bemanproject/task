@@ -23,7 +23,7 @@ static_assert(ex::receiver<test_receiver>);
 
 std::ostream& fmt_id(std::ostream& out) { return out << std::this_thread::get_id(); }
 
-struct non_affine : ex::default_context {
+struct non_affine {
     using scheduler_type = ex::inline_scheduler;
 };
 } // namespace

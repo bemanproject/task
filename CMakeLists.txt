@@ -17,7 +17,6 @@ option(
     "Enable building tests and test infrastructure. Default: ON. Values: { ON, OFF }."
     ${PROJECT_IS_TOP_LEVEL}
 )
-set(BEMAN_TASK_BUILD_TESTS FALSE)
 
 # [CMAKE.SKIP_EXAMPLES]
 option(
