@@ -24,5 +24,5 @@ int main() {
     };
 
     ex::sync_wait(test<affine_env>()); // OK
-    ex::sync_wait(test<inline_env>()); // error: stack overflow
+    // ex::sync_wait(test<inline_env>()); // error: stack overflow without symmetric transfer
 }
