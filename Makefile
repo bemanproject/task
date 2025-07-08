@@ -3,7 +3,7 @@
 .PHONY: config test default compile clean distclean doc format tidy
 
 BUILDDIR = build
-PRESET  = gcc-debug
+PRESET  = gcc-release
 UNAME = $(shell uname -s)
 ifeq ($(UNAME),Darwin)
     PRESET  = appleclang-release

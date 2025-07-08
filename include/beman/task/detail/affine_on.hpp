@@ -25,14 +25,14 @@ struct affine_on_t {
 
 template <::beman::execution::sender Sender, ::beman::execution::scheduler Scheduler>
 struct affine_on_t::sender {
-    using sender_concept = ::beman::execution::sender_t;
-    template <typename Env>
+    using sender_concept                 = ::beman::execution::sender_t;
     static constexpr bool elide_schedule = ::std::same_as<::beman::task::detail::inline_scheduler, Scheduler>;
 
     template <typename Env>
     auto get_completion_signatures(const Env& env) const& noexcept {
-        if constexpr (elide_schedule<Env>) {
-            return ::beman::execution::get_completion_signatures(this->upstream, env);
+        if constexpr (elide_schedule) {
+            return ::beman::execution::get_completion_signatures(
+                ::std::remove_cvref_t<Sender>(::std::move(this->upstream)), env);
         } else {
             return ::beman::execution::get_completion_signatures(
                 ::beman::execution::continues_on(this->upstream, this->scheduler), env);
@@ -40,8 +40,9 @@ struct affine_on_t::sender {
     }
     template <typename Env>
     auto get_completion_signatures(const Env& env) && noexcept {
-        if constexpr (elide_schedule<Env>) {
-            return ::beman::execution::get_completion_signatures(this->upstream, env);
+        if constexpr (elide_schedule) {
+            return ::beman::execution::get_completion_signatures(
+                ::std::remove_cvref_t<Sender>(::std::move(this->upstream)), env);
         } else {
             return ::beman::execution::get_completion_signatures(
                 ::beman::execution::continues_on(::std::move(this->upstream), ::std::move(this->scheduler)), env);
@@ -55,7 +56,7 @@ struct affine_on_t::sender {
     template <::beman::execution::receiver Receiver>
     auto connect(Receiver&& receiver) const& {
         using env_t = decltype(::beman::execution::get_env(receiver));
-        if constexpr (elide_schedule<env_t>) {
+        if constexpr (elide_schedule) {
             return ::beman::execution::connect(this->upstream, ::std::forward<Receiver>(receiver));
         } else {
             return ::beman::execution::connect(::beman::execution::continues_on(this->upstream, this->scheduler),
@@ -64,8 +65,8 @@ struct affine_on_t::sender {
     }
     template <::beman::execution::receiver Receiver>
     auto connect(Receiver&& receiver) && {
-        using env_t = decltype(::beman::execution::get_env(receiver));
-        if constexpr (elide_schedule<env_t>) {
+        using env_t = ::std::remove_cvref_t<decltype(::beman::execution::get_env(receiver))>;
+        if constexpr (elide_schedule) {
             return ::beman::execution::connect(::std::move(this->upstream), ::std::forward<Receiver>(receiver));
         } else {
             return ::beman::execution::connect(
