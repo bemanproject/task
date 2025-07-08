@@ -3,15 +3,6 @@
 set(ALL_EXAMPLES co_await-task)
 set(ALL_EXAMPLES
     affinity
-    escaped-exception
-    co_await-result
-    friendly
-    issue-affine_on
-    issue-frame-allocator
-    issue-start-reschedules
-    issue-symmetric-transfer
-    loop
-    stop
     alloc
     c++now-affinity
     c++now-allocator
@@ -32,6 +23,10 @@ set(ALL_EXAMPLES
     friendly
     hello
     into_optional
+    issue-affine_on
+    issue-frame-allocator
+    issue-start-reschedules
+    issue-symmetric-transfer
     loop
     query
     result_example
