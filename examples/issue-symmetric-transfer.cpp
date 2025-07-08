@@ -22,6 +22,7 @@ int main() {
     struct inline_env {
         using scheduler_type = ex::inline_scheduler;
     };
+    [[maybe_unused]] auto env = ex::inline_scheduler{};
 
     ex::sync_wait(test<affine_env>()); // OK
     // ex::sync_wait(test<inline_env>()); // error: stack overflow without symmetric transfer

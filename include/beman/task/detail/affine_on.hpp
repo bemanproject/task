@@ -55,7 +55,6 @@ struct affine_on_t::sender {
 
     template <::beman::execution::receiver Receiver>
     auto connect(Receiver&& receiver) const& {
-        using env_t = decltype(::beman::execution::get_env(receiver));
         if constexpr (elide_schedule) {
             return ::beman::execution::connect(this->upstream, ::std::forward<Receiver>(receiver));
         } else {
@@ -65,7 +64,6 @@ struct affine_on_t::sender {
     }
     template <::beman::execution::receiver Receiver>
     auto connect(Receiver&& receiver) && {
-        using env_t = ::std::remove_cvref_t<decltype(::beman::execution::get_env(receiver))>;
         if constexpr (elide_schedule) {
             return ::beman::execution::connect(::std::move(this->upstream), ::std::forward<Receiver>(receiver));
         } else {
