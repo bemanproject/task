@@ -87,70 +87,65 @@ became aware of all but one of these concerns after the poll by LWG
 to forward the proposal for inclusion into C++26.  The rest of this
 section discusses these concerns:
 
-## Task Is Not Actually Lazily Started
+## Task Operation
 
-The wording for `task<...>::promise_type::initial_suspend` in
-[task.promise] p6 may imply that a `task` is eagerly started:
+This section groups three concerns relating to the way `task` gets
+started and stopped:
 
-> `auto initial_suspend() noexcept;`
->
-> _Returns:_ An awaitable object of unspecified type ([expr.await])
-> whose member functions arrange for
->
-> - the calling coroutine to be suspended,
-> - the coroutine to be resumed on an execution agent of the execution
->     resource associated with `SCHED(*this)`.
+1. `task` shouldn't reschedule upon `start()`.
+2. `task`s `co_await`ing `task`s shouldn't reschedule.
+3. `task` doesn't support symmetric Transfer.
 
-In particular the second bullet can be interpreted to mean that the
-task gets resumed immediately. That wouldn't actually work because
-`SCHED(*this)` only gets initialized when the `task` gets `connect`ed
-to a suitable receiver. The intention of the current specification
-is to establish the invariant that the coroutine is running on the
-correct scheduler when the coroutine is resumed (see discussion of
-`affine_on` below). The mechanisms used to achieve that are not
-detailed to avoid requiring that it gets scheduled. The formulation
-should, at least, be improved to clarify that the coroutine isn't
-resumed immediates, possibly using
+### Starting A `task` Should Not Unconditionally Reschedule
 
-> - the coroutine [to be resumed]{.rm}[resuming]{.add} on an execution
->     agent of the execution resource associated with `SCHED(*this)`
->     [when it gets resumed]{.add}.
+*TODO*
 
-The proposed fix from the issue is to specify that `initial_suspend()`
-always returns `suspend_always{}` and require that `start(...)`
-calls `handle.resume()` to resume the coroutine on the appropriate
-scheduler after `SCHED(*this)` has been initialized. The corresponding
-change could be
+Concern raised:
 
-> Change [task.promise] paragraph 6:
->
-> `auto initial_suspend() noexcept;`
->
-::: rm
-> _Returns:_ An awaitable object of unspecified type ([expr.await])
-> whose member functions arrange for:
->
-> - the calling coroutine to be suspended,
-> - the coroutine to be resumed on an execution agent of the execution
->     resource associated with `SCHED(*this)`.
-:::
-::: add
-> _Returns:_ `suspend_always{}`.
-:::
+> calling a task coroutine unconditionally schedules onto
+> its scheduler (a large performance bottleneck),
 
-The suggestion is to ensure that the task gets resumed on the
-correct associated context via added requirements on the receiver's
-`get_scheduler()` (see below).
+Example (see `issue-start-reschedules.cpp`):
 
-In separate discussions it was suggested to relax the specification
-of `initial_suspend()` to allow returning an awaiter which does
-semantically what `suspend_always` does but isn't necessary
-`suspend_always`. The proposal was to copy the wording of the
-`suspend_always` specification
-[[coroutine.trivial.awaitables]](https://eel.is/c++draft/coroutine.trivial.awaitables#lib:suspend_always).
-This specification just shows the class completion definition.
+```cpp
+ex::task<int> test(auto sched) {
+    std::cout << "init =" << std::this_thread::get_id() << "\n";
+    co_await ex::starts_on(sched, scheduler(), ex::just());
+    std::cout << "final=" << std::this_thread::get_id() << "\n";
+}
+```
 
-## Task Should Not Unconditionally Reschedule When Control Enters The Coroutine
+TODO turn into text
+
+- assuming an execution agent with only one thread is used, the
+    two thread ids need to be identical for scheduler affinity:
+    this is the affinity invariant of `task`
+- `ex::sync_wait(test(pool2.get_scheduler()))`: no scheduling needed
+    as the `task` is started on the same thread as the one used by
+    the `run_loop` within `sync_wait`.
+- `ex::sync_wait(ex::starts_on(pool1.get_scheduler(), test(pool2.get_scheduler())))`:
+    also no scheduling needed as `starts_on` provides a receiver with the same
+    scheduler it starts the child on.
+- the specification doesn't explicitly say that the `initial_suspend()`
+    awaiter reschedules but it specifies the that it resumes on the
+    scheduler's execution agent.
+- it seems to contradict the idea of scheduler affinity if the
+    thread ids printed in the example could be different, i.e., if it
+    is allowed to resume on a different execution agent than that
+    corresponding to `get_scheduler(get_env(rcvr))` for receiver
+    `rcvr` the task is connected to
+- if it is never possible that the execution agent on which the `task`
+    gets started mismatches the execution agent(s) from the receiver,
+    no scheduling for the initial resumption is needed but I don't
+    if that is guaranteed
+- my current implementation reschedules when the awaiter returned from
+    `initial_suspend()` resumes: doing so _may_ be unnecessary
+- I don't see how the coroutine could see what scheduler it is
+    started on, i.e., I don't know how the rescheduling can be avoided
+- if there is a way, however, the specification doesn't enforce
+    rescheduling as long as the coroutine resumes on the correct
+    scheduler
+
 
 The specification of `initial_suspend()` (assuming it is rephrased
 to not resume the coroutine immediately) doesn't really say it
@@ -217,6 +212,76 @@ Depending on the choice of `Env` this code may stack overflow:
 - I don't think an implementation is prohibited from providing
     an awaiter interface and taking advantage of symmetric transfer:
     how does the user tell?
+
+## Miscelleaneous
+
+The remaining concerns aren't as coupled to other concerns and
+discussed separately.
+
+### Task Is Not Actually Lazily Started
+
+The wording for `task<...>::promise_type::initial_suspend` in
+[task.promise] p6 may imply that a `task` is eagerly started:
+
+> `auto initial_suspend() noexcept;`
+>
+> _Returns:_ An awaitable object of unspecified type ([expr.await])
+> whose member functions arrange for
+>
+> - the calling coroutine to be suspended,
+> - the coroutine to be resumed on an execution agent of the execution
+>     resource associated with `SCHED(*this)`.
+
+In particular the second bullet can be interpreted to mean that the
+task gets resumed immediately. That wouldn't actually work because
+`SCHED(*this)` only gets initialized when the `task` gets `connect`ed
+to a suitable receiver. The intention of the current specification
+is to establish the invariant that the coroutine is running on the
+correct scheduler when the coroutine is resumed (see discussion of
+`affine_on` below). The mechanisms used to achieve that are not
+detailed to avoid requiring that it gets scheduled. The formulation
+should, at least, be improved to clarify that the coroutine isn't
+resumed immediates, possibly using
+
+> - the coroutine [to be resumed]{.rm}[resuming]{.add} on an execution
+>     agent of the execution resource associated with `SCHED(*this)`
+>     [when it gets resumed]{.add}.
+
+The proposed fix from the issue is to specify that `initial_suspend()`
+always returns `suspend_always{}` and require that `start(...)`
+calls `handle.resume()` to resume the coroutine on the appropriate
+scheduler after `SCHED(*this)` has been initialized. The corresponding
+change could be
+
+> Change [task.promise] paragraph 6:
+>
+> `auto initial_suspend() noexcept;`
+>
+::: rm
+> _Returns:_ An awaitable object of unspecified type ([expr.await])
+> whose member functions arrange for:
+>
+> - the calling coroutine to be suspended,
+> - the coroutine to be resumed on an execution agent of the execution
+>     resource associated with `SCHED(*this)`.
+:::
+::: add
+> _Returns:_ `suspend_always{}`.
+:::
+
+The suggestion is to ensure that the task gets resumed on the
+correct associated context via added requirements on the receiver's
+`get_scheduler()` (see below).
+
+In separate discussions it was suggested to relax the specification
+of `initial_suspend()` to allow returning an awaiter which does
+semantically what `suspend_always` does but isn't necessary
+`suspend_always`. The proposal was to copy the wording of the
+`suspend_always` specification
+[[coroutine.trivial.awaitables]](https://eel.is/c++draft/coroutine.trivial.awaitables#lib:suspend_always).
+This specification just shows the class completion definition.
+
+--------------------
 
 ## Unusual Allocator Customisation
 
@@ -325,54 +390,6 @@ or `continues_on(sender, sched)`:
 - Implementations can be required to do some of these optimisations in future
     revisions of the standard.
 - Note that avoiding scheduling work increases the chances of stack overflow.
-
-## Starting A `task` Reschedules
-
-Concern raised:
-
-> calling a task coroutine unconditionally schedules onto
-> its scheduler (a large performance bottleneck),
-
-Example (see `issue-start-reschedules.cpp`):
-
-```cpp
-ex::task<int> test(auto sched) {
-    std::cout << "init =" << std::this_thread::get_id() << "\n";
-    co_await ex::starts_on(sched, scheduler(), ex::just());
-    std::cout << "final=" << std::this_thread::get_id() << "\n";
-}
-```
-
-TODO turn into text
-
-- assuming an execution agent with only one thread is used, the
-    two thread ids need to be identical for scheduler affinity:
-    this is the affinity invariant of `task`
-- `ex::sync_wait(test(pool2.get_scheduler()))`: no scheduling needed
-    as the `task` is started on the same thread as the one used by
-    the `run_loop` within `sync_wait`.
-- `ex::sync_wait(ex::starts_on(pool1.get_scheduler(), test(pool2.get_scheduler())))`:
-    also no scheduling needed as `starts_on` provides a receiver with the same
-    scheduler it starts the child on.
-- the specification doesn't explicitly say that the `initial_suspend()`
-    awaiter reschedules but it specifies the that it resumes on the
-    scheduler's execution agent.
-- it seems to contradict the idea of scheduler affinity if the
-    thread ids printed in the example could be different, i.e., if it
-    is allowed to resume on a different execution agent than that
-    corresponding to `get_scheduler(get_env(rcvr))` for receiver
-    `rcvr` the task is connected to
-- if it is never possible that the execution agent on which the `task`
-    gets started mismatches the execution agent(s) from the receiver,
-    no scheduling for the initial resumption is needed but I don't
-    if that is guaranteed
-- my current implementation reschedules when the awaiter returned from
-    `initial_suspend()` resumes: doing so _may_ be unnecessary
-- I don't see how the coroutine could see what scheduler it is
-    started on, i.e., I don't know how the rescheduling can be avoided
-- if there is a way, however, the specification doesn't enforce
-    rescheduling as long as the coroutine resumes on the correct
-    scheduler
 
 ## The Environment Design Is Odd
 
