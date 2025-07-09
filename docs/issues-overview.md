@@ -234,3 +234,37 @@ the respective issue):
 - legacy APIs may need TLS to be set appropriately
 - objective: capture TLS before async, restore after
 - fix: use custom `affine_on` with wrapped scheduler, delegating
+
+
+# Outline
+
+## Major
+
+- [ ] `affine_on` - require more detailed specification - Dietmar will have a paper - get_scheduler semantics (Telecon during August, vote during Kona) - NB comment
+    - [ ] Missing a specification for a default implementation
+    - [ ] `affine_on` semantics are not clear
+    - [ ] `affine_on` might not have the right shape
+    - [ ] `affine_on` should probably not forward stop-requests to reschedule operation
+- [x] `task` is not actually lazily started - wording fix (should suspend always) (Dietmar’s paper)
+- [ ] `task` coroutine reschedules too often: - apply “known design” to optimize / fix (Dietmar’s paper)
+    - [ ] `task` should not unconditionally reschedule when control enters the coroutine
+    - [ ] `task` awaiting another task should not reschedule on resumption
+- [ ] `task` coroutine awaiting another task does not use symmetric-transfer - (Dietmar’s paper)
+- [ ] `task` allocation strategy
+    - [ ] `task allocator` customisation behaviour is inconsistent with generator
+    - [ ] `task` environment’s `allocator_type` overrides the parent environment’s `get_allocator`
+    - [ ] for `generator` an `allocator_arg, allocator` can always be used
+
+## Medium
+
+- [ ] `task::promise_type` should not contain a stop-source - (Dietmar’s paper)
+- [ ] `task::promise_type` wording assumes that stop-token is default constructible - (Dietmar’s paper)
+- [ ] `task` coroutine-state is not destroyed early enough after completing (optimization?) - (Dietmar’s paper)
+- [ ] `task::promise_type::get_env` seems to require an inefficient implementation (optimization?) - (Dietmar’s paper)
+
+## Minor issues
+
+- [ ] `task` does not accept awaiting types that provide `as_awaitable` but that do not satisfy sender concept
+- [ ] `task::promise_type` doesn’t use `with_awaitable_senders` - should it?
+- [ ] `task::promise_type::unhandled_stopped` should be marked `noexcept`
+

@@ -16,10 +16,9 @@ toc: false
 
 After the [task proposal](https://wg21.link/p3552) was voted to be
 forwarded to plenary for inclusion into C++26 a number of issues
-were brought up. The issues were either reported as an immediate
-reaction to the review. The description of individual issues may
-be incomplete and the list of issues may be incomplete. This paper
-tries to address these known issues.
+were brought up. The issues were reported using various means. This
+paper describes the issues and proposes potential changes to address
+them.
 
 # Change History
 
@@ -39,19 +38,20 @@ proposal as it currently is, I see two questions:
 2. Can the interface and specification of `task` be improved?
 
 I haven't heard any concern which implies that `task` as specified
-can't be used at all. Some of the concerns raised are about performance
-of `task`. Even if the semantic operations of `task` are exactly
-right, bad performance may be a reason why `task` can't be used in
-practice. Currently, I'm not in a position to produce any data
-showing that `task` performance is acceptable or that its performance
-is unacceptable.
+can't be used at all. There are some concerns which my imply otherwise
+but these are really issues with the current wording. Some of the
+concerns raised are about performance of `task`. Even if the semantic
+operations of `task` are exactly right, bad performance may be a
+reason why `task` can't be used in practice. Currently, I'm not in
+a position to produce any data showing that `task` performance is
+acceptable or that its performance is unacceptable.
 
 One statement from the planary was that `task` is the obvious name
 for a coroutine task and we should get it right. There are certainly
 improvements which can be applied. Although I'm not aware of anything
 concrete beyond the raised issues there is certainly potential for
 improvements. If the primary concern is that there may be better
-task interfaces in the future and a better `task` should get the
+task interfaces in the future and a better task should get the
 name `task`, it seems reasonable to rename the component. The
 original name used for the component was `lazy` and feedback from
 Hagenberg was to rename it `task`.
@@ -64,9 +64,17 @@ without concerns about using the good name for a version which is
 inferior to a future design. If the component should be renamed it
 is up to LEWG to acutally pick a name.
 
-It is also worth pointing out that it is possible to have more than
-one coroutine task component. Due to the design of coroutines and
-sender/receiver different coroutine tasks can interoperate.
+The naming concern isn't really specific to `task`: if we believe
+we can't change the API of a components in a future reversion of
+the standard, it is prudent to use a name which may get superseded.
+This argument is even stronger if we believe the ABI needs to be
+stable: it is actually quite unlikely that the very first implementation
+of a component in a standard library use the optimal interface and
+implementation.
+
+Specifically for `task` it is worth pointing out that multiple
+coroutine task components can coexist. Due to the design of coroutines
+and sender/receiver different coroutine tasks can interoperate.
 
 # The Concerns
 
@@ -98,10 +106,11 @@ task gets resumed immediately. That wouldn't actually work because
 `SCHED(*this)` only gets initialized when the `task` gets `connect`ed
 to a suitable receiver. The intention of the current specification
 is to establish the invariant that the coroutine is running on the
-correct scheduler when the coroutine is resumed. The mechanisms
-used to achieve that are not detailed to avoid requiring that it
-gets scheduled. The formulation should, at least, be improved to
-clarify that the coroutine isn't resumed immediates, possibly using
+correct scheduler when the coroutine is resumed (see discussion of
+`affine_on` below). The mechanisms used to achieve that are not
+detailed to avoid requiring that it gets scheduled. The formulation
+should, at least, be improved to clarify that the coroutine isn't
+resumed immediates, possibly using
 
 > - the coroutine [to be resumed]{.rm}[resuming]{.add} on an execution
 >     agent of the execution resource associated with `SCHED(*this)`
@@ -111,7 +120,7 @@ The proposed fix from the issue is to specify that `initial_suspend()`
 always returns `suspend_always{}` and require that `start(...)`
 calls `handle.resume()` to resume the coroutine on the appropriate
 scheduler after `SCHED(*this)` has been initialized. The corresponding
-change would be
+change could be
 
 > Change [task.promise] paragraph 6:
 >
@@ -132,6 +141,14 @@ change would be
 The suggestion is to ensure that the task gets resumed on the
 correct associated context via added requirements on the receiver's
 `get_scheduler()` (see below).
+
+In separate discussions it was suggested to relax the specification
+of `initial_suspend()` to allow returning an awaiter which does
+semantically what `suspend_always` does but isn't necessary
+`suspend_always`. The proposal was to copy the wording of the
+`suspend_always` specification
+[[coroutine.trivial.awaitables]](https://eel.is/c++draft/coroutine.trivial.awaitables#lib:suspend_always).
+This specification just shows the class completion definition.
 
 ## Task Should Not Unconditionally Reschedule When Control Enters The Coroutine
 
@@ -515,3 +532,9 @@ TODO add example and turn into text
 - using a custom scheduler with a custom implementation of
     `affine_on` allows this functionality (via the domain)
 - it would still be nice to have an easier interface
+
+
+# Potential Polls
+
+1. Should `task` be renamed to something else?
+2. Is the naming scheme `task@_year_@` an approach to be used?
