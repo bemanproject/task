@@ -110,7 +110,7 @@ the respective issue):
 
 => starts on get_scheduler, complete on the passed scheduler (which may get dropped)
 
-## `affine_on` schedule vs. stop token
+## `affine_on` schedule vs. stop token
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-should-probably-not-forward-stop-requests-to-reschedule-operation)
 
@@ -147,7 +147,7 @@ the respective issue):
 - fix: do it!
 - comment: for consistency it should be `noexcept`
 
-## allocator type not specified
+## allocator type not specified
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#behaviour-when-the-tasks-environment-type-does-not-specify-an-allocator_type)
 [DK](https://github.com/bemanproject/task/blob/issues/docs/issues.md#unusual-allocator-customisation)
@@ -197,7 +197,7 @@ the respective issue):
 - fix: don't have it: get it from env or stop source
 - comment: I think that is alrady allowed
 
-## coro frame destroyed too late
+## coro frame destroyed too late
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-coroutine-state-is-not-destroyed-early-enough-after-completing)
 
@@ -205,7 +205,7 @@ the respective issue):
 - fix: result in state, destroy before completing
 - comment: that is what I had hoped to say; may need wording fix
 
-## inefficient env
+## inefficient env
 
 [LB](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_typeget_env-seems-to-require-an-inefficient-implementation)
 [DK](https://github.com/bemanproject/task/blob/issues/docs/issues.md#the-environment-design-is-odd)
@@ -213,7 +213,7 @@ the respective issue):
 - `own_env` must copy lots of state
 - comment: `own_env` just allows a potential type-erase entity to be workable, primarily it is env
 
-## no completion scheduler
+## no completion scheduler
 
 [DK](https://github.com/bemanproject/task/blob/issues/docs/issues.md#no-completion-scheduler)
 
@@ -264,6 +264,6 @@ the respective issue):
 
 ## Minor issues
 
-- [ ] [`task` does not accept awaiting types that provide `as_awaitable`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-task-does-not-accept-awaiting-types-that-provide-as_awaitable-but-that-do-not-satisfy-sender-concept) but that do not satisfy sender concept
+- [x] [`task` does not accept awaiting types that provide `as_awaitable`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-task-does-not-accept-awaiting-types-that-provide-as_awaitable-but-that-do-not-satisfy-sender-concept) but that do not satisfy sender concept
 - [ ] [`task::promise_type` doesn’t use `with_awaitable_senders` - should it?](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-taskpromise_type-doesnt-use-with_awaitable_senders---should-it)
-- [ ] [`task::promise_type::unhandled_stopped` should be marked `noexcept`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_typeunhandled_stopped-should-be-marked-noexcept)
+- [x] [`task::promise_type::unhandled_stopped` should be marked `noexcept`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_typeunhandled_stopped-should-be-marked-noexcept)

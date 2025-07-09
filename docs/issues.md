@@ -87,6 +87,79 @@ became aware of all but one of these concerns after the poll by LWG
 to forward the proposal for inclusion into C++26.  The rest of this
 section discusses these concerns:
 
+## `affine_on` Concerns
+
+This section covers different concerns around the specification,
+or rather lack thereof, of `affine_on`. The `affine_on` is at the
+core of the scheduler affinity implementation: this algorithm is
+used to establish the invariant that a `task` executes on currently
+installed scheduler. The idea is that `affine_on(@_sndr_@, @_sch_@)`
+behaves like `continues_on(@_sndr_@, @_sch_@)` but it is customized
+to avoid actual scheduling when it knows that `@_sndr_@` completes
+on `@_sch_@`.
+
+To some extend `affine_on`'s specification is deliberately vague
+because currently the `execution` specification is lacking some
+tools which would allow omission of scheduling, e.g., for `just`
+which completes immediately with a result. While users can't
+necessarily tap into the customizations, yet, implementation could
+use tools like those proposed by [P3206](https://wg21.link/p3206)
+"A sender query for completion behaviour" using a suitable hidden
+name.
+
+### `affine_on` Semantics Are Not Clear
+
+Concern raised:
+
+> the semantics of the `affine_on` customisation point seems poorly
+> defined, or not exactly what we need it to be (how does the
+> operatiom map onto a scheduler and how does it determine whether
+> or not it needs to reschedule?),
+
+TODO turn into text
+
+Example (see `issue-affine_on.cpp`):
+
+```c++
+template <ex::sender Sender>
+ex::task<> test(Sender&& sender) {
+    co_await std::move(sender);
+}
+```
+
+The `co_await` awaits the result of `task`'s
+`promise_type::await_transform` which returns the result of
+`affine_on(sender, sched)` for the parameter `sender` and the
+scheduler `sched` associated with the `task`. `affine_on`
+in turn conditionally returns `sender` if it can determine that
+`sender` completes on the execution agent associated with `sched`
+or `continues_on(sender, sched)`:
+
+- Does `ex::sync_wait(test(ex::just()))` result the an operation
+    being scheduled? It can be statically determined that (the default)
+    `just()` doesn't change the execution agent
+- Does this use result in an operation being scheduled?
+
+    ```c++
+    ex::sync_wait(test(
+          ex::read_env(ex::get_scheduler)
+        | ex::let_value([](auto sched){ return ex::starts_on(sched, ex::just()); })
+    ));
+    ```
+
+    It can be dynamically determined that the completion scheduler is
+    identical to the expected scheduler and no scheduling is needed.
+- The specification is deliberately kept vague to allow future changes
+    to the behavior when implementation can detect more cases where no
+    scheduling is needed.
+- That direction was discussed in Hagenberg.
+- There [P3206](https://wg21.link/P3206) to define a corresponding interface.
+- Implementation can do something like that for standard library senders.
+- Implementations can be required to do some of these optimisations in future
+    revisions of the standard.
+- Note that avoiding scheduling work increases the chances of stack overflow.
+
+
 ## Task Operation
 
 This section groups three concerns relating to the way `task` gets
@@ -172,7 +245,7 @@ have a corresponding constraint. `task<...>` is a sender and
 where it can be used with standard library algorithms this constraint
 would hold.
 
-## No Support For Symmetric Transfer
+### No Support For Symmetric Transfer
 
 Concern raised:
 
@@ -204,86 +277,14 @@ Depending on the choice of `Env` this code may stack overflow:
     `inline_scheduler` or the default environment with such a
     scheduler may cause a stack overflow.
 
-- Agreed: like other senders, `task` doesn't have an awaitable
-    interface.
-- To guarantee scheduler affinity, it may be necessary to reschedule,
-    i.e., the whether symmetric transfer could be used is conditional.
+- Agreed: like other senders, `task` doesn't have an awaitable interface.
+- To guarantee scheduler affinity, it may be necessary to reschedule, i.e., the whether symmetric transfer could be used is conditional.
 - With scheduler affinity there isn't an issue (also see below).
-- I don't think an implementation is prohibited from providing
-    an awaiter interface and taking advantage of symmetric transfer:
-    how does the user tell?
+- I don't think an implementation is prohibited from providing an awaiter interface and taking advantage of symmetric transfer: how does the user tell?
 
-## Miscelleaneous
+## Allocation
 
-The remaining concerns aren't as coupled to other concerns and
-discussed separately.
-
-### Task Is Not Actually Lazily Started
-
-The wording for `task<...>::promise_type::initial_suspend` in
-[task.promise] p6 may imply that a `task` is eagerly started:
-
-> `auto initial_suspend() noexcept;`
->
-> _Returns:_ An awaitable object of unspecified type ([expr.await])
-> whose member functions arrange for
->
-> - the calling coroutine to be suspended,
-> - the coroutine to be resumed on an execution agent of the execution
->     resource associated with `SCHED(*this)`.
-
-In particular the second bullet can be interpreted to mean that the
-task gets resumed immediately. That wouldn't actually work because
-`SCHED(*this)` only gets initialized when the `task` gets `connect`ed
-to a suitable receiver. The intention of the current specification
-is to establish the invariant that the coroutine is running on the
-correct scheduler when the coroutine is resumed (see discussion of
-`affine_on` below). The mechanisms used to achieve that are not
-detailed to avoid requiring that it gets scheduled. The formulation
-should, at least, be improved to clarify that the coroutine isn't
-resumed immediates, possibly using
-
-> - the coroutine [to be resumed]{.rm}[resuming]{.add} on an execution
->     agent of the execution resource associated with `SCHED(*this)`
->     [when it gets resumed]{.add}.
-
-The proposed fix from the issue is to specify that `initial_suspend()`
-always returns `suspend_always{}` and require that `start(...)`
-calls `handle.resume()` to resume the coroutine on the appropriate
-scheduler after `SCHED(*this)` has been initialized. The corresponding
-change could be
-
-> Change [task.promise] paragraph 6:
->
-> `auto initial_suspend() noexcept;`
->
-::: rm
-> _Returns:_ An awaitable object of unspecified type ([expr.await])
-> whose member functions arrange for:
->
-> - the calling coroutine to be suspended,
-> - the coroutine to be resumed on an execution agent of the execution
->     resource associated with `SCHED(*this)`.
-:::
-::: add
-> _Returns:_ `suspend_always{}`.
-:::
-
-The suggestion is to ensure that the task gets resumed on the
-correct associated context via added requirements on the receiver's
-`get_scheduler()` (see below).
-
-In separate discussions it was suggested to relax the specification
-of `initial_suspend()` to allow returning an awaiter which does
-semantically what `suspend_always` does but isn't necessary
-`suspend_always`. The proposal was to copy the wording of the
-`suspend_always` specification
-[[coroutine.trivial.awaitables]](https://eel.is/c++draft/coroutine.trivial.awaitables#lib:suspend_always).
-This specification just shows the class completion definition.
-
---------------------
-
-## Unusual Allocator Customisation
+### Unusual Allocator Customisation
 
 Concern raised:
 
@@ -339,85 +340,7 @@ Depending on how the coroutine is invoked this may fail to compile:
 - doing so could be done later (things which currently don't compile start
     compiling) or as an NB comment
 
-## `affine_on` Underspecified
-
-Concern raised:
-
-> the semantics of the `affine_on` customisation point seems poorly
-> defined, or not exactly what we need it to be (how does the
-> operatiom map onto a scheduler and how does it determine whether
-> or not it needs to reschedule?),
-
-TODO turn into text
-
-Example (see `issue-affine_on.cpp`):
-
-```c++
-template <ex::sender Sender>
-ex::task<> test(Sender&& sender) {
-    co_await std::move(sender);
-}
-```
-
-The `co_await` awaits the result of `task`'s
-`promise_type::await_transform` which returns the result of
-`affine_on(sender, sched)` for the parameter `sender` and the
-scheduler `sched` associated with the `task`. `affine_on`
-in turn conditionally returns `sender` if it can determine that
-`sender` completes on the execution agent associated with `sched`
-or `continues_on(sender, sched)`:
-
-- Does `ex::sync_wait(test(ex::just()))` result the an operation
-    being scheduled? It can be statically determined that (the default)
-    `just()` doesn't change the execution agent
-- Does this use result in an operation being scheduled?
-
-    ```c++
-    ex::sync_wait(test(
-          ex::read_env(ex::get_scheduler)
-        | ex::let_value([](auto sched){ return ex::starts_on(sched, ex::just()); })
-    ));
-    ```
-
-    It can be dynamically determined that the completion scheduler is
-    identical to the expected scheduler and no scheduling is needed.
-- The specification is deliberately kept vague to allow future changes
-    to the behavior when implementation can detect more cases where no
-    scheduling is needed.
-- That direction was discussed in Hagenberg.
-- There [P3206](https://wg21.link/P3206) to define a corresponding interface.
-- Implementation can do something like that for standard library senders.
-- Implementations can be required to do some of these optimisations in future
-    revisions of the standard.
-- Note that avoiding scheduling work increases the chances of stack overflow.
-
-## The Environment Design Is Odd
-
-Concern raised:
-
-> the design of the `Environment` template parameter seems weird -
-> it's trying to be a trait-like class but also a `queryable`,
-
-TODO add example? turn into text
-
-- the `Enviroment` (i.e, second) template parameter has sort of
-    dual use:
-    1. It provides configurations for various types (`allocator_type`,
-        `scheduler_type`, `stop_source_type`, `error_type`)
-    2. An object of the type is created which is either initialized
-        with the receiver's environment or, if that isn't possibly,
-        default initialized. This object is then used to satisfy
-        queries if available. The actual logic is a bit more complicated,
-        actually, to allow capturing state depending on the receiver's
-        enironment type.
-- the functionality could be separated by naming the parameter `Configuration`
-    which may optionally provide an `environement_type` in addition to the
-    other type configurations
-- this change would slightly change the use but I think it would retain the
-    spirit of the current design
-- both approaches work
-
-## Shadowing The Environment Allocator Is Questionable
+### Shadowing The Environment Allocator Is Questionable
 
 Concern raised:
 
@@ -452,6 +375,182 @@ TODO add example? turn into text
     at least ignoring a mismatching allocator or producing a compile time
     error are options.
 
+## Stop Token Management
+
+### A Stop Source Always Needs To Be Created
+
+Concern raised:
+
+> the way the promise is worded seems to specify that a stop-source
+> is always constructed as a member of the coroutine promise - you
+> shoud really only need a new stop-source when adapting between
+> incompatable stop-token types, if everything is using
+> `inplace_stop_token` then it should just be passed through and have
+> no space overhead in the promise.
+
+TODO add example? turn into text
+
+- the stop source is an exposition-only member of the `promise_type`
+    and I don't think the existance of such a member has any implication
+    on whether such an object needs to exist or where it is created
+- an implementation can (and probably should) create the stop source in
+    the operation state object when `connect`ed to a receiver with an
+    an environment with a mismatching stop token.
+- if there is a concern with that the specification is unnecessarily
+    restrictive, it should be fixed to use a specifiation macro
+    similar to other specification macros used which refer to
+    entities in the operation state
+- there is certainly no design intend to create unnecessary stop sources
+    and I don't think the specification implies that it is required
+
+## Miscelleaneous Concerns
+
+The remaining concerns aren't as coupled to other concerns and
+discussed separately.
+
+### Task Is Not Actually Lazily Started
+
+The wording for `task<...>::promise_type::initial_suspend` in
+[[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
+p6 may imply that a `task` is eagerly started:
+
+> `auto initial_suspend() noexcept;`
+>
+> _Returns:_ An awaitable object of unspecified type ([expr.await])
+> whose member functions arrange for
+>
+> - the calling coroutine to be suspended,
+> - the coroutine to be resumed on an execution agent of the execution
+>     resource associated with `SCHED(*this)`.
+
+In particular the second bullet can be interpreted to mean that the
+task gets resumed immediately. That wouldn't actually work because
+`SCHED(*this)` only gets initialized when the `task` gets `connect`ed
+to a suitable receiver. The intention of the current specification
+is to establish the invariant that the coroutine is running on the
+correct scheduler when the coroutine is resumed (see discussion of
+`affine_on` below). The mechanisms used to achieve that are not
+detailed to avoid requiring that it gets scheduled. The formulation
+should, at least, be improved to clarify that the coroutine isn't
+resumed immediates, possibly changing the text like this:
+
+> - the coroutine [to be resumed]{.rm}[resuming]{.add} on an execution
+>     agent of the execution resource associated with `SCHED(*this)`
+>     [when it gets resumed]{.add}.
+
+The proposed fix from the issue is to specify that `initial_suspend()`
+always returns `suspend_always{}` and require that `start(...)`
+calls `handle.resume()` to resume the coroutine on the appropriate
+scheduler after `SCHED(*this)` has been initialized. The corresponding
+change could be
+
+Change [[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise) paragraph 6:
+
+> `auto initial_suspend() noexcept;`
+>
+::: rm
+> _Returns:_ An awaitable object of unspecified type ([expr.await])
+> whose member functions arrange for:
+>
+> - the calling coroutine to be suspended,
+> - the coroutine to be resumed on an execution agent of the execution
+>     resource associated with `SCHED(*this)`.
+:::
+::: add
+> _Returns:_ `suspend_always{}`.
+:::
+
+The suggestion is to ensure that the task gets resumed on the
+correct associated context via added requirements on the receiver's
+`get_scheduler()` (see below).
+
+In separate discussions it was suggested to relax the specification
+of `initial_suspend()` to allow returning an awaiter which does
+semantically what `suspend_always` does but isn't necessary
+`suspend_always`. The proposal was to copy the wording of the
+`suspend_always` specification
+[[coroutine.trivial.awaitables]](https://eel.is/c++draft/coroutine.trivial.awaitables#lib:suspend_always).
+This specification just shows the class completion definition.
+
+### Default Arguments for `task<T, E>` Missing
+
+The current specification of `task<T, E>` doesn't have any default arguments
+in its first declaration in [[execution.syn]](https://eel.is/c++draft/execution.syn). The intent was to default the
+type `T` to `void` and the environment `E` to `env<>`. That is, this change
+should be applied to [[execution.syn]](https://eel.is/c++draft/execution.syn):
+
+> ```
+>   ...
+>   // [exec.task]
+>   template <class T@[ = void]{.add}@, class Environment@[ = env<>]{.add}@>
+>   class task;
+>   ...
+> ```
+
+It isn't catastrophic if that change isn't made but it seems to
+improve usability without any drawbacks.
+
+### `unhandled_stopped()` Isn't `noexcept`
+
+The `unhandled_stopped()` member function of `task::promise_type`
+[[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
+is not currently marked as `noexcept`.
+
+As this method is generally called from the `set_stopped`
+completion-handler of a receiver (such as in [[exec.as.awaitable] p4.3](https://eel.is/c++draft/exec.as.awaitable#4.3))
+and is invoked without handler from a `noexcept` function, we should
+probably require that this function is marked `noexcept` as well.
+
+The equivalent method defined as part of the with_awaitable_senders
+base-class
+([[exec.with.awaitable.senders]](https://eel.is/c++draft/exec.with.awaitable.senders#1)
+p1) is also marked `noexcept`.
+
+This change should be applied to [[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise):
+
+> ```
+>     ...
+>     void uncaught_exception();
+>     coroutine_handle<> unhandled_stopped()@[ noexcept]{.add}@;
+> 
+>     void return_void(); // present only if is_void_v<T> is true;
+>     ...
+> ```
+>
+> ...
+>
+> ```
+> coroutine_handle<> unhandled_stopped()@[ noexcept]{.add}@;
+> ```
+>
+> [13]{.pnum} _Effects_: Completes the asynchronous operation associated with `STATE(*this)` by invoking `set_stopped(std::move(RCVR(*this)))`.
+
+### The Environment Design Is Odd
+
+Concern raised:
+
+> the design of the `Environment` template parameter seems weird -
+> it's trying to be a trait-like class but also a `queryable`,
+
+TODO add example? turn into text
+
+- the `Enviroment` (i.e, second) template parameter has sort of
+    dual use:
+    1. It provides configurations for various types (`allocator_type`,
+        `scheduler_type`, `stop_source_type`, `error_type`)
+    2. An object of the type is created which is either initialized
+        with the receiver's environment or, if that isn't possibly,
+        default initialized. This object is then used to satisfy
+        queries if available. The actual logic is a bit more complicated,
+        actually, to allow capturing state depending on the receiver's
+        enironment type.
+- the functionality could be separated by naming the parameter `Configuration`
+    which may optionally provide an `environement_type` in addition to the
+    other type configurations
+- this change would slightly change the use but I think it would retain the
+    spirit of the current design
+- both approaches work
+
 ## No Completion Scheduler
 
 Concern raised:
@@ -481,33 +580,51 @@ TODO add example? turn into text
     an error which should be corrected. As of know I don't know what a
     reasonable result may be.
 
-## A Stop Source Always Needs To Be Created
+### Awaitable non-`sender`s Are Not Supported (minor)
 
-Concern raised:
+The overload of `await_transform` described in
+[[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
+is constrained to require arguments to satisfy the
+[`sender`](https://eel.is/c++draft/exec.snd.concepts) concept.
+However, this precludes awaiting types that implement the
+[`as_awaitable()`](https://eel.is/c++draft/exec.as.awaitable)
+customization point but that do not satisfy the
+[`sender`](https://eel.is/c++draft/exec.snd.concepts) concept from
+being able to be awaited within a `task` coroutine.
 
-> the way the promise is worded seems to specify that a stop-source
-> is always constructed as a member of the coroutine promise - you
-> shoud really only need a new stop-source when adapting between
-> incompatable stop-token types, if everything is using
-> `inplace_stop_token` then it should just be passed through and have
-> no space overhead in the promise.
+This is inconsistent with the behaviour of the [`with_awaitable_senders`]()
+base class defined in
+[[exec.with.awaitable.senders]](https://eel.is/c++draft/exec.with.awaitable.senders),
+which only requires that the awaited value supports the
+[`as_awaitable()`](https://eel.is/c++draft/exec.as.awaitable)
+operation.
 
-TODO add example? turn into text
+The rationale for this is that the argument needs to be passed to
+the
+[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on)
+algorithm which currently requires its argument to model
+[`sender`](https://eel.is/c++draft/exec.snd.concepts). This requirement in turn is
+there because it is unclear how to guarantee scheduler affinity with an awaitable-only
+interface without wrapping a coroutine around the awaitable.
 
-- the stop source is an exposition-only member of the `promise_type`
-    and I don't think the existance of such a member has any implication
-    on whether such an object needs to exist or where it is created
-- an implementation can (and probably should) create the stop source in
-    the operation state object when `connect`ed to a receiver with an
-    an environment with a mismatching stop token.
-- if there is a concern with that the specification is unnecessarily
-    restrictive, it should be fixed to use a specifiation macro
-    similar to other specification macros used which refer to
-    entities in the operation state
-- there is certainly no design intend to create unnecessary stop sources
-    and I don't think the specification implies that it is required
+Do we want to consider relaxing this constraint to be consistent with the constraints
+on 
+[[exec.with.awaitable.senders]](https://eel.is/c++draft/exec.with.awaitable.senders)?
 
-## A Future Coroutine Feature Could Avoid `co_yield` For Errors
+This would require either:
+
+- relaxing the [`sender`](https://eel.is/c++draft/exec.snd.concepts)
+  constraint on the ~affine_on~ algorithm to also allow an argument
+  that has only an
+  [`as_awaitable()`](https://eel.is/c++draft/exec.as.awaitable) but
+  that did not satisfy the
+  [`sender`](https://eel.is/c++draft/exec.snd.concepts) concept.
+- extending the [`sender`](https://eel.is/c++draft/exec.snd.concepts)
+  concept to match types that provide the `.as_awaitable()`
+  member-function similar to how it supports types with `operator
+  co_await()` (see [[exec.connect]](https://eel.is/c++draft/exec.connect)).
+
+### A Future Coroutine Feature Could Avoid `co_yield` For Errors
 
 Concern raised:
 
@@ -527,7 +644,7 @@ TODO turn into text
     it seems to be a pure extension which can hopefully be integrated
     with the existing design
 
-## There Is No Hook To Capture/Restore TLS
+### There Is No Hook To Capture/Restore TLS
 
 This concern is the only one I was aware of for a few weeks prior
 to the Sofia meeting. I believe the necessary functionality can be
@@ -549,7 +666,6 @@ TODO add example and turn into text
 - using a custom scheduler with a custom implementation of
     `affine_on` allows this functionality (via the domain)
 - it would still be nice to have an easier interface
-
 
 # Potential Polls
 
