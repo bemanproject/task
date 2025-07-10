@@ -239,12 +239,12 @@ the respective issue):
 
 ## Major
 
-- [ ] `affine_on` - require more detailed specification - Dietmar will have a paper - get_scheduler semantics (Telecon during August, vote during Kona) - NB comment
-    - [ ] [`affine_on` is missing a specification for a default implementation](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-is-missing-a-specification-for-a-default-implementation)
-    - [ ] [`affine_on` semantics are not clear](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-semantics-are-not-clear)
-    - [ ] [`affine_on` might not have the right shape](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-might-not-have-the-right-shape)
-    - [ ] [`affine_on` should probably not forward stop-requests to reschedule operation](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-should-probably-not-forward-stop-requests-to-reschedule-operation)
-    - [ ] [`affine_on` customization for other senders](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#we-should-probably-define-customsiations-for-affine_on-for-some-other-senders)
+- [x] `affine_on` - require more detailed specification - Dietmar will have a paper - get_scheduler semantics (Telecon during August, vote during Kona) - NB comment
+    - [x] [`affine_on` is missing a specification for a default implementation](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-is-missing-a-specification-for-a-default-implementation)
+    - [x] [`affine_on` semantics are not clear](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-semantics-are-not-clear)
+    - [x] [`affine_on` might not have the right shape](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-might-not-have-the-right-shape)
+    - [x] [`affine_on` should probably not forward stop-requests to reschedule operation](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-should-probably-not-forward-stop-requests-to-reschedule-operation)
+    - [x] [`affine_on` customization for other senders](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#we-should-probably-define-customsiations-for-affine_on-for-some-other-senders)
 - [x] [`task` is not actually lazily started](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-is-not-actually-lazily-started) - wording fix (should suspend always) (Dietmar’s paper)
 - [ ] [`task` coroutine reschedules too often](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-coroutine-reschedules-too-often): - apply “known design” to optimize / fix (Dietmar’s paper)
     - [ ] [`task` should not unconditionally reschedule when control enters the coroutine](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-should-not-unconditionally-reschedule-when-control-enters-the-coroutine)

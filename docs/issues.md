@@ -107,58 +107,314 @@ use tools like those proposed by [P3206](https://wg21.link/p3206)
 "A sender query for completion behaviour" using a suitable hidden
 name.
 
+### `affine_on` Default Implementation Lacks a Specification
+
+The wording of
+[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on)
+doesn't have a specification for the default implementation. For
+other algorithms the default implementation is specified. To resolve
+this concern add a new paragraph in
+[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on)
+to provide a specification for the default implementation:
+
+::: add
+> [5]{.pnum} Let `sndr` and `env` be subexpressions such that `Sndr`
+> is `decltype((sndr))`. If `@_sender-for_@<Sndr, affine_on_t>` is
+> `false`, then the expression `affine_on.transform_sender(sndr, env)` is
+> ill-formed; otherwise, it is equivalent to:
+>
+> ```
+> auto [_, sch, child] = sndr;
+> return transform_sender(
+>   @_query-with-default_@(get_doman, sch, default_domain()),
+>   continues_on(std::move(child), std::move(sch)));
+> ```
+>
+> except that `sch` is only evaluated once.
+:::
+
+The intention for `affine_on` was to all optimization/customization
+in a way reducing the necessary scheduling: if the implementation
+can determine if a sender completed already on the correct execution
+agent it should be allowed to avoid scheduling. That may be achieved
+by using `get_completion_scheduler<set_value_t>` of the sender,
+using (for now implementatio specific) queries like those proposed
+by
+[P3206 "A sender query for completion behaviour"](https://wg21.link/P3206),
+or some other means. Unfortunately, the specification proposed above
+seems to disallow implementation specific techniques to avoid
+scheduling. Future revisions of the standard could require some of
+the techniques to avoid scheduling assuming the necessary infrastructure
+gets standardized.
+
 ### `affine_on` Semantics Are Not Clear
 
-Concern raised:
+The wording in
+[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on)
+p5 says:
 
-> the semantics of the `affine_on` customisation point seems poorly
-> defined, or not exactly what we need it to be (how does the
-> operatiom map onto a scheduler and how does it determine whether
-> or not it needs to reschedule?),
+> ...  Calling `start(op)` will start `sndr` on the current execution
+> agent and execution completion operations on `out_rcvr` on an
+> execution agent of the execution resource associated with `sch`.
+> If the current execution resource is the same as the execution
+> resource associated with `sch`, the completion operation on
+> `out_rcvr` may be called before `start(op)` completes. If scheduling
+> onto `sch` fails, an error completion on `out_rcvr` shall be
+> executed on an unspecified execution agent.
 
-TODO turn into text
+The sentence If the current execution resource is the same as the
+execution resource associated with `sch` is not clear to which
+execution resource is the "current execution resource". It could
+be the "current execution agent" that was used to call `start(op)`,
+or it could be the execution agent that the predecessor completes
+on.
 
-Example (see `issue-affine_on.cpp`):
+The intended meaning for "current execution resource" was to refer
+to the execution resource of the execution agent that was used to
+call `stop(op)`. The specification could be clarified by changing
+the wording to become:
 
-```c++
-template <ex::sender Sender>
-ex::task<> test(Sender&& sender) {
-    co_await std::move(sender);
+> ...  Calling `start(op)` will start `sndr` on the current execution
+> agent and execution completion operations on `out_rcvr` on an
+> execution agent of the execution resource associated with `sch`.
+> If the [current]{.rm} execution resource [of the execution agent
+> that was used to invoke `start(op)` ]{.add} is the same as the
+> execution resource associated with `sch`, the completion operation
+> on `out_rcvr` may be called before `start(op)` completes. If
+> scheduling onto `sch` fails, an error completion on `out_rcvr`
+> shall be executed on an unspecified execution agent.
+
+It is also not clear what the actual difference in semantics
+between `continues_on` and `affine_on` is. The `continues_on`
+semantics already requires that the resulting sender completes on
+the specified schedulers execution agent. It does not specify that
+it must evaluate a `schedule()` (although that is what the default
+impl does), and so in theory it already permits an
+implementation/customization to skip the schedule (e.g. if the child
+senders completion scheduler was equal to the target scheduler).
+
+The key semantic that we want here is to specify one of two possible
+semantics that differ from `continues_on`:
+
+1. That the completion of an `affine_on` sender will occur on the
+    same scheduler that the operation started on. This is a slightly
+    stronger requirement than that of `continues_on`, in that it
+    puts a requirement on the caller of `affine_on` to ensure that
+    the operation is started on the scheduler passed to `affine_on`,
+    but then also grants permission for the operation to complete
+    inline if it completes synchronously.
+2. That the completion of an `affine_on` sender will either complete
+    inline on the execution agent that it was started on, or it
+    will complete asynchronously on an execution agent associated
+    with the provided scheduler. This is a slightly more permissive
+    than option 1. in that it permits the caller to start on any
+    context, but also is no longer able to definitively advertise
+    a completion context, since it might now complete on one of two
+    possible contexts (even if in many cases those two contexts
+    might be the same). This weaker semantic can be used in conjunction
+    with knowledge by the caller that they will start the operation
+    on a context associated with the same scheduler passed to
+    `affine_on` to ensure that the operation will complete on the
+    given scheduler.
+
+The description in the paper at the Hagenberg meeting assumed that
+`task` uses `continues_on` directly to achieve scheduler affinity.
+During the SG1 discussion it was requested that the approach to
+scheduler affinity doesn't use `continues_on` directly but rather
+uses a different algorithm which can be customized separately. This
+is the algorithm now named `affine_on`. The intention was that
+`affine_on` can avoid scheduling in more cases than `continues_on`.
+
+It is worth noting that an implementation can't determine the
+execution resource of the execution agent which invoked `start(op)`
+directly. If `rcvr` is the receiver used to create `op` it can be
+queried for `get_scheduler(get_env(rcvr))` which is intended to
+yield this execution resource. However, there is no guarantee that
+this is the case [yet?].
+
+The intended direction here is to pursue the second possibility
+mentioned above. Compared to `continues_on` that would effectively
+relax the requirement that `affine_on` completes on `sch` if `sender`
+doesn't actually change schedulers and completes inline: if `start(op)`
+gets invoked on an execution agents which matches `sch`'s execution
+resources the guarantee holds but `affine_on` would be allowed to
+complete on the execution agent `start(op)` was invoked. It is upon
+the user to invoke `start(op)` on the correct execution agent.
+
+Another difference to `continues_on` is that `affine_on` can be
+separately customized.
+
+### `affine_on`'s Shape May Not Be Correct
+
+The `affine_on` algorithm defined in
+[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on) takes two arguments; a
+[`sender`](https://eel.is/c++draft/exec.snd.concepts) and a
+[`scheduler`](https://eel.is/c++draft/exec.sched).
+
+As mentioned above, the semantic that we really want for the purpose
+in coroutines is that the operation completes on the same execution
+context that it started on. This way, we can ensure, by induction,
+that the coroutine which starts on the right context, and resumes
+on the same context after each suspend-point, will itself complete
+on the same context.
+
+This then also begs the question: Could we just take the scheduler
+that the operation will be started on from the
+[`get_scheduler`](https://eel.is/c++draft/exec.get.scheduler) query
+on the receivers environment and avoid having to explicitly pass
+the scheduler as an argument?
+
+To this end, we should consider potentially simplifying the `affine_on`
+algorithm to just take an input sender and to pick up the scheduler
+that it will be started on from the receivers environment and promise
+to complete on that context.
+
+For example, the
+[`await_transform`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html?validation_key=7c6057b778f7a41d2ba63fd94676bf5e#class-taskpromise_type-task.promise)
+function could potentially be changed to return:
+`as_awaitable(affine_on(std::forward<Sndr>(sndr)))`.  Then we could
+define the `affine_on.transform_sender(sndr, env)` expression (which
+provides the default implementation) to be equivalent to
+`continues_on(sndr, get_scheduler(env))`.
+
+Such an approach would also a require change to the semantic
+requirements of `get_scheduler(get_env(rcvr))` to require that
+`start(op)` is called on that context.
+
+This change isn't strictly necessary, though. The interface of
+`affine_on` as is can be used. Making this change does improve the
+design. Nothing outside of `task` is currently using `affine_on`
+and as it is an algorithm tailored for `task`'s needs it seems
+reasonable to make it fit this use case exactly. This change would
+also align with the direction that the execution agent used to
+invoke `start(op)` matches the execution resource of
+`get_scheduler(get_env(rcvr))`.
+
+### `affine_on` Shouldn't Forward Stop Requests To Scheduling Operations
+
+The `affine_on` algorithm is used by the `task` coroutine to ensure
+that the coroutine always resumes back on its associated scheduler
+by applying the `affine_on` algorithm to each awaited value in a
+`co_await` expression.
+
+In cases where the awaited operation completes asynchronously,
+resumption of the coroutine will be scheduled using the coroutines
+associated scheduler via a
+[`schedule`](https://eel.is/c++draft/exec.schedule) operation.
+
+If that schedule operation completes with `set_value` then the
+coroutine successfully resumes on its associated execution context.
+However, if it completes with `set_error` or `set_stopped` then resuming
+the coroutine on the execution context of the completion is not
+going to preserve the invariant that the coroutine is always going
+to resume on its associated context.
+
+For some cases this may not be an issue, but for other cases,
+resuming on the right execution context may be important for
+correctness, even during exception unwind or due to cancellation.
+For example, destructors may require running in a UI thread in order
+to release UI resources. Or the associated scheduler may be a strand
+(which runs all tasks scheduled to it sequentially) in order to
+synchronise access to shared resources used by destructors.
+
+Thus, if a stop-request has been sent to the coroutine, that
+stop-request should be propagated to child operations so that the
+child operation it is waiting on can be cancelled if necessary, but
+should probably not be propagated to any schedule operation created
+by the implicit `affine_on` algorithm as this is needed to complete
+successfully in order to ensure the coroutine resumes on its
+associated context.
+
+One option to work around this with the status-quo would be to
+define a scheduler adapter that adapted the underlying `schedule()`
+operation to prevent passing through stop-requests from the parent
+environment (e.g. applying the [`unstoppable`](https://wg21.link/p3284)
+adapter). If failing to reschedule onto the associated context was
+a fatal error, you could also apply a `terminate_on_error` adaptor
+as well.
+
+Then the user could apply this adapter to the scheduler before
+passing it to the `task`.
+
+For example:
+
+```
+template<std::execution::scheduler S>
+struct infallible_scheduler {
+  using scheduler_concept = std::execution::scheduler_t;
+  S scheduler;
+  auto schedule() {
+    return unstoppable(terminate_on_error(std::execution::schedule(scheduler)));
+  }
+  bool operator==(const infallible_scheduler&) const noexcept = default;
+};
+template<std::execution::scheduler S>
+infallible_scheduler(S) -> infallible_scheduler<S>;
+
+std::execution::task<void, std::execution::env<>> example() {
+  co_await some_cancellable_op();
+}
+
+std::execution::task<void, std::execution::env<>> caller() {
+  std::execution::scheduler auto sched = co_await std::execution::read_env(get_scheduler);
+  co_await std::execution::on(infallible_scheduler{sched}, example());
 }
 ```
 
-The `co_await` awaits the result of `task`'s
-`promise_type::await_transform` which returns the result of
-`affine_on(sender, sched)` for the parameter `sender` and the
-scheduler `sched` associated with the `task`. `affine_on`
-in turn conditionally returns `sender` if it can determine that
-`sender` completes on the execution agent associated with `sched`
-or `continues_on(sender, sched)`:
+However, this approach has the downside that this scheduler behaviour
+now also applies to all other uses of the scheduler - not just the
+uses required to ensure the coroutines invariant of always resuming
+on the associated context.
 
-- Does `ex::sync_wait(test(ex::just()))` result the an operation
-    being scheduled? It can be statically determined that (the default)
-    `just()` doesn't change the execution agent
-- Does this use result in an operation being scheduled?
+Other ways this could be tackled include:
 
-    ```c++
-    ex::sync_wait(test(
-          ex::read_env(ex::get_scheduler)
-        | ex::let_value([](auto sched){ return ex::starts_on(sched, ex::just()); })
-    ));
-    ```
+- Making it the default behaviour of `affine_on` to suppress stop
+    requests for the scheduling operations. That would mean that
+    `affine_on` won't delegate to [`continues_on`]().
+- Somehow making the behaviour a policy decision specified via the
+    `Environment` template parameter of the `task`.
+- Somehow using domain-based customisation to allow the coroutine
+    to customise the behaviour of `affine_on`.
+- Making the `task::promise_type::await_transform` apply this adapter
+    to the scheduler passed to `affine_on`. i.e. it calls
+    `affine_on(std::forward<Sndr>(sndr), infallible_scheduler{SCHED(*sched)})`.
+    Taking this route would mean that the shape of `affine_on` should
+    not be changed.
 
-    It can be dynamically determined that the completion scheduler is
-    identical to the expected scheduler and no scheduling is needed.
-- The specification is deliberately kept vague to allow future changes
-    to the behavior when implementation can detect more cases where no
-    scheduling is needed.
-- That direction was discussed in Hagenberg.
-- There [P3206](https://wg21.link/P3206) to define a corresponding interface.
-- Implementation can do something like that for standard library senders.
-- Implementations can be required to do some of these optimisations in future
-    revisions of the standard.
-- Note that avoiding scheduling work increases the chances of stack overflow.
+### `affine_on` Customization For Other Senders
 
+Assuming the the `affine_on` algorithm semantics are changed to
+just require that it completes either inline or on the context of
+the receiver environments `get_scheduler` query, then there are
+probably some other algorithms that could either make use of
+this, or provide customisations for it that short-circuit the need
+to schedule unnecessarily.
+
+For example:
+
+- `affine_on(just(args...))` could be simplified to `just(args...)`
+- `affine_on(on(sch, sndr))` can be simplified to `on(sch, sndr)`
+    as on already provides `affine_on`-like semantics
+- The `counting_scope::join` sender currently already provides
+    `affine_on`-like semantics. 
+    - We could potentially simplify this sender to just complete
+        inline unless the join-sender is wrapped in `affine_on`, in
+        which case the resulting `affine_on(scope.join())` sender would
+        have the semantics that `scope.join()` has today.
+    - Alternatively, we could just customise `affine_on(scope.join())`
+        to be equivalent to `scope.join()`.
+- Other similar senders like those returned from
+    `bounded_queue::async_push` and `bounded_queue::async_pop` which
+    are defined to return a sender that will resume on the original
+    scheduler.
+
+The intended use of `affine_on` is to avoid scheduling where the
+algorithm already resumes on a suitable execution agent. However,
+as the proposal was late it didn't require potential optimizations.
+The intend was to leave the specification of the default implementation
+vague enough to let implementations avoid scheduling where they
+know it isn't needed. Making these a requirement is intended for
+future revisions of the standard.
 
 ## Task Operation
 
