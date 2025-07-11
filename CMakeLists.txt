@@ -35,14 +35,14 @@ FetchContent_Declare(
     execution
     # SOURCE_DIR <path-to>/execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG 578c05
+    GIT_TAG fa6d441
 )
 FetchContent_MakeAvailable(execution)
 FetchContent_Declare(
     net
     # SOURCE_DIR <path-to>/net
     GIT_REPOSITORY https://github.com/bemanproject/net
-    GIT_TAG 53a8738
+    GIT_TAG ea1fd8f
 )
 if(NOT WIN32)
     FetchContent_MakeAvailable(net)
