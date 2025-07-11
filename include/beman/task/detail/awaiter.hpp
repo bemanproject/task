@@ -56,7 +56,6 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
         this->scheduler.emplace(
             this->template from_env<scheduler_type>(::beman::execution::get_env(parent.promise())));
         this->parent = ::std::move(parent);
-        assert(this->parent);
         return this->handle.start(this);
     }
     auto await_resume() { return this->result_resume(); }
@@ -74,7 +73,6 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
                 ::beman::execution::get_scheduler(::beman::execution::get_env(this->parent.promise()))) {
                 this->reschedule.emplace(this->parent.promise(), this);
                 this->reschedule->start();
-                std::cout << "awaiter rescheduled()\n";
                 return ::std::noop_coroutine();
             }
         }

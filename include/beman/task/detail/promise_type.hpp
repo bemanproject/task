@@ -70,7 +70,7 @@ class promise_type
 
     auto get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
 
-    template <::beman::execution::sender Sender, typename... A>
+    template <::beman::execution::sender Sender>
     auto await_transform(Sender&& sender) noexcept {
         if constexpr (requires {
                           ::std::forward<Sender>(sender).as_awaitable(*this);
