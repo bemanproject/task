@@ -1,7 +1,7 @@
 ---
 title: Coroutine Task Issues
-document: D0000R0
-date: 2025-06-22
+document: D37960
+date: 2025-07-13
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -11,7 +11,7 @@ author:
       email: <dkuhl@bloomberg.net>
 source:
     - https://github.com/bemanproject/task/doc/issues.md
-toc: false
+toc: true
 ---
 
 After the [task proposal](https://wg21.link/p3552) was voted to be
@@ -425,6 +425,10 @@ started and stopped:
 2. `task`s `co_await`ing `task`s shouldn't reschedule.
 3. `task` doesn't support symmetric Transfer.
 
+All three concerns are quite related and can be addressed by
+`task<...>` using a suitable awaiter when `co_await`ing another
+`task<...>`.
+
 ### Starting A `task` Should Not Unconditionally Reschedule
 
 *TODO*
@@ -728,7 +732,7 @@ semantically what `suspend_always` does but isn't necessary
 [[coroutine.trivial.awaitables]](https://eel.is/c++draft/coroutine.trivial.awaitables#lib:suspend_always).
 This specification just shows the class completion definition.
 
-### Default Arguments for `task<T, E>` Missing
+### `task<T, E>` Has No Default Arguments
 
 The current specification of `task<T, E>` doesn't have any default arguments
 in its first declaration in [[execution.syn]](https://eel.is/c++draft/execution.syn). The intent was to default the
@@ -807,36 +811,32 @@ TODO add example? turn into text
     spirit of the current design
 - both approaches work
 
-## No Completion Scheduler
+### No Completion Scheduler
 
-Concern raised:
+The concern raised is that `task` doesn't define a `get_env` that
+returns an environent with a `get_completion_scheduler<Tag>` query.
+As a result, it will be necessary to reschedule in situations although
+the `task` already completes on the correct scheduler.
 
-> task doesn't define `get_env` that returns an env with a
-> completion-scheduler, this means awaiting a task from within a
-> coroutine will always reschedule back onto the parent coroutine's
-> context - so you schedule when entering a coroutine and schedule
-> when resuming - very inefficient,
+The query `get_completion_scheduler(env)` operates on the sender's
+enviroment, i.e., it would operate on the `task`'s enironment.
+However, when the `task` is created it has no information about the
+scheduler, yet, it is going to use. The entire information the
+`task` has is what is passed to the corouting [factory] function.
+The information about any scheduling gets provided when the `task`
+is `connect`ed to a receiver: the receiver provides the queries on
+where the task is started (`get_scheduler`). The `task` may complete
+on this scheduler assuming the scheduler isn't changed (using
+`co_awaiit change_coroutine_scheduler(sch)`).
 
-TODO add example? turn into text
+The only place where a `task` actually knows its completion scheduler
+is once it has completed. However, there is no query or environment
+defined for completed operation states. Thus, it seems there is no
+way where a `get_completion_scheduler` would be useful. A future
+evolution of the sender/receiver interface may change that in which
+case `task` should be revisted.
 
-- `get_completion_scheduler(env)` is a query operating on the sender's
-    enviroment, i.e., it would operate on the `task`'s enironment.
-- a `task` is created without any information of scheduling at all:
-    the only state it gets are the arguments passed to the coroutine
-    [factory] function and what the coroutine uses for scheduling is
-    unknown!
-- Once the `task` is `connect`ed to a receiver, the resulting operation
-    state could be inspected for its complection scheduler - if queries
-    were defined on operation states
-- I believe a similar issue exists in other contexts where a sender can't
-    tell on which scheduler it may complete until it is actually `connect`ed
-    to a receiver.
-- If there is a meaningful way to determine the completion scheduler for a
-    `task` I'd consider the omission of a `get_completion_scheduler` query
-    an error which should be corrected. As of know I don't know what a
-    reasonable result may be.
-
-### Awaitable non-`sender`s Are Not Supported (minor)
+### Awaitable non-`sender`s Are Not Supported
 
 The overload of `await_transform` described in
 [[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
@@ -870,7 +870,7 @@ on
 This would require either:
 
 - relaxing the [`sender`](https://eel.is/c++draft/exec.snd.concepts)
-  constraint on the ~affine_on~ algorithm to also allow an argument
+  constraint on the `affine_on` algorithm to also allow an argument
   that has only an
   [`as_awaitable()`](https://eel.is/c++draft/exec.as.awaitable) but
   that did not satisfy the
@@ -882,48 +882,71 @@ This would require either:
 
 ### A Future Coroutine Feature Could Avoid `co_yield` For Errors
 
-Concern raised:
+The mechanism to complete with an error without using an exception
+uses `co_yield with_error(x)`. This use may surprise users as
+`co_yield`ing is normally assumed not to be a final operation. A
+future language change may provide a better way to achieve the
+objective of reporting errors without using exceptions.
 
-> I would prefer a language change to avoid the need for the hack using
-> `co_yield with_error(x)`.
-
-TODO turn into text
-
-- yes - a future revision of the C++ standard may provide facilities
-    which result in a better design for pretty much anything.
-- assuming such a language change gets proposed reasonably early (there
-    are no existing `task` implementations and there is certainly none
-    which promises ABI stability for the next few years) a corresponding
-    change can be taken into account such that a future revision can
-    actually change the interface
-- I don't know what the shape of the envisioned language change is but
-    it seems to be a pure extension which can hopefully be integrated
-    with the existing design
+Using not, yet, proposed features which may become part of a future
+revision of the C++ standard may always provide facilities which
+result in a better design for pretty much anything. There is no
+current `task` implementation and certainly none which promises ABI
+stability. Assuming a corresponding language change gets proposed
+reasonably early for the next cycle, implementation can take it into
+account for possibly improving the interface without the need to
+break ABI. The shape of the envisioned language change is unknown
+but most likely it is an extension which hopefully be integrated
+with the existing design. The functionality to use `co_yield`
+would, however, continue to exist until it eventually gets
+deprecated and removed (assuming a better alternative emerges).
 
 ### There Is No Hook To Capture/Restore TLS
 
 This concern is the only one I was aware of for a few weeks prior
 to the Sofia meeting. I believe the necessary functionality can be
 implemented although it is possibly harder to do than with more
-direct support.
+direct support. The concern raised is that xisting code accesses
+thread local storage (TLS) to store context information. When a
+`co_await` actually suspends it is possible that a different task
+running on the same thread replaces used TLS data or the task gets
+resumed on a different thread of a thread pool. In that case it is
+necessary to capture the TLS variables prior to suspending and
+restoring them prior to resuming the coroutine.  There is currently
+no way to actually do that.
 
-Concern raised:
+The sender/receiver approach to propagating context information
+isn't using TLS but rather the environments accessed via the receiver.
+However, existing software does use TLS and at least for migration
+corresponding support may be necessary. One way to implement this
+functionality is using a scheduler adapter with a customized
+`affine_on` algorithm:
 
-> Existing code accesses TLS to store context information. When
-> a `co_await` actually suspends it is possible that a different
-> task running on the same thread replaces used TLS data or the
-> task gets resumed on a different thread of a thread pool. In
-> that case it is necessary to capture the TLS variables prior
-> to suspending and restoring them prior to resuming the coroutine.
-> There is currently no way to actually do that.
+- When the `affine_on` algorithm is started, it captures the relevant
+    TLS data into the operation state and then starts `affine_on`
+    for the adapted scheduler with a receiver observing the
+    completions.
+- When the adapted scheduler invokes any of the completion signals
+    the TLS data is restored before invoke the algorithms completion
+    signal.
 
-TODO add example and turn into text
-
-- using a custom scheduler with a custom implementation of
-    `affine_on` allows this functionality (via the domain)
-- it would still be nice to have an easier interface
+Support for optionally capturing some state before starting a child
+operation and restoring the captured started before resuming could
+be added to the `task`, avoiding the need to use custom scheduling.
+Doing so would yield a nicer and easier to use interface. In
+environment where TLS is currently used and developers move to an
+asychronous model, failure to capture and restore data in TLS is a
+likely source of errors. However, it will be necessary to specify
+what data needs to be stored, i.e., the problems can't be automatically
+avoided.
 
 # Potential Polls
 
 1. Should `task` be renamed to something else?
 2. Is the naming scheme `task@_year_@` an approach to be used?
+
+# Acknowledgement
+
+The issue descriptions are largely based on a draft written by
+Lewis Baker. Lewis Baker and Tomasz Kamiński contributed to the
+discussions towards addressing the issues.

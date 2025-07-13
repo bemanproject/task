@@ -266,4 +266,10 @@ the respective issue):
 
 - [x] [`task` does not accept awaiting types that provide `as_awaitable`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-task-does-not-accept-awaiting-types-that-provide-as_awaitable-but-that-do-not-satisfy-sender-concept) but that do not satisfy sender concept
 - [ ] [`task::promise_type` doesn’t use `with_awaitable_senders` - should it?](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-taskpromise_type-doesnt-use-with_awaitable_senders---should-it)
+- [x] `task<T, E>` Has No Default Arguments
 - [x] [`task::promise_type::unhandled_stopped` should be marked `noexcept`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_typeunhandled_stopped-should-be-marked-noexcept)
+- [ ] The Environment Design Is Odd
+- [x] No Completion Scheduler
+- [x] Awaitable non-`sender`s Are Not Supported
+- [x] Future Coroutine Features Could avoid co_yield with_error.
+- [x] No hook to capture/restore TLS

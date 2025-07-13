@@ -76,6 +76,7 @@ struct affine_on_t::sender {
 } // namespace beman::task::detail
 
 namespace beman::task {
+using affine_on_t = ::beman::task::detail::affine_on_t;
 inline constexpr ::beman::task::detail::affine_on_t affine_on{};
 }
 
