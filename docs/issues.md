@@ -648,66 +648,92 @@ requirement on `generator` in a future revision of the C++ standard.
 
 ### Shadowing The Environment Allocator Is Questionable
 
-Concern raised:
+The `get_allocator` query on the environment of receiver passed to
+`co_await`ed senders always returns the allocator determined when
+the coroutine frame is created.  The allocator provided by the
+environment of receiver the `task` is `connect`ed to is hidden.
 
-> I'm unsure whether the shadowing of the `get_allocator` query
-> on the parent environment with the coroutine promise's allocator
-> is the behavior we really wnat here.,
+Creating a coroutine (calling the coroutine function) chooses the
+allocotor for the coroutine frame, either explicitly specified or
+implicitly determined. Either way the coroutine frame is allocated
+when the function is called. At this point the coroutine isn't
+`connect`ed to a receiver, yet.  The fundamental idea of the allocator
+model is that children of an entity use the same allocator as their
+parent unless an allocator is explicitly specified for a child.
+The `co_await`ed entities are children of the coroutine and should
+share the coroutine's allocator.
 
-TODO add example? turn into text
+In addition, to forward the allocator from the receiver's environment
+in an environment, its static type needs to be convertible to the
+coroutine's allocator type: the coroutine's environment types are
+determined when the coroutine is created at which point the receiver
+isn't known, yet. Whether the allocator from the receiver's environment
+can be used with the statically determined allocator type can't be
+determined. It may be possible to use a type-erase allocator which
+could be created in the operation state when the `task` is `connect`ed.
 
-- creating a coroutine (calling the coroutine function) chooses the
-    allocotor for the coroutine frame, either explicitly specified or
-    implicitly determined. Either way the coroutine frame is allocated
-    when the function is called.
-- the fundamental idea of the allocator model is that children of an
-    entity use the same allocator as their parent unless an allocator
-    is explicitly specified for a child.
-- the `co_await`ed entities are children of the coroutine and should
-    share the coroutine's allocator
-- further, to forward the allocator from the receiver's environment in
-    an environment, its static type needs to be convertible to the
-    coroutine's allocator type: the coroutine's environment types are
-    determined when the coroutine is created at which point the receiver
-    isn't known, yet
-- on the flip side, the receiver's environment can contain the configuration
-    from the user of a work-graph which is likely better informed about
-    the allocator
-- the allocator from the receiver's environment could be forwarded if the
-    `task`'s allocator can be initialized with it, e.g., because the `task`
-    use `std::pmr::polymorphic_allocator<>`.
-- it isn't a priori clear what should happen if the receiver's environment
-    has an allocator which can't be converted to the `task`'s environment:
-    at least ignoring a mismatching allocator or producing a compile time
-    error are options.
+On the flip side, the receiver's environment can contain the
+configuration from the user of a work-graph which is likely better
+informed about the best allocator to use.  The allocator from the
+receiver's environment could be forwarded if the `task`'s allocator
+can be initialized with it, e.g., because the `task` use
+`std::pmr::polymorphic_allocator<>`.  It isn't clear what should
+happen if the receiver's environment has an allocator which can't
+be converted to the allocator based `task`'s environment: at least
+ignoring a mismatching allocator or producing a compile time error
+are options. It is likely possible to come up with a way to configure
+the desired behavior using the environment.
 
 ## Stop Token Management
 
 ### A Stop Source Always Needs To Be Created
 
-Concern raised:
+The specification of the `promise_type` contains exposition-only
+members for a stop source and a stop token. It is expected that in
+may situations the upstream stop token will be an `inplace_stop_token`
+and this is also the token type exposed downstream. In these cases
+the `promise_type` should store neither a stop source nor a stop
+token: instead the stop token should be obtained from the upstream
+stream environment. Necessarily storing a stop source and a stop
+token would increase the size of the promise type by multiple
+pointers.  On top of that, to forward the state of an upstream stop
+token via a new stop source requires registration/deregistration
+of a stop callback which requires dealing with synchronization.
 
-> the way the promise is worded seems to specify that a stop-source
-> is always constructed as a member of the coroutine promise - you
-> shoud really only need a new stop-source when adapting between
-> incompatable stop-token types, if everything is using
-> `inplace_stop_token` then it should just be passed through and have
-> no space overhead in the promise.
+The expected implementation is, indeed, to get the stop token from
+the operation state: when the operation state is created, it is
+known whether the upstream stop token is compatible with the
+statically determined stop token exposed by `task` to `co_await`ed
+operations via the respective receiver's environment. It the type
+is compatible there is no need to store anything beyond the receiver
+from which a stop token can be obtained using the `get_stop_token`
+query when needed. Otherwise, the operation state can store an
+optional stop source which gets initialized and connected to the
+upstream stop toke via a stop callback when the first stop token
+is requested.
 
-TODO add example? turn into text
+The exposition-only members are not meant to imply that a corresponding
+object is actually stored or where they are. Instead, they are
+merely meant to talk about the corresponding entities where the
+behavior of the environment is described. If the current wording
+is considered to imply that these entities actually exist or it can
+be misunderstood to imply that, the wording may need some massaging
+possibly using specification macros to refer to the respective
+entities in the operation state.
 
-- the stop source is an exposition-only member of the `promise_type`
-    and I don't think the existance of such a member has any implication
-    on whether such an object needs to exist or where it is created
-- an implementation can (and probably should) create the stop source in
-    the operation state object when `connect`ed to a receiver with an
-    an environment with a mismatching stop token.
-- if there is a concern with that the specification is unnecessarily
-    restrictive, it should be fixed to use a specifiation macro
-    similar to other specification macros used which refer to
-    entities in the operation state
-- there is certainly no design intend to create unnecessary stop sources
-    and I don't think the specification implies that it is required
+### The Wording Implies The Stop Token Is Default Constructible
+
+Using an exposition-only member for the stop token implies that the
+stop token type is default constructible. The stop token types are
+generally not default constructible and are, instead, created via
+the stop source and always refer to the corresponding stop source.
+
+The intent here is, indeed, that the stop token type isn't actually
+stored at all: the operation state either stores a stop source which
+is used to get the stop token or, probably in the comment case, the
+stop token is obtained from the upstream receiver's environment by
+querying `get_stop_token`. The rewording for the previous concern
+should also address this concerna.
 
 ## Miscelleaneous Concerns
 

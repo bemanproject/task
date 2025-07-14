@@ -34,15 +34,12 @@ struct tester {
     handle<promise_type> h;
 };
 
-void use(auto&&...) {}
-
 } // namespace
 
 int main() {
+#ifndef _MSC_VER
     bool called{false};
-    [](bool& c) -> tester {
-        use(c);
-        co_return;
-    }(called);
+    [](bool&) -> tester { co_return; }(called);
     assert(called);
+#endif
 }

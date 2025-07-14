@@ -87,7 +87,7 @@ class task {
     };
     struct domain {
         template <typename DS>
-        auto transform_sender(DS&& s, auto&&...) const noexcept {
+        auto transform_sender(DS&&, auto&&...) const noexcept {
             std::cout << "task::domain::transform_sender\n";
             return dom_sender{};
         }
