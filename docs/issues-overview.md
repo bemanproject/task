@@ -246,14 +246,14 @@ the respective issue):
     - [x] [`affine_on` should probably not forward stop-requests to reschedule operation](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#affine_on-should-probably-not-forward-stop-requests-to-reschedule-operation)
     - [x] [`affine_on` customization for other senders](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#we-should-probably-define-customsiations-for-affine_on-for-some-other-senders)
 - [x] [`task` is not actually lazily started](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-is-not-actually-lazily-started) - wording fix (should suspend always) (Dietmar’s paper)
-- [ ] [`task` coroutine reschedules too often](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-coroutine-reschedules-too-often): - apply “known design” to optimize / fix (Dietmar’s paper)
+- [x] [`task` coroutine reschedules too often](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-coroutine-reschedules-too-often): - apply “known design” to optimize / fix (Dietmar’s paper)
     - [x] [`task` should not unconditionally reschedule when control enters the coroutine](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-should-not-unconditionally-reschedule-when-control-enters-the-coroutine)
     - [x] [`task` awaiting another task should not reschedule on resumption](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-awaiting-another-task-should-not-reschedule-on-resumption)
-    - [ ] [`task` coroutine awaiting another task does not use symmetric-transfer](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-coroutine-awaiting-another-task-does-not-use-symmetric-transfer) - (Dietmar’s paper)
+    - [x] [`task` coroutine awaiting another task does not use symmetric-transfer](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-coroutine-awaiting-another-task-does-not-use-symmetric-transfer) - (Dietmar’s paper)
 - [ ] [`task` allocation strategy](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-allocator-customisation-behaviour-is-inconsistent-with-generator)
-    - [ ] [`task` allocator customisation is more permissive](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#handling-of-allocator_arg-is-more-permissive-than-for-stdgenerator)
+    - [x] [`task` allocator customisation is more permissive](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#handling-of-allocator_arg-is-more-permissive-than-for-stdgenerator)
     - [ ] [`task` environment’s `allocator_type` hides the parent environment’s `get_allocator`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-task-environments-allocator_type-overrides-the-parent-environments-get_allocator)
-    - [ ] [for `generator` an `allocator_arg, allocator` can always be used](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#behaviour-when-the-tasks-environment-type-does-not-specify-an-allocator_type)
+    - [x] [for `generator` an `allocator_arg, allocator` can always be used](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#behaviour-when-the-tasks-environment-type-does-not-specify-an-allocator_type)
 
 ## Medium
 

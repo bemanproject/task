@@ -396,7 +396,7 @@ For example:
 - `affine_on(on(sch, sndr))` can be simplified to `on(sch, sndr)`
     as on already provides `affine_on`-like semantics
 - The `counting_scope::join` sender currently already provides
-    `affine_on`-like semantics. 
+    `affine_on`-like semantics.
     - We could potentially simplify this sender to just complete
         inline unless the join-sender is wrapped in `affine_on`, in
         which case the resulting `affine_on(scope.join())` sender would
@@ -509,68 +509,66 @@ provides a domain with a custom transformation for `affine_on`.
 
 ### No Support For Symmetric Transfer
 
-Concern raised:
-
-> it doesn't customise `as_awaitable()` and so can't make use of
-> symmetric transfer when another coroutine awaits a `task` - this
-> will lead to more stack-overflow situations.
-
-Example (see `issue-symmetric-transfer.cpp`):
+The specification doesn't mention any use of symmetric transfer.
+Further, the `task` gets adapted by `affine_on` in `await_transform`
+([[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
+paragraph 10) which produces a different sender than `task` which needs
+special treatment to use symmetric transfer. With symmetric transfer
+stackoverflow can be avoided when operation complete immediately, e.g.
 
 ```c++
 template <typename Env>
 task<void, Env> test() {
     for (std::size_t i{}; i < 1000000; ++i) {
-        co_await std::invoke([]()->std::execution::task<> {
-            co_await std::execution::just();
+        co_await std::invoke([]()->task<void, env<>> {
+            co_return;
         });
     }
 }
 ```
 
-TODO - turn into text
+When using a scheduler which actually schedules the work (rather
+than immediately completing when a corresponding sender gets started)
+there isn't a stackoverflow but the scheduling may be slow. With
+symmetric transfer the it can be possible to avoid both the expensive
+scheduling operation and the stackoverflow, at least in some cases.
+When the inner `task` actually `co_await`s any work which synchronously
+completes, e.g., `co_await just()`, the code could still result in
+a stackoverflow despite using symmetric transfer.
 
-Depending on the choice of `Env` this code may stack overflow:
-
-- Using the default environment with a scheduler enqueuing tasks
-    will not cause an overflow but does schedule each task (see
-    below).
-- Using an environment a scheduler immediately starting work like
-    `inline_scheduler` or the default environment with such a
-    scheduler may cause a stack overflow.
-
-- Agreed: like other senders, `task` doesn't have an awaitable interface.
-- To guarantee scheduler affinity, it may be necessary to reschedule, i.e., the whether symmetric transfer could be used is conditional.
-- With scheduler affinity there isn't an issue (also see below).
-- I don't think an implementation is prohibited from providing an awaiter interface and taking advantage of symmetric transfer: how does the user tell?
+Except for the presence or absence of stackoverflows it shouldn't
+be observable whether an implementation invokes the nested coroutine
+directly through an awaiter interface or using the default
+implementations of `as_awaitable` and `affine_on`. To address the
+different scheduling problems (schedule on `start`, schedule on
+completion, and symmetric transfer) it may be reasonable to mandate
+that `task` customizes `affine_on` and that the result of this
+customization also customizes `as_awaitable`.
 
 ## Allocation
 
 ### Unusual Allocator Customisation
 
-Concern raised:
+The allocator customisation mechanism is inconsistent with the
+design of `generator` allocator customisation: with `generator`,
+when you don't specify an allocator in the template arg, then you
+can use any `allocator_arg` type. With `task` if no allocator is
+specified in the `Environment` the allocator type defaults to
+`std::allocator<std::byte>` and using an allocator with an incompatible
+type results in an ill-formed program.
 
-> allocator customisation mechanism is inconsistent with the design
-> of `generator` allocator customisation (with `generator`, when you
-> don't specify an allocator in the template arg, then you can use
-> any `allocator_arg` type, `allocator_arg` is only allowed in the
-> first or second position), A bit vage - I'm not sure what's the
-> suggested design here, but I suspect this can be fixed.
-
-TODO turn into text
-
-Example (see `issue-frame-allocator.cpp`):
+For example:
 
 ```c++
-template <typename Env>
-ex::task<int, Env> test(int i, auto&&...) {
-    co_return co_await ex::just(i);
-}
-
 struct default_env {};
 struct allocator_env {
     using allocator_type = std::pmr::polymorphic_allocator<>;
 };
+
+template <typename Env>
+ex::task<int, Env> test(int i, auto&&...) {
+    co_return co_await ex::just(i);
+}
 ```
 
 Depending on how the coroutine is invoked this may fail to compile:
@@ -580,27 +578,73 @@ Depending on how the coroutine is invoked this may fail to compile:
 - `test<default_env>(17, std::allocator_arg, std::pmr::polymorphic_allocator<>())`: compile-time error
 - `test<alloctor_env>(17, std::allocator_arg, std::pmr::polymorphic_allocator<>())`: OK
 
+The main motivator for always having an `allocator_type` is it to
+support the `get_allocator` query on the receiver's environments
+when `co_await`ing another sender. The immediate use of the allocator
+is the allocation of the coroutine frame and these two needs can be
+considered separte.
+
+Instead of using the `allocator_type` both for the environment and
+the coroutine frame, the coroutine frame could be allocated with
+any allocator specified as an argument (i.e., as the argument
+following an `std::allocator_arg` argument). The cost of doing so
+is that the allocator stored with the coroutine frame would need
+to be type-erased which is, however, fairly cheap as only the
+`deallocate(ptr, size)` operation needs to be known and certainly
+no extra allocation is needed to do so. If no `allocator_type` is
+specified in the `Environment` argument to `task`, the
+`get_allocator` query would not be available from the environment
+of received used with `co_await`.
+
 ### Issue: Flexible Allocator Position
 
-- `generator` only allows the `std::allocator_arg`/allocator pair as
-    leading parameters
-- `task` allows them to go anywhere
-- allowing arbitrary positions is intentional
-    - otherwise the implementer of a coroutine decides allocator use
-    - alternative 1: the coroutine could be implemented twice
-    - alternative 2: the coroutine could determine presence of allocator
-    - a trailing `auto&&...` is preferable
-    - arguably `generator` is "broken" in that sense => needs paper to improve
-- the use of `allocator_arg` in other than the first parameter is inconsistent
-    with all other uses, though
+For `task<T, E>` with position of an `std::allocator_arg` can be
+anywhere in the argument list. For `generator` the `std::allocator_arg`
+argument needs to be the first argument. That is consisten with
+other uses of `std::allocator_arg`. `task` should also require the
+`std::allocator_arg` argument to be the first argument.
 
-### Issue: Unconfigured Allocator Leads To Compiler-Time Error
+The reason why `task` deviates from the approach normally taken is
+that the consistent with non-coroutines is questionable: the primary
+reason why the `std::allocator_arg` is needed in the first position
+is that allocation is delegated to `std::uses_allocator` construction.
+This approach, however, doesn't apply to coroutines at all: the
+coroutine frame is allocated from an `operator new()` overloaded
+for the `promise_type`. In the context of coroutines the question
+is rather how to make it easy to optionally support allocators.
 
-- `generator` allows to use an arbitrary allocator without configuration
-- omission: task could always use allocator argument for the coroutine
-    frame but not expose it downstream when no allocator is configured
-- doing so could be done later (things which currently don't compile start
-    compiling) or as an NB comment
+Any coroutine which wants to support allocators for the allocation
+of the coroutine frame needs to allow that allocators show up on
+the parameter list. As coroutines normally have other parameters,
+too, requiring that the optional `std::allocator_arg`/allocator
+pair of arguments comes first effectively means that a forwarding
+function is provided, e.g., for a coroutine taking an `int` parameter
+for its work (`Env` is assumed to be a enviroment type with a
+suitable definition of `allocator_type`):
+
+```
+task<void, Env> work(std::allocator_arg_t, auto, int value) {
+    co_await just(value);
+}
+task<void, Env> work(int value) {
+    return work(std::allocator_arg, std::allocator<std::byte>());
+}
+```
+
+If the `allocator_arg` argument can be at an arbitrary location of
+the parameter list, defining a coroutine with optional allocator
+support amounts to adding a suitable trailing list of parameters,
+e.g.:
+
+```
+task<void, Env> work(int value, auto&&...) {
+    co_await just(value);
+}
+```
+
+Constraining `task` to match the use of `generator` is entirely
+possible. It seems more reasonable to rather consider relaxing the
+requirement on `generator` in a future revision of the C++ standard.
 
 ### Shadowing The Environment Allocator Is Questionable
 
@@ -774,7 +818,7 @@ This change should be applied to [[task.promise]](https://wiki.edg.com/pub/Wg21s
 >     ...
 >     void uncaught_exception();
 >     coroutine_handle<> unhandled_stopped()@[ noexcept]{.add}@;
-> 
+>
 >     void return_void(); // present only if is_void_v<T> is true;
 >     ...
 > ```
@@ -866,7 +910,7 @@ there because it is unclear how to guarantee scheduler affinity with an awaitabl
 interface without wrapping a coroutine around the awaitable.
 
 Do we want to consider relaxing this constraint to be consistent with the constraints
-on 
+on
 [[exec.with.awaitable.senders]](https://eel.is/c++draft/exec.with.awaitable.senders)?
 
 This would require either:
@@ -949,6 +993,7 @@ avoided.
 
 # Acknowledgement
 
-The issue descriptions are largely based on a draft written by
-Lewis Baker. Lewis Baker and Tomasz Kamiński contributed to the
-discussions towards addressing the issues.
+The issue descriptions are largely based on [this
+draft](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org)
+written by Lewis Baker. Lewis Baker and Tomasz Kamiski contributed
+to the discussions towards addressing the issues.
