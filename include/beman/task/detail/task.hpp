@@ -76,26 +76,24 @@ class task {
     }
 
     struct dom_sender {
-      using sender_concept = ::beman::execution::sender_t;
-      using completion_signatures = ::beman::execution::completion_signatures<
-          ::beman::execution::set_value_t()
-      >;
-      struct state {
-        using operation_state_concept = ::beman::execution::operation_state_t;
-        auto start() & noexcept {}
-      };
-      
-      auto connect(auto&&) noexcept -> state { return state{}; }
+        using sender_concept        = ::beman::execution::sender_t;
+        using completion_signatures = ::beman::execution::completion_signatures< ::beman::execution::set_value_t()>;
+        struct state {
+            using operation_state_concept = ::beman::execution::operation_state_t;
+            auto start() & noexcept {}
+        };
+
+        auto connect(auto&&) noexcept -> state { return state{}; }
     };
     struct domain {
-      template <typename DS>
-      auto transform_sender(DS&&s, auto&&...) const noexcept {
-          std::cout << "task::domain::transform_sender\n";
-          return dom_sender{};
-      }
+        template <typename DS>
+        auto transform_sender(DS&& s, auto&&...) const noexcept {
+            std::cout << "task::domain::transform_sender\n";
+            return dom_sender{};
+        }
     };
     struct env {
-        auto query(::beman::execution::get_domain_t const&) const noexcept -> domain {
+        auto query(const ::beman::execution::get_domain_t&) const noexcept -> domain {
             std::cout << "task::env::get_domain\n";
             return domain{};
         }

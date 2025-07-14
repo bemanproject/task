@@ -11,8 +11,8 @@
 namespace ex = beman::execution;
 
 namespace {
-    struct empty {};
-}
+struct empty {};
+} // namespace
 
 int main() {
 #if 0
