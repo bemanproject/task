@@ -425,74 +425,34 @@ started and stopped:
 2. `task`s `co_await`ing `task`s shouldn't reschedule.
 3. `task` doesn't support symmetric Transfer.
 
-All three concerns are quite related and can be addressed by
-`task<...>` using a suitable awaiter when `co_await`ing another
-`task<...>`.
-
 ### Starting A `task` Should Not Unconditionally Reschedule
 
-*TODO*
-
-Concern raised:
-
-> calling a task coroutine unconditionally schedules onto
-> its scheduler (a large performance bottleneck),
-
-Example (see `issue-start-reschedules.cpp`):
-
-```cpp
-ex::task<int> test(auto sched) {
-    std::cout << "init =" << std::this_thread::get_id() << "\n";
-    co_await ex::starts_on(sched, scheduler(), ex::just());
-    std::cout << "final=" << std::this_thread::get_id() << "\n";
-}
-```
-
-TODO turn into text
-
-- assuming an execution agent with only one thread is used, the
-    two thread ids need to be identical for scheduler affinity:
-    this is the affinity invariant of `task`
-- `ex::sync_wait(test(pool2.get_scheduler()))`: no scheduling needed
-    as the `task` is started on the same thread as the one used by
-    the `run_loop` within `sync_wait`.
-- `ex::sync_wait(ex::starts_on(pool1.get_scheduler(), test(pool2.get_scheduler())))`:
-    also no scheduling needed as `starts_on` provides a receiver with the same
-    scheduler it starts the child on.
-- the specification doesn't explicitly say that the `initial_suspend()`
-    awaiter reschedules but it specifies the that it resumes on the
-    scheduler's execution agent.
-- it seems to contradict the idea of scheduler affinity if the
-    thread ids printed in the example could be different, i.e., if it
-    is allowed to resume on a different execution agent than that
-    corresponding to `get_scheduler(get_env(rcvr))` for receiver
-    `rcvr` the task is connected to
-- if it is never possible that the execution agent on which the `task`
-    gets started mismatches the execution agent(s) from the receiver,
-    no scheduling for the initial resumption is needed but I don't
-    if that is guaranteed
-- my current implementation reschedules when the awaiter returned from
-    `initial_suspend()` resumes: doing so _may_ be unnecessary
-- I don't see how the coroutine could see what scheduler it is
-    started on, i.e., I don't know how the rescheduling can be avoided
-- if there is a way, however, the specification doesn't enforce
-    rescheduling as long as the coroutine resumes on the correct
-    scheduler
-
+In
+[[task.promise]]((https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise))
+p6, the wording for `initial_suspend` says that it unconditionally
+suspends and reschedules onto the associated scheduler. The intent
+of this wording seems to be that the coroutine ensures execution
+initially starts on the associated scheduler by executing a schedule
+operation and then resuming the coroutine from the initial suspend
+point inside the set_value completion handler of the schedule
+operation. The effect of this would be that every call to a coroutine
+would have to round-trip through the scheduler, which, depending
+on the behaviour of the schedule operation, might requeue it to the
+back of the schedulers queue, greatly increasing latency of the
+call.
 
 The specification of `initial_suspend()` (assuming it is rephrased
 to not resume the coroutine immediately) doesn't really say it
-unconditionally reschedules. It merely says that an awaiter is
+unconditionally reschedules. It merely states that an awaiter is
 returned which arranges for the coroutine to get resumed on the
 correct scheduler. In general, i.e., when the coroutine gets resumed
-via `start(os)` on an operation state `os` obtained from `connect(tsk, rcvr)`
-it will need to reschedule. However, an implementation can have
-additional information, e.g., when using `co_await tsk`: the
-implementation knows that the `co_await`ing coroutine is executing
-on the same scheduler as the one given to `tsk` (via the environment
-of some receiver) and it could resume the coroutine bypassing any
-scheduling (e.g., using whatever is used to support symmetric
-transfer; see below).
+via `start(os)` on an operation state `os` obtained from `connect(tsk,
+rcvr)` it will need to reschedule.  However, an implementation can
+pass additional context information, e.g., via implementation
+specific properties on the receiver's environment: while the
+`get_scheduler` query may not provide the necessary guarantee that
+the returned scheduler is the scheduler the operation was started
+on a different, non-forwardable query could provide this guarantee.
 
 A possible alternative is to require that `start(op)`, where `op`
 is the result of `connect(sndr, rcvr)`, is invoked on an execution
@@ -504,6 +464,48 @@ contract. The current specification in
 have a corresponding constraint. `task<...>` is a sender and
 where it can be used with standard library algorithms this constraint
 would hold.
+
+A different way to approach the issue is to use a `task`-specific
+awaitable when a `task` is `co_await`ed by another `task`. This use
+of an awaiter shouldn't be observable but it may be better to
+explicitly spell out that `task` has a domain with custom transformation
+of the `affine_on` algorithm and `as_awaitable` operation.
+
+### Resuming After A `task` Should Not Reschedule
+
+Similar to the previous issue, a `task` needs to resume on the
+expected scheduler. The definition of `await_transform` which is used
+for a `task` is defined in [[task.promise]]((https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)) paragraph 10
+(the `co_await`ed `task` would be the `sndr` parameter):
+
+```
+as_awaitable(affine_on(std::forward<Sender>(sndr), SCHED(*this)), *this)
+```
+
+As defined there is no additional information about the scheduler
+on which the `sndr` completes. Thus, it is likely that a scheduling
+operation is needed after a `co_await`ed `task` completes when the
+outer `task` resumes, even if the `co_await`ed `task` completed on
+the same execution agent.
+
+As `task` is scheduler affine, it is likely that it completes on
+the same scheduler it was started on, i.e., there shouldn't be a
+need to reschedule (if the scheduler used by the `task` was changed
+using `co_await change_coroutine_scheduler(sch)` it still needs to
+be rescheduled). The implementation can provide a query on the state
+used to execute the `task` which identifies the scheduler on which
+it completed and the `affine_on` implementation can use this
+information to decide whether it is necessary to reschedule after
+the `task`'s completion. It would be preferable if a corresponding
+query were specificied by the standard library to have user-defined
+senders provide similar information but currently there is no such
+query.
+
+A different approach is to transform the `affine_on(task, sch)`
+operation into a `task`-specific implementation which arranges to
+always complete on `sch` using `task` specific information. It may
+be necessary to explicit specify or, at least, allow that `task`
+provides a domain with a custom transformation for `affine_on`.
 
 ### No Support For Symmetric Transfer
 
