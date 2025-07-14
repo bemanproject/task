@@ -1,6 +1,6 @@
 #-dk: note to self: PATH=/opt/llvm-19.1.6/bin:$PATH LDFLAGS=-fuse-ld=lld
 
-.PHONY: config test default compile clean distclean doc format tidy
+.PHONY: config test default compile clean distclean doc html pdf format tidy
 
 BUILDDIR = build
 PRESET  = gcc-release
@@ -14,6 +14,9 @@ default: compile
 
 doc:
 	cd docs; $(MAKE)
+
+pdf html:
+	cd docs; $(MAKE) doc-$@
 
 compile:
 	CMAKE_EXPORT_COMPILE_COMMANDS=1 \

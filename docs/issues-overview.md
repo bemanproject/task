@@ -258,17 +258,16 @@ the respective issue):
 ## Medium
 
 - [x] [`task::promise_type` should not contain a stop-source](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_type-should-not-contain-a-stop-source) - (Dietmar’s paper)
-- [ ] [`task::promise_type` wording assumes that stop-token is default constructible](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_type-wording-assumes-that-stop-token-is-default-constructible) - (Dietmar’s paper)
-- [ ] [`task` coroutine-state is not destroyed early enough after completing](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-coroutine-state-is-not-destroyed-early-enough-after-completing) (optimization?) - (Dietmar’s paper)
-- [ ] [`task::promise_type::get_env` seems to require an inefficient implementation](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_typeget_env-seems-to-require-an-inefficient-implementation) (optimization?) - (Dietmar’s paper)
+- [x] [`task::promise_type` wording assumes that stop-token is default constructible](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_type-wording-assumes-that-stop-token-is-default-constructible) - (Dietmar’s paper)
+- [x] [`task` coroutine-state is not destroyed early enough after completing](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-coroutine-state-is-not-destroyed-early-enough-after-completing) (optimization?) - (Dietmar’s paper)
+- [x] [`task::promise_type::get_env` seems to require an inefficient implementation](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_typeget_env-seems-to-require-an-inefficient-implementation) (optimization?) - (Dietmar’s paper)
 
 ## Minor issues
 
 - [x] [`task` does not accept awaiting types that provide `as_awaitable`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-task-does-not-accept-awaiting-types-that-provide-as_awaitable-but-that-do-not-satisfy-sender-concept) but that do not satisfy sender concept
-- [ ] [`task::promise_type` doesn’t use `with_awaitable_senders` - should it?](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-taskpromise_type-doesnt-use-with_awaitable_senders---should-it)
+- [x] [`task::promise_type` doesn’t use `with_awaitable_senders` - should it?](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-taskpromise_type-doesnt-use-with_awaitable_senders---should-it)
 - [x] `task<T, E>` Has No Default Arguments
 - [x] [`task::promise_type::unhandled_stopped` should be marked `noexcept`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#taskpromise_typeunhandled_stopped-should-be-marked-noexcept)
-- [ ] The Environment Design Is Odd
 - [x] No Completion Scheduler
 - [x] Awaitable non-`sender`s Are Not Supported
 - [x] Future Coroutine Features Could avoid co_yield with_error.

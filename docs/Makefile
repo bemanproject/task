@@ -1,8 +1,12 @@
-.PHONY: default doc
+.PHONY: default doc doc-html doc-pdf
 
 default: doc
 
-doc: P3552-task.html issues.html
+doc: doc-html
+
+doc-html: P3552-task.html P3796-task-issues.html
+
+doc-pdf: P3552-task.pdf P3796-task-issues.pdf
 
 wg21/Makefile:
 	git clone https://github.com/mpark/wg21.git
