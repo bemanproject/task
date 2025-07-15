@@ -26,51 +26,28 @@ them.
 
 # General
 
-Non-trivial components can always be improved in some way. The same
-is true for `std::execution::task`. If we wait until we have something
-everybody is fully satisfied with, we will hardly ever get anything
-at all.  The key question is whether the current specification works
-or if there are fatal flaws making it a bad choice. For the `task`
-proposal as it currently is, I see two questions:
-
-1. Does the specified `task` work and can it reasonably be used for
-    expected use cases?
-2. Can the interface and specification of `task` be improved?
-
-I haven't heard any concern which implies that `task` as specified
-can't be used at all. There are some concerns which my imply otherwise
-but these are really issues with the current wording. Some of the
-concerns raised are about performance of `task`. Even if the semantic
-operations of `task` are exactly right, bad performance may be a
-reason why `task` can't be used in practice. Currently, I'm not in
-a position to produce any data showing that `task` performance is
-acceptable or that its performance is unacceptable.
+After LWG voted to forward the [task
+proposal](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html)
+to be forwarded to plenary for inclusion into C++26 some issues
+were brought up. The concerns range from accidental omissions (e.g.,
+`unhandled_stopped` lacking `noexcept`) via wording issues and
+performance concerns to some design questions. In particular the
+behaviour of the algorithm `affine_on` used to implement scheduler
+affinity for `task` received some questions which may lead to some
+design changes and/or clarifications. This document discusses the
+various issues raised and proposes ways to address some of them.
 
 One statement from the plenary was that `task` is the obvious name
 for a coroutine task and we should get it right. There are certainly
 improvements which can be applied. Although I'm not aware of anything
-concrete beyond the raised issues there is certainly potential for
+concrete beyond the raised issues there is probably potential for
 improvements. If the primary concern is that there may be better
-task interfaces in the future and a better task should get the
-name `task`, it seems reasonable to rename the component. The
-original name used for the component was `lazy` and feedback from
-Hagenberg was to rename it `task`.
-
-For a different name, the proposal would be something like `task26`
-and to similarly name future revisions with a version number. This
-way the name `task` would be reserved until the design stabilises.
-This direction would allow making a coroutine task available now
-without concerns about using the good name for a version which is
-inferior to a future design. If the component should be renamed it
-is up to LEWG to actually pick a name.
-
-The naming concern isn't really specific to `task`: if we believe
-we can't change the API of a components in a future reversion of
-the standard, it is prudent to use a name which may get superseded.
-This argument is even stronger if we believe the ABI needs to be
-stable: it is actually quite unlikely that the very first implementation
-of a component in a standard library use the optimal interface and
-implementation.
+task interfaces in the future and a better task should get the name
+`task`, it seems reasonable to rename the component. The original
+name used for the component was `lazy` and feedback from Hagenberg
+was to rename it `task`. In principle, any name could work, e.g.,
+`affine_task`. It seems reasonable to keep `task` in the name somehow
+if `task` is to be renamed.
 
 Specifically for `task` it is worth pointing out that multiple
 coroutine task components can coexist. Due to the design of coroutines
@@ -90,13 +67,25 @@ section discusses these concerns:
 ## `affine_on` Concerns
 
 This section covers different concerns around the specification,
-or rather lack thereof, of `affine_on`. The `affine_on` is at the
-core of the scheduler affinity implementation: this algorithm is
-used to establish the invariant that a `task` executes on currently
-installed scheduler. The idea is that `affine_on(@_sndr_@, @_sch_@)`
-behaves like `continues_on(@_sndr_@, @_sch_@)` but it is customised
-to avoid actual scheduling when it knows that `@_sndr_@` completes
-on `@_sch_@`.
+or rather lack thereof, of `affine_on`. The algorithm `affine_on`
+is at the core of the scheduler affinity implementation: this
+algorithm is used to establish the invariant that a `task` executes
+on the currently installed scheduler. Originally, the `task` proposal
+used `continue_on` in the specification but during the SG1 discussion
+it was suggested that a differently named algorithm is used. The
+original idea was that `affine_on(@_sndr_@, @_sch_@)` behaves like
+`continues_on(@_sndr_@, @_sch_@)` but it is customised to avoid
+actual scheduling when it knows that `@_sndr_@` completes on
+`@_sch_@`. When further exploring the direction of using a different
+algorithm than `continues_on` some additional potential for changed
+semantics emerged (see below).
+
+The name `affine_on` was _not_ discussed by SG1. The
+direction was "come up with a name". The current name just concentrates
+on the primary objective of implementing scheduler affinity for
+`task`. It can certainly use a different name. For example the
+algorithm could be called `continues_inline_or_on` or
+`affine_continues_on`.
 
 To some extend `affine_on`'s specification is deliberately vague
 because currently the `execution` specification is lacking some
@@ -105,7 +94,7 @@ which completes immediately with a result. While users can't
 necessarily tap into the customisations, yet, implementation could
 use tools like those proposed by [P3206](https://wg21.link/p3206)
 "A sender query for completion behaviour" using a suitable hidden
-name.
+name while the proposal isn't adopted.
 
 ### `affine_on` Default Implementation Lacks a Specification
 
@@ -126,7 +115,7 @@ to provide a specification for the default implementation:
 > ```
 > auto [_, sch, child] = sndr;
 > return transform_sender(
->   @_query-with-default_@(get_doman, sch, default_domain()),
+>   @_query-with-default_@(get_domain, sch, default_domain()),
 >   continues_on(std::move(child), std::move(sch)));
 > ```
 >
@@ -158,9 +147,10 @@ p5 says:
 > execution agent of the execution resource associated with `sch`.
 > If the current execution resource is the same as the execution
 > resource associated with `sch`, the completion operation on
-> `out_rcvr` may be called before `start(op)` completes. If scheduling
-> onto `sch` fails, an error completion on `out_rcvr` shall be
-> executed on an unspecified execution agent.
+> `out_rcvr` may be invoked on the same thread of execution before
+> `start(op)` completes. If scheduling onto `sch` fails, an error
+> completion on `out_rcvr` shall be executed on an unspecified
+> execution agent.
 
 The sentence If the current execution resource is the same as the
 execution resource associated with `sch` is not clear to which
@@ -416,6 +406,34 @@ vague enough to let implementations avoid scheduling where they
 know it isn't needed. Making these a requirement is intended for
 future revisions of the standard.
 
+It is also a bit unclear how algorithm customisation is actually
+implemented in practice. Algorithms can advertise a domain via the
+`get_domain` query which can then be used to transform algorithms:
+`transform_sender(dom, sender, env...)`
+[[exec.snd.transform]](https://eel.is/c++draft/exec#snd.transform)
+uses `dom.transform_sender(sender, env...)` to transform the sender
+if this expression is valid (otherwise the transformation from
+`default_domain` is used which doesn't transform the sender). One
+way to allow special transformations for `affine_on` is to defined
+the `get_domain` query for `affine_on` (well, the environment
+obtained by `get_env(a)` from an `affine_on` sender `a`) to yield a
+custom domain `affine_on_domain` which delegates transformations
+of `affine_on(sndr, sch)` the sender `sndr` or the scheduler `sch`:
+
+Let `affine_on_domain.transform_sender(affsndr, env...)` (where
+`affsndr` is the result of `affine_on(sch, sndr)`) be
+
+- the result of the expression `sndr.affine_on(sch, env...)` if it
+    is valid, otherwise
+- the result of the expression `sch.affine_on(sndr, env...)` if it
+    is valid, otherwise
+- not defined.
+
+A similar approach would be used for other algorithms which can be
+customised. Currently, no algorithm defines the exact ways it can
+be customised in an open form and the intended design for customisations
+may be different. The above outlines one possible way.
+
 ## Task Operation
 
 This section groups three concerns relating to the way `task` gets
@@ -534,7 +552,11 @@ symmetric transfer the it can be possible to avoid both the expensive
 scheduling operation and the stack overflow, at least in some cases.
 When the inner `task` actually `co_await`s any work which synchronously
 completes, e.g., `co_await just()`, the code could still result in
-a stack overflow despite using symmetric transfer.
+a stack overflow despite using symmetric transfer. There is a general
+issue that stack size needs to be bounded when operations complete
+synchronously. The general idea is to use a trampoline scheduler
+which bounds stack size and reschedules when the stack size or the
+recursion depth becomes too big.
 
 Except for the presence or absence of stack overflows it shouldn't
 be observable whether an implementation invokes the nested coroutine
