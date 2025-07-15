@@ -1,7 +1,7 @@
 ---
 title: Coroutine Task Issues
-document: D3796R0
-date: 2025-07-14
+document: P3796R0
+date: 2025-07-15
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
