@@ -39,7 +39,7 @@ int main() {
 }
 ```
 
-Full runnable examples can be found in `examples/` (e.g., [`./examples/hello.cpp`](./examples/hello.cpp)).
+Full runnable examples can be found in [`examples/`](`./example`) (e.g., [`./examples/hello.cpp`](./examples/hello.cpp)). For some explanation see [`./docs/examples.md`](./docs/examples.md).
 
 ## Help Welcome
 

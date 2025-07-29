@@ -46,12 +46,10 @@ int main() {
     ex::sync_wait([](auto& scope)->ex::task<void, tls_env> {
         auto scheduler = co_await ex::read_env(ex::get_scheduler);
 
-#if 1
         ex::spawn(ex::write_env(run_timer("timer 1") | ex::upon_error([](auto&&) noexcept {}) | ex::then([]() noexcept { std::cout << "loop done\n"; }),
             ex::detail::make_env(ex::get_scheduler, scheduler)), scope.get_token());
         ex::spawn(ex::write_env(run_timer("timer 2") | ex::upon_error([](auto&&) noexcept {}) | ex::then([]() noexcept { std::cout << "loop done\n"; }),
             ex::detail::make_env(ex::get_scheduler, scheduler)), scope.get_token());
-#endif
         co_return;
     }(scope));
     ex::sync_wait(scope.join());

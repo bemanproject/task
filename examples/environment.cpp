@@ -11,7 +11,7 @@
 #include <utility>
 #include <type_traits>
 #include "demo-scope.hpp"
-#include "demo-thread_pool.hpp"
+#include "demo-thread_loop.hpp"
 
 namespace ex  = beman::execution;
 namespace net = beman::net;
@@ -135,20 +135,20 @@ const std::string                  text("####");
 [[maybe_unused]] const std::string white("\x1b[37m" + text + "\x1b[0m:");
 
 int main() {
-    demo::thread_pool pool1;
-    demo::thread_pool pool2;
+    demo::thread_loop loop1;
+    demo::thread_loop loop2;
     net::io_context   context;
     demo::scope       scope;
 
     environment::set("main");
 
-    ex::sync_wait(ex::schedule(pool1.get_scheduler()) | ex::then([] { environment::set("thread1"); }) |
+    ex::sync_wait(ex::schedule(loop1.get_scheduler()) | ex::then([] { environment::set("thread1"); }) |
                   ex::then([] { std::cout << print_env << "\n"; }));
     std::cout << print_env << "\n";
 
-    spawn(env_scheduler(magenta, pool1.get_scheduler()), scope, run(context.get_scheduler(), 100ms));
-    spawn(env_scheduler(green, pool1.get_scheduler()), scope, run(context.get_scheduler(), 150ms));
-    spawn(env_scheduler(blue, pool1.get_scheduler()), scope, run(context.get_scheduler(), 250ms));
+    spawn(env_scheduler(magenta, loop1.get_scheduler()), scope, run(context.get_scheduler(), 100ms));
+    spawn(env_scheduler(green, loop1.get_scheduler()), scope, run(context.get_scheduler(), 150ms));
+    spawn(env_scheduler(blue, loop1.get_scheduler()), scope, run(context.get_scheduler(), 250ms));
 
     while (!scope.empty()) {
         context.run();
