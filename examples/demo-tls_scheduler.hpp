@@ -29,37 +29,41 @@ struct tls_domain {
         using receiver_concept = ::beman::execution::receiver_t;
         struct env_t {
             affine_state_base<Rcvr, Data>* st;
-            //template <typename Q, typename... A>
-            //   requires requires(affine_state_base<Rcvr, Data>* self, Q&& q, A&&... a) { std::forward<Q>(q)(::beman::execution::get_env(self->st->rcvr), ::std::forward<A>(a)...); }
-            //auto query(Q&& q, A&&... a) const noexcept { std::forward<Q>(q)(::beman::execution::get_env(this->st->rcvr, ::std::forward<A>(a)...)); }
+            // template <typename Q, typename... A>
+            //    requires requires(affine_state_base<Rcvr, Data>* self, Q&& q, A&&... a) {
+            //    std::forward<Q>(q)(::beman::execution::get_env(self->st->rcvr), ::std::forward<A>(a)...); }
+            // auto query(Q&& q, A&&... a) const noexcept {
+            // std::forward<Q>(q)(::beman::execution::get_env(this->st->rcvr, ::std::forward<A>(a)...)); }
         };
         affine_state_base<Rcvr, Data>* st;
-        auto          set_value() && noexcept -> void { this->st->complete(); }
+        auto                           set_value() && noexcept -> void { this->st->complete(); }
         template <typename E>
         auto set_error(E&& e) && noexcept -> void {
             ::beman::execution::set_error(::std::move(this->st->rcvr), ::std::forward<E>(e));
         }
         auto set_stopped() && noexcept -> void { ::beman::execution::set_stopped(::std::move(this->st->rcvr)); }
 
-        auto get_env() const noexcept -> env_t { return { this->st }; }
+        auto get_env() const noexcept -> env_t { return {this->st}; }
     };
 
     template <::beman::execution::sender Sndr, ::beman::execution::scheduler Sch, ::beman::execution::receiver Rcvr>
-    struct affine_state: affine_state_base<Rcvr, typename Sch::type> {
+    struct affine_state : affine_state_base<Rcvr, typename Sch::type> {
         using operation_state_concept = ::beman::execution::operation_state_t;
-        using env_t  = decltype(::beman::execution::get_env(std::declval<Rcvr>()));
-        using base_t = affine_state_base<Rcvr, typename Sch::type>;
-        using data_t = typename Sch::type;
+        using env_t                   = decltype(::beman::execution::get_env(std::declval<Rcvr>()));
+        using base_t                  = affine_state_base<Rcvr, typename Sch::type>;
+        using data_t                  = typename Sch::type;
         using state_t                 = decltype(::beman::execution::connect(
-            ::beman::execution::affine_on(::std::declval<Sndr>(), ::std::declval<Sch>()), ::std::declval<affine_receiver<Rcvr, data_t>>()));
+            ::beman::execution::affine_on(::std::declval<Sndr>(), ::std::declval<Sch>()),
+            ::std::declval<affine_receiver<Rcvr, data_t>>()));
 
-        state_t                   state;
+        state_t state;
 
         template <::beman::execution::sender S, ::beman::execution::scheduler SC, ::beman::execution::receiver R>
         affine_state(S&& s, SC&& sc, R&& r)
             : base_t{::std::forward<R>(r)},
               state(::beman::execution::connect(
-                  ::beman::execution::affine_on(::std::forward<S>(s), ::std::forward<SC>(sc)), affine_receiver<Rcvr, data_t>{this})) {}
+                  ::beman::execution::affine_on(::std::forward<S>(s), ::std::forward<SC>(sc)),
+                  affine_receiver<Rcvr, data_t>{this})) {}
         auto start() & noexcept {
             std::cout << "affine_state::start\n";
             this->data.save();
@@ -95,7 +99,7 @@ struct tls_domain {
 template <typename Data, ::beman::execution::scheduler Scheduler>
 struct tls_scheduler {
     using scheduler_concept = ::beman::execution::scheduler_t;
-    using type = Data;
+    using type              = Data;
     struct env {
         Scheduler sched;
         template <typename Tag>
@@ -139,10 +143,10 @@ struct tls_scheduler {
     template <typename Sch>
         requires(!std::same_as<tls_scheduler, std::remove_cvref_t<Sch>>)
     tls_scheduler(Sch&& sch) : sched(sch) {}
-    tls_scheduler(tls_scheduler const&) = default;
-    tls_scheduler(tls_scheduler &&) = default;
-    tls_scheduler& operator=(tls_scheduler const&) = default;
-    tls_scheduler& operator=(tls_scheduler &&) = default;
+    tls_scheduler(const tls_scheduler&)            = default;
+    tls_scheduler(tls_scheduler&&)                 = default;
+    tls_scheduler& operator=(const tls_scheduler&) = default;
+    tls_scheduler& operator=(tls_scheduler&&)      = default;
 
     auto schedule() -> tls_sender { return {this->sched}; }
 
@@ -151,7 +155,7 @@ struct tls_scheduler {
     auto operator==(const tls_scheduler&) const -> bool = default;
 };
 
-}
+} // namespace demo
 
 // ----------------------------------------------------------------------------
 

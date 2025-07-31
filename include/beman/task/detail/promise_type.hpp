@@ -74,14 +74,13 @@ class promise_type
     auto await_transform(Sender&& sender) noexcept {
         if constexpr (requires {
                           ::std::forward<Sender>(sender).as_awaitable(*this);
-                          //typename ::std::remove_cvref_t<Sender>::task_concept;
+                          // typename ::std::remove_cvref_t<Sender>::task_concept;
                       }) {
             return ::std::forward<Sender>(sender).as_awaitable(*this);
-        }
-        else if constexpr (::std::same_as<::beman::execution::tag_of_t<::std::remove_cvref_t<Sender>>, ::beman::execution::read_env_t>) {
+        } else if constexpr (::std::same_as<::beman::execution::tag_of_t<::std::remove_cvref_t<Sender>>,
+                                            ::beman::execution::read_env_t>) {
             return ::beman::execution::as_awaitable(::std::forward<Sender>(sender), *this);
-        }
-        else {
+        } else {
             return ::beman::execution::as_awaitable(
                 ::beman::task::affine_on(::std::forward<Sender>(sender), this->get_scheduler()), *this);
         }

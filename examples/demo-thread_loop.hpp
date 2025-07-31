@@ -15,11 +15,11 @@
 
 namespace demo {
 
-class thread_loop: public ::beman::execution::run_loop {
-private:
+class thread_loop : public ::beman::execution::run_loop {
+  private:
     std::thread thread{std::bind(&thread_loop::run, this)};
 
-public:
+  public:
     ~thread_loop() {
         this->finish();
         this->thread.join();
