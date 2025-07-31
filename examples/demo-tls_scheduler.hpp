@@ -96,7 +96,7 @@ struct tls_domain {
     template <::beman::execution::sender Sndr, typename... Env>
         requires std::same_as<::beman::execution::tag_of_t<::std::remove_cvref_t<Sndr>>,
                               ::beman::execution::affine_on_t>
-    auto transform_sender(Sndr&& s, const Env&... env) const noexcept {
+    auto transform_sender(Sndr&& s, const Env&...) const noexcept {
         auto [tag, sch, sndr] = s;
         return affine_sender<decltype(sndr), decltype(sch)>{::beman::execution::detail::forward_like<Sndr>(sndr),
                                                             ::beman::execution::detail::forward_like<Sndr>(sch)};
