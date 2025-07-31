@@ -29,19 +29,22 @@ struct tls_domain {
         using receiver_concept = ::beman::execution::receiver_t;
         struct env_t {
             affine_state_base<Rcvr, Data>* st;
-            // template <typename Q, typename... A>
-            //    requires requires(affine_state_base<Rcvr, Data>* self, Q&& q, A&&... a) {
-            //    std::forward<Q>(q)(::beman::execution::get_env(self->st->rcvr), ::std::forward<A>(a)...); }
-            // auto query(Q&& q, A&&... a) const noexcept {
-            // std::forward<Q>(q)(::beman::execution::get_env(this->st->rcvr, ::std::forward<A>(a)...)); }
+            template <typename Q, typename... A>
+                requires requires(affine_state_base<Rcvr, Data>* self, Q&& q, A&&... a) {
+                    std::forward<Q>(q)(::beman::execution::get_env(self->st->rcvr), ::std::forward<A>(a)...);
+                }
+            auto query(Q&& q, A&&... a) const noexcept {
+                std::forward<Q>(q)(::beman::execution::get_env(this->st->rcvr, ::std::forward<A>(a)...));
+            }
         };
         affine_state_base<Rcvr, Data>* st;
-        auto                           set_value() && noexcept -> void { this->st->complete(); }
+
         template <typename E>
         auto set_error(E&& e) && noexcept -> void {
             ::beman::execution::set_error(::std::move(this->st->rcvr), ::std::forward<E>(e));
         }
         auto set_stopped() && noexcept -> void { ::beman::execution::set_stopped(::std::move(this->st->rcvr)); }
+        auto set_value() && noexcept -> void { this->st->complete(); }
 
         auto get_env() const noexcept -> env_t { return {this->st}; }
     };
@@ -64,7 +67,7 @@ struct tls_domain {
               state(::beman::execution::connect(
                   ::beman::execution::affine_on(::std::forward<S>(s), ::std::forward<SC>(sc)),
                   affine_receiver<Rcvr, data_t>{this})) {}
-        auto start() & noexcept {
+        auto start() & noexcept -> void {
             std::cout << "affine_state::start\n";
             this->data.save();
             ::beman::execution::start(this->state);
@@ -80,6 +83,10 @@ struct tls_domain {
         template <typename Env>
         auto get_completion_signatures(const Env& env) const noexcept {
             return ::beman::execution::get_completion_signatures(this->sndr, env);
+        }
+        template <::beman::execution::receiver Rcvr>
+        auto connect(Rcvr&& rcvr) const& {
+            return affine_state<Sndr, Sch, Rcvr>(sndr, sch, std::forward<Rcvr>(rcvr));
         }
         template <::beman::execution::receiver Rcvr>
         auto connect(Rcvr&& rcvr) && {
@@ -134,7 +141,7 @@ struct tls_scheduler {
         auto get_env() const noexcept -> env { return {this->sched}; }
 
         template <::beman::execution::receiver Receiver>
-        auto connect(Receiver&& rcvr) && -> state<Receiver> {
+        auto connect(Receiver&& rcvr) -> state<Receiver> {
             return state<Receiver>(::beman::execution::schedule(this->sched), std::forward<Receiver>(rcvr));
         }
     };
@@ -154,6 +161,8 @@ struct tls_scheduler {
 
     auto operator==(const tls_scheduler&) const -> bool = default;
 };
+static_assert(::beman::execution::scheduler<
+              tls_scheduler<int, decltype(std::declval<::beman::execution::run_loop>().get_scheduler())>>);
 
 } // namespace demo
 
