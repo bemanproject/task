@@ -72,6 +72,7 @@ struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::s
 
     auto                    start() & noexcept -> void { this->handle.start(this).resume(); }
     std::coroutine_handle<> do_complete() override {
+        this->handle.release();
         this->result_complete(::std::move(this->receiver));
         return std::noop_coroutine();
     }
