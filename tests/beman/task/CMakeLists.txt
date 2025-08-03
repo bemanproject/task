@@ -25,7 +25,6 @@ list(
     task
     task_scheduler
     with_error
-
 )
 
 foreach(test ${task_tests})
