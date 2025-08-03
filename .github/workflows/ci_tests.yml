@@ -113,7 +113,7 @@ jobs:
                 { "cxxversions": ["c++23"],
                   "tests": [
                     { "stdlibs": ["stl"],
-                      "tests": ["Release.Default"]
+                      "tests": ["Debug.Default", "Release.Default", "Release.MaxSan"]
                     }
                   ]
                 },
