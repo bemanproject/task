@@ -19,12 +19,13 @@ struct affine_on_t {
     auto operator()(Sender&& sndr, Scheduler&& scheduler) const {
         using result_t = sender<::std::remove_cvref_t<Sender>, ::std::remove_cvref_t<Scheduler>>;
         static_assert(::beman::execution::sender<result_t>);
-        return result_t{*this, ::std::forward<Sender>(sndr), ::std::forward<Scheduler>(scheduler)};
+        return result_t(::std::forward<Scheduler>(scheduler), ::std::forward<Sender>(sndr));
     }
 };
 
 template <::beman::execution::sender Sender, ::beman::execution::scheduler Scheduler>
-struct affine_on_t::sender {
+struct affine_on_t::sender
+    : ::beman::execution::detail::product_type<::beman::task::detail::affine_on_t, Scheduler, Sender> {
     using sender_concept                 = ::beman::execution::sender_t;
     static constexpr bool elide_schedule = ::std::same_as<::beman::task::detail::inline_scheduler, Scheduler>;
 
@@ -32,44 +33,51 @@ struct affine_on_t::sender {
     auto get_completion_signatures(const Env& env) const& noexcept {
         if constexpr (elide_schedule) {
             return ::beman::execution::get_completion_signatures(
-                ::std::remove_cvref_t<Sender>(::std::move(this->upstream)), env);
+                ::std::remove_cvref_t<Sender>(::std::move(this->template get<2>())), env);
         } else {
             return ::beman::execution::get_completion_signatures(
-                ::beman::execution::continues_on(this->upstream, this->scheduler), env);
+                ::beman::execution::continues_on(this->template get<2>(), this->template get<1>()), env);
         }
     }
     template <typename Env>
     auto get_completion_signatures(const Env& env) && noexcept {
         if constexpr (elide_schedule) {
             return ::beman::execution::get_completion_signatures(
-                ::std::remove_cvref_t<Sender>(::std::move(this->upstream)), env);
+                ::std::remove_cvref_t<Sender>(::std::move(this->template get<2>())), env);
         } else {
             return ::beman::execution::get_completion_signatures(
-                ::beman::execution::continues_on(::std::move(this->upstream), ::std::move(this->scheduler)), env);
+                ::beman::execution::continues_on(::std::move(this->template get<2>()),
+                                                 ::std::move(this->template get<1>())),
+                env);
         }
     }
 
-    affine_on_t tag{};
-    Sender      upstream;
-    Scheduler   scheduler;
+    template <typename S, typename Sch>
+    sender(Sch&& sch, S&& s)
+        : ::beman::execution::detail::product_type<::beman::task::detail::affine_on_t, Scheduler, Sender>{
+              {{::beman::task::detail::affine_on_t{}},
+               {Scheduler(::std::forward<Sch>(sch))},
+               {Sender(::std::forward<S>(s))}}} {}
 
     template <::beman::execution::receiver Receiver>
     auto connect(Receiver&& receiver) const& {
         if constexpr (elide_schedule) {
-            return ::beman::execution::connect(this->upstream, ::std::forward<Receiver>(receiver));
+            return ::beman::execution::connect(this->template get<2>(), ::std::forward<Receiver>(receiver));
         } else {
-            return ::beman::execution::connect(::beman::execution::continues_on(this->upstream, this->scheduler),
-                                               ::std::forward<Receiver>(receiver));
+            return ::beman::execution::connect(
+                ::beman::execution::continues_on(this->template get<2>(), this->template get<1>()),
+                ::std::forward<Receiver>(receiver));
         }
     }
     template <::beman::execution::receiver Receiver>
     auto connect(Receiver&& receiver) && {
         if constexpr (elide_schedule) {
-            return ::beman::execution::connect(::std::move(this->upstream), ::std::forward<Receiver>(receiver));
+            return ::beman::execution::connect(::std::move(this->template get<2>()),
+                                               ::std::forward<Receiver>(receiver));
         } else {
-            return ::beman::execution::connect(
-                ::beman::execution::continues_on(::std::move(this->upstream), ::std::move(this->scheduler)),
-                ::std::forward<Receiver>(receiver));
+            return ::beman::execution::connect(::beman::execution::continues_on(::std::move(this->template get<2>()),
+                                                                                ::std::move(this->template get<1>())),
+                                               ::std::forward<Receiver>(receiver));
         }
     }
 };

@@ -4,6 +4,7 @@
 #include <beman/task/task.hpp>
 #include <beman/execution/execution.hpp>
 #include <beman/execution/stop_token.hpp>
+#include "demo-thread_loop.hpp"
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
@@ -13,117 +14,7 @@
 
 namespace ex = beman::execution;
 
-// ----------------------------------------------------------------------------
-
 namespace {
-class thread_context {
-    struct base {
-        base* next{};
-
-        virtual void do_run()        = 0;
-        base()                       = default;
-        base(const base&)            = delete;
-        base(base&&)                 = delete;
-        base& operator=(const base&) = delete;
-        base& operator=(base&&)      = delete;
-        virtual ~base()              = default;
-    };
-
-    ex::stop_source         source;
-    std::mutex              mutex;
-    std::condition_variable condition;
-    std::thread             thread{[this] { this->run(this->source.get_token()); }};
-    base*                   queue{};
-
-    void run(auto token) {
-        while (true) {
-            base* next(std::invoke([&]() -> base* {
-                std::unique_lock cerberus(this->mutex);
-                this->condition.wait(cerberus,
-                                     [this, &token] { return token.stop_requested() || nullptr != this->queue; });
-                if (nullptr == this->queue) {
-                    return nullptr;
-                }
-                base* n = std::exchange(queue, queue->next);
-                return n;
-            }));
-            if (next) {
-                next->do_run();
-            } else {
-                break;
-            }
-        }
-    }
-
-  public:
-    thread_context()                      = default;
-    thread_context(const thread_context&) = delete;
-    thread_context(thread_context&&)      = delete;
-    ~thread_context() {
-        this->source.request_stop();
-        this->condition.notify_one();
-        this->thread.join();
-    }
-    thread_context& operator=(const thread_context&) = delete;
-    thread_context& operator=(thread_context&&)      = delete;
-
-    void enqueue(base* work) noexcept {
-        {
-            std::lock_guard cerberus(this->mutex);
-            work->next = this->queue;
-            queue      = work;
-        }
-        this->condition.notify_one();
-    }
-
-    template <typename Receiver>
-    struct state final : base {
-        using operation_state_concept = ex::operation_state_t;
-        Receiver        receiver;
-        thread_context* context;
-
-        template <typename R>
-        state(thread_context* ctxt, R&& r) : receiver(std::forward<R>(r)), context(ctxt) {}
-        void start() noexcept {
-            static_assert(ex::operation_state<state>);
-            this->context->enqueue(this);
-        }
-        void do_run() override { ex::set_value(std::move(this->receiver)); }
-    };
-
-    struct scheduler;
-    struct env {
-        thread_context* context;
-        template <typename Tag>
-        scheduler query(const ex::get_completion_scheduler_t<Tag>&) const noexcept {
-            return {this->context};
-        }
-    };
-    struct sender {
-        using sender_concept        = ex::sender_t;
-        using completion_signatures = ex::completion_signatures<ex::set_value_t()>;
-        thread_context* context;
-        template <ex::receiver Receiver>
-        auto connect(Receiver&& r) {
-            return state<std::remove_cvref_t<Receiver>>(this->context, std::forward<Receiver>(r));
-        }
-        env get_env() const noexcept { return {this->context}; }
-    };
-    static_assert(ex::sender<sender>);
-    // static_assert(ex::sender_in<sender>);
-
-    struct scheduler {
-        using scheduler_concept = ex::scheduler_t;
-        thread_context* context;
-
-        sender schedule() noexcept { return {this->context}; }
-        bool   operator==(const scheduler&) const = default;
-    };
-    static_assert(ex::scheduler<scheduler>);
-    scheduler get_scheduler() { return {this}; }
-};
-
-// ----------------------------------------------------------------------------
 
 ex::task<> work1(auto sched) {
     std::cout << "before id=" << std::this_thread::get_id() << "\n";
@@ -155,10 +46,10 @@ ex::task<void, inline_context> work3(auto sched) {
 
 int main() {
     try {
-        thread_context context;
-        ex::sync_wait(work1(context.get_scheduler()));
-        ex::sync_wait(work2(context.get_scheduler()));
-        ex::sync_wait(work3(context.get_scheduler()));
+        demo::thread_loop loop;
+        ex::sync_wait(work1(loop.get_scheduler()));
+        ex::sync_wait(work2(loop.get_scheduler()));
+        ex::sync_wait(work3(loop.get_scheduler()));
     } catch (...) {
         std::cout << "ERROR: unexpected exception\n";
     }

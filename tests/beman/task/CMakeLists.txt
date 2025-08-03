@@ -3,11 +3,10 @@
 list(
     APPEND
     task_tests
-    single_thread_context
+    msvc-asan-issue
     affine_on
     allocator_of
     allocator_support
-    task_scheduler
     completion
     error_types_of
     final_awaiter
@@ -20,9 +19,11 @@ list(
     promise_type
     result_type
     scheduler_of
+    single_thread_context
     state_base
     sub_visit
     task
+    task_scheduler
     with_error
 )
 
