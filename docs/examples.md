@@ -98,12 +98,24 @@ shows some basic use of a `task`:
     `just*` to show the different results:
     - `co_await`ing a sender completing with `set_value_t()`, e.g., `just()`, produces an expression with type `void`.
     - `co_await`ing a sender completing with `set_value_t(T)`, e.g., `just(1)`, produces an expression with type `T`.
-    - `co_await`ing a sender completing with <code>set_value_t(T<sub>0</sub>, ..., T<sub>n</sub>)<code>, e.g., `just(1, true)`, produces an expression with type <code>tuple&lt;T<sub>0</sub>, ..., T<sub>n</sub>&gt;`.
+    - `co_await`ing a sender completing with <code>set_value_t(T<sub>0</sub>, ..., T<sub>n</sub>)</code>, e.g., `just(1, true)`, produces an expression with type <code>tuple&lt;T<sub>0</sub>, ..., T<sub>n</sub>&gt;</code>`.
     - `co_await`ing a sender completing with `set_error_t(E)`, e.g., `just_error(1)`, results in an exception of type `E` being thrown.
     - `co_await`ing a sender completing with `set_stopped_t()`, e.g., `just_stopped()`, results in the corouting never getting resumed although all local objects are properly destroyed.
-</detail>
+</details>
 
-- [`c++now-cancel.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-cancel.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/vx4PqYvE6)
+<details>
+<summary>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-cancel.cpp'><code>c++now-cancel.cpp</code></a>
+<a href='https://godbolt.org/z/vx4PqYvE6'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
+demo how a `task` can actively cancel the work
+</summary>
+
+The example
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-basic.cpp'><code>c++now-basic.cpp</code></a>
+shows a coroutine `co_await`ing `just_stopped()` which results in the coroutine getting cancelled. The coroutine will
+complete with `set_stopped()`.
+</details>
+
 - [`c++now-errors.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-errors.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/95Mhr5MGn)
 - [`c++now-query.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-query.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/dPboEeqfv)
 - [`c++now-result-types.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-result-types.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/aWfc8T8he)
