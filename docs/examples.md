@@ -137,7 +137,24 @@ shows examples of how to handle errors within a coroutine:
 
 </details>
 
-- [`c++now-query.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-query.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/dPboEeqfv)
+<details>
+<summary>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-query.cpp'><code>c++now-query.cpp</code></a>
+<a href='https://godbolt.org/z/dPboEeqfv'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
+demo passing a custom envrionment into a <code>task</code>
+</summary>
+
+The example
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-query.cpp'><code>c++now-query.cpp</code></a>
+shows how to define and use a custom environment element.
+
+1. The coroutine `with_env` uses a simple environment named `context` which just defines a custom query for `get_value`
+    to obtain a value. The value itself gets initialized from the environment of the receiver used with the `task`.
+2. The coroutine `with_fancy_env` uses an environment which embed a an object depending the type of the environment
+    of the receiver used with the `task`. While the type accessed from within the `task` needs to be type-erased,
+    the actually stored value can depend on the environment of the upstream receiver.
+</details>
+
 - [`c++now-result-types.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-result-types.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/aWfc8T8he)
 - [`c++now-return.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-return.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/f5YE5W4Ta)
 - [`c++now-stop_token.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-stop_token.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/TxYe3jEs7)
@@ -147,7 +164,7 @@ shows examples of how to handle errors within a coroutine:
 
 <details>
 <summary>
-<a href='https://github.com/bemanproject/task/blob/remove-net-and-improve-docs/examples/demo-thread_loop.hpp'><code>demo::thread_loop</code>(../examples/demo-thread_loop.hpp) is a <code>run_loop</code> whose <code>run()</code> is called from a <code>std::thread</code>.
+<a href='https://github.com/bemanproject/task/blob/remove-net-and-improve-docs/examples/demo-thread_loop.hpp'><code>demo::thread_loop</code> is a <code>run_loop</code> whose <code>run()</code> is called from a <code>std::thread</code>.
 </summary>
 
 Technically [`demo::thread_loop`](../examples/demo-thread_loop.hpp)

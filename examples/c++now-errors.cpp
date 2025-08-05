@@ -70,7 +70,7 @@ ex::task<> error_result() {
 ex::task<> expected() {
     auto e = co_await as_expected(ex::just(17));
     print_expected("expected with value=", e);
-     auto u = co_await as_expected(ex::just_error(17));
+    auto u = co_await as_expected(ex::just_error(17));
     print_expected("expected without value=", u);
 }
 #endif

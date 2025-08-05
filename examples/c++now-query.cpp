@@ -27,7 +27,10 @@ struct context {
     int query(const get_value_t&) const { return this->value; }
 };
 
-ex::task<void, context> with_env() { [[maybe_unused]] decltype(auto) v = co_await ex::read_env(get_value); }
+ex::task<void, context> with_env() {
+    decltype(auto) v = co_await ex::read_env(get_value);
+    std::cout << "with_env: v=" << v << "\n";
+}
 
 struct fancy {
     struct env_base {
@@ -52,7 +55,7 @@ struct fancy {
 };
 
 ex::task<void, fancy> with_fancy_env() {
-    [[maybe_unused]] decltype(auto) v = co_await ex::read_env(get_value);
+    decltype(auto) v = co_await ex::read_env(get_value);
     std::cout << "v=" << v << "\n";
 }
 } // namespace
