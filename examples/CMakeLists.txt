@@ -41,14 +41,7 @@ message("Examples to be built: ${ALL_EXAMPLES}")
 foreach(example ${ALL_EXAMPLES})
     add_executable(beman.task.examples.${example})
     target_sources(beman.task.examples.${example} PRIVATE ${example}.cpp)
-    if(WIN32)
-        target_link_libraries(beman.task.examples.${example} beman::task)
-    else()
-        target_link_libraries(
-            beman.task.examples.${example}
-            beman::task
-        )
-    endif()
+    target_link_libraries(beman.task.examples.${example} beman::task)
     add_test(
         NAME beman.task.examples.${example}
         COMMAND $<TARGET_FILE:beman.task.examples.${example}>

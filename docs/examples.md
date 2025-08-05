@@ -85,7 +85,7 @@ The second use explicitly specifies the memory resource
 <summary>
 <a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-basic.cpp'><code>c++now-basic.cpp</code></a>
 <a href='https://godbolt.org/z/7Pn5TEhfK'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
-demo basic task use
+demo basic <code>task</code> use
 </summary>
 
 The example
@@ -98,7 +98,7 @@ shows some basic use of a `task`:
     `just*` to show the different results:
     - `co_await`ing a sender completing with `set_value_t()`, e.g., `just()`, produces an expression with type `void`.
     - `co_await`ing a sender completing with `set_value_t(T)`, e.g., `just(1)`, produces an expression with type `T`.
-    - `co_await`ing a sender completing with <code>set_value_t(T<sub>0</sub>, ..., T<sub>n</sub>)</code>, e.g., `just(1, true)`, produces an expression with type <code>tuple&lt;T<sub>0</sub>, ..., T<sub>n</sub>&gt;</code>`.
+    - `co_await`ing a sender completing with <code>set_value_t(T<sub>0</sub>, ..., T<sub>n</sub>)</code>, e.g., `just(1, true)`, produces an expression with type <code>tuple&lt;T<sub>0</sub>, ..., T<sub>n</sub>&gt;</code>.
     - `co_await`ing a sender completing with `set_error_t(E)`, e.g., `just_error(1)`, results in an exception of type `E` being thrown.
     - `co_await`ing a sender completing with `set_stopped_t()`, e.g., `just_stopped()`, results in the corouting never getting resumed although all local objects are properly destroyed.
 </details>
@@ -107,16 +107,36 @@ shows some basic use of a `task`:
 <summary>
 <a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-cancel.cpp'><code>c++now-cancel.cpp</code></a>
 <a href='https://godbolt.org/z/vx4PqYvE6'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
-demo how a `task` can actively cancel the work
+demo how a <code>task</code> can actively cancel the work
 </summary>
 
 The example
-<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-basic.cpp'><code>c++now-basic.cpp</code></a>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-cancel.cpp'><code>c++now-cancel.cpp</code></a>
 shows a coroutine `co_await`ing `just_stopped()` which results in the coroutine getting cancelled. The coroutine will
 complete with `set_stopped()`.
 </details>
 
-- [`c++now-errors.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-errors.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/95Mhr5MGn)
+<details>
+<summary>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-errors.cpp'><code>c++now-errors.cpp</code></a>
+<a href='https://godbolt.org/z/95Mhr5MGn'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
+demo how to handle errors within <code>task</code>
+</summary>
+
+The example
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-errors.cpp'><code>c++now-errors.cpp</code></a>
+shows examples of how to handle errors within a coroutine:
+
+- The coroutine `error_result` simply `co_await`s a sender producing an error (`just_error(17)`). When
+    a `co_await`ed sender completes with `set_error_t(T)` an exception of type `T` is thrown and the error
+    needs to be handled with a `try`/`catch` block. Otherwise the coroutine itself completes with `set_error_t(exception_ptr)`
+    where the `exception_ptr` hold the thrown exception object.
+- The coroutine `expected` uses a sender algorithm `as_expected` which is implemented at the top of the example
+    to turn the result of the `co_await`ed sender into an object of type `expected<T, E>`, avoiding an exception
+    from being thrown.
+
+</details>
+
 - [`c++now-query.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-query.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/dPboEeqfv)
 - [`c++now-result-types.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-result-types.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/aWfc8T8he)
 - [`c++now-return.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-return.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/f5YE5W4Ta)
@@ -127,7 +147,7 @@ complete with `set_stopped()`.
 
 <details>
 <summary>
-[`demo::thread_loop`](../examples/demo-thread_loop.hpp) is a `run_loop` whose `run()` is called from a `std::thread`.
+<a href='https://github.com/bemanproject/task/blob/remove-net-and-improve-docs/examples/demo-thread_loop.hpp'><code>demo::thread_loop</code>(../examples/demo-thread_loop.hpp) is a <code>run_loop</code> whose <code>run()</code> is called from a <code>std::thread</code>.
 </summary>
 
 Technically [`demo::thread_loop`](../examples/demo-thread_loop.hpp)

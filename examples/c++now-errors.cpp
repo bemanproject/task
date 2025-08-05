@@ -68,9 +68,9 @@ ex::task<> error_result() {
 
 #if 202202 <= __cpp_lib_expected
 ex::task<> expected() {
-    [[maybe_unused]] auto e = co_await as_expected(ex::just(17));
+    auto e = co_await as_expected(ex::just(17));
     print_expected("expected with value=", e);
-    [[maybe_unused]] auto u = co_await as_expected(ex::just_error(17));
+     auto u = co_await as_expected(ex::just_error(17));
     print_expected("expected without value=", u);
 }
 #endif
