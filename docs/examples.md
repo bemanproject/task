@@ -5,7 +5,8 @@
 <details>
 <summary>
 <a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-affinity.cpp'>`c++now-affinity.cpp`</a>
-<a href='https://godbolt.org/z/8qEG5x7sz'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico'/></a>: demo scheduler affinity
+<a href='https://godbolt.org/z/8qEG5x7sz'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='2em' height='2em'/></a>:
+demo scheduler affinity
 </summary>
 
 The example program
@@ -56,7 +57,30 @@ the `inline_scheduler` doesn't do any actual scheduling.
 
 </details>
 
-- [`c++now-allocator.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-allocator.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/719v7en6a)
+<details>
+<summary>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-allocator.cpp'>`c++now-allocator.cpp`</a>
+<a href='https://godbolt.org/z/719v7en6a'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='2em' height='2em'/></a>:
+demo allocator use
+</summary>
+
+This demo shows how to configure `task`'s environment argument to
+use a different allocator than the default `std::allocator<std::byte>`.
+To do so it defines an environment type `with_allocator` which
+defines a nested type alias `allocator_type` to be
+`std::pmr::polymorphic_allocator<std::byte>`.
+
+The coroutine `coro` shows how to use `read_env` to extract the
+used allocator object to potentially use it for any allocation
+purposes within the coroutine.  There are two uses of `coro`, the
+first one using the default which just uses
+`std::pmr::polymorphic_allocator<std::byte>()` to allocate memory.
+The second use explicitly specifies the memory resource
+`std::pmr::new_delete_resource()` to initialized the use
+`std::pmr::polymorphic_allocator<std::byte>`.
+
+</details>
+
 - [`c++now-basic.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-basic.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/7Pn5TEhfK)
 - [`c++now-cancel.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-cancel.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/vx4PqYvE6)
 - [`c++now-errors.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-errors.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/95Mhr5MGn)
