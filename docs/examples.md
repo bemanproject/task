@@ -4,8 +4,8 @@
 
 <details>
 <summary>
-<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-affinity.cpp'>`c++now-affinity.cpp`</a>
-<a href='https://godbolt.org/z/8qEG5x7sz'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='2em' height='2em'/></a>:
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-affinity.cpp'>c++now-affinity.cpp</a>
+<a href='https://godbolt.org/z/8qEG5x7sz'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
 demo scheduler affinity
 </summary>
 
@@ -59,8 +59,8 @@ the `inline_scheduler` doesn't do any actual scheduling.
 
 <details>
 <summary>
-<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-allocator.cpp'>`c++now-allocator.cpp`</a>
-<a href='https://godbolt.org/z/719v7en6a'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='2em' height='2em'/></a>:
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-allocator.cpp'><code>c++now-allocator.cpp</code></a>
+<a href='https://godbolt.org/z/719v7en6a'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
 demo allocator use
 </summary>
 
@@ -81,7 +81,28 @@ The second use explicitly specifies the memory resource
 
 </details>
 
-- [`c++now-basic.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-basic.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/7Pn5TEhfK)
+<details>
+<summary>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-basic.cpp'><code>c++now-basic.cpp</code></a>
+<a href='https://godbolt.org/z/7Pn5TEhfK'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
+demo basic task use
+</summary>
+
+The example
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-basic.cpp'><code>c++now-basic.cpp</code></a>
+shows some basic use of a `task`:
+
+1. The coroutine `basic` just `co_await`s the awaiter `std::suspend_never{}` which immediately completes.
+    This use demonstrates that any awaiter can be `co_await`ed by a `task<...>`.
+2. The coroutine `await_sender` demonstrates the results of `co_await`ing various senders. It uses variations of
+    `just*` to show the different results:
+    - `co_await`ing a sender completing with `set_value_t()`, e.g., `just()`, produces an expression with type `void`.
+    - `co_await`ing a sender completing with `set_value_t(T)`, e.g., `just(1)`, produces an expression with type `T`.
+    - `co_await`ing a sender completing with <code>set_value_t(T<sub>0</sub>, ..., T<sub>n</sub>)<code>, e.g., `just(1, true)`, produces an expression with type <code>tuple&lt;T<sub>0</sub>, ..., T<sub>n</sub>&gt;`.
+    - `co_await`ing a sender completing with `set_error_t(E)`, e.g., `just_error(1)`, results in an exception of type `E` being thrown.
+    - `co_await`ing a sender completing with `set_stopped_t()`, e.g., `just_stopped()`, results in the corouting never getting resumed although all local objects are properly destroyed.
+</detail>
+
 - [`c++now-cancel.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-cancel.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/vx4PqYvE6)
 - [`c++now-errors.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-errors.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/95Mhr5MGn)
 - [`c++now-query.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-query.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/dPboEeqfv)
