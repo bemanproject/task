@@ -4,13 +4,13 @@
 
 <details>
 <summary>
-[`c++now-affinity.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-affinity.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/8qEG5x7sz): demo scheduler affinity
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-affinity.cpp'>`c++now-affinity.cpp`</a>
+<a href='https://godbolt.org/z/8qEG5x7sz'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico'/></a>: demo scheduler affinity
 </summary>
 
 The example program
 [`c++now-affinity.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-affinity.cpp)
-[![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/8qEG5x7sz) uses
-[`demo::thread_loop`](../examples/demo-thread_loop.hpp) to demonstrate
+uses [`demo::thread_loop`](../examples/demo-thread_loop.hpp) to demonstrate
 the behavior of _scheduler affinity_: the idea is that scheduler
 affinity causes the coroutine to resume on the same scheduler as
 the one the coroutine was started on. The program implements three

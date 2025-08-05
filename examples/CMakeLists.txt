@@ -19,7 +19,6 @@ set(ALL_EXAMPLES
     co_await-result
     co_await-task
     container
-    environment
     error
     escaped-exception
     friendly
@@ -48,7 +47,6 @@ foreach(example ${ALL_EXAMPLES})
         target_link_libraries(
             beman.task.examples.${example}
             beman::task
-            beman::net
         )
     endif()
     add_test(
