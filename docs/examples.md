@@ -155,10 +155,74 @@ shows how to define and use a custom environment element.
     the actually stored value can depend on the environment of the upstream receiver.
 </details>
 
-- [`c++now-result-types.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-result-types.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/aWfc8T8he)
-- [`c++now-return.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-return.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/f5YE5W4Ta)
-- [`c++now-stop_token.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-stop_token.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/TxYe3jEs7)
-- [`c++now-with_error.cpp`](https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-with_error.cpp) [![Compiler Explorer](compiler-explorer.ico)](https://godbolt.org/z/6oqox6zf8)
+<details>
+<summary>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-result-types.cpp'><code>c++now-result-types.cpp</code></a>
+<a href='https://godbolt.org/z/aWfc8T8he'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
+demo the result type of <code>co_await</code> expressions.
+</summary>
+
+The example
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-result-types.cpp'><code>c++now-result-types.cpp</code></a>
+shows the result types of successful senders using variatons of `just`:
+
+- `co_await just()` doesn't produce a value, i.e., the type of the expression is `void`.
+- `co_await just(1)` produces an `int`.
+- `co_await just(1, true)` produces a `tuple<int, bool>`.
+
+</details>
+
+<details>
+<summary>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-return.cpp'><code>c++now-return.cpp</code></a>
+<a href='https://godbolt.org/z/f5YE5W4Ta'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
+shows the different normal values returned
+</summary>
+
+The example
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-return.cpp'><code>c++now-return.cpp</code></a>
+shows various ways of returning normally (without an error) for a `task`. Some of the coroutines are set up to produce
+specific error results although none of them are actually use:
+
+- `default_return` shows that the default return type for `task<>` is `void`.
+- `void_return` explicitly specifies a `void` return type.
+- `int_return` specifies the return type as `int` and returns an `int` value.
+- `error_return` specifies the return type as `int` and also specifies custom error results.
+- `no_error_return` specifies the return type as `int` and also specifies that the coroutine can't produce any error.
+</details>
+
+<details>
+<summary>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-stop_token.cpp'><code>c++now-stop_token.cpp</code></a>
+<a href='https://godbolt.org/z/TxYe3jEs7'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
+demo how to get and use a stop token in a `task`
+</summary>
+
+The example
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-stop_token.cpp'><code>c++now-stop_token.cpp</code></a>
+shows how to get a stop token in side a `task` and how to use it to cancel active work. It doesn't actually complete
+with a `set_stopped()` but completes with `set_value()`.
+
+- In the coroutine `co_await read_env(get_stop_token)` is used to get a stop token.
+- In the loop the value of `token.stop_requested()` is checked to determine if the loop should continue.
+- In `main` an `inplace_stop_source` is used to have something which can be stopped.
+- When running the coroutine `stopping` on a separate thread, the environment is changed using `write_env` to use stop token from `main`'s stop source in the environment.
+- After sleeping for a bit, `source.request_stop()` is called to trigger cancellation of the coroutine.
+</details>
+
+<details>
+<summary>
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-with_error.cpp'><code>c++now-with_error.cpp</code></a>
+<a href='https://godbolt.org/z/6oqox6zf8'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
+demo exiting a <code>task</code> with an error
+</summary>
+
+The example
+<a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-with_error.cpp'><code>c++now-with_error.cpp</code></a>
+shows how a coroutine can be exited reporting an error without throwing an exception. To do so, the coroutine
+uses `co_yield with_error(e)`. By default the `task` only declares `set_error_t(exception_ptr)`. To return
+other errors, an environment declarating a suitable `set_error_t(E)` completion using the `error_types` alias is used.
+</details>
 
 ## Tools Used By The Examples
 
