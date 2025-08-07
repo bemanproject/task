@@ -7,10 +7,7 @@
 // ----------------------------------------------------------------------------
 
 #include <beman/execution/execution.hpp>
-#include <condition_variable>
-#include <exception>
 #include <functional>
-#include <mutex>
 #include <thread>
 
 namespace demo {

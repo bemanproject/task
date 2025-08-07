@@ -39,15 +39,6 @@ FetchContent_Declare(
     GIT_TAG 330be95
 )
 FetchContent_MakeAvailable(execution)
-FetchContent_Declare(
-    net
-    # SOURCE_DIR <path-to>/net
-    GIT_REPOSITORY https://github.com/bemanproject/net
-    GIT_TAG ea1fd8f
-)
-if(NOT WIN32)
-    FetchContent_MakeAvailable(net)
-endif()
 
 add_subdirectory(src/beman/task)
 
