@@ -41,7 +41,7 @@ struct state_rep<C, Receiver> {
     state_rep(R&& r)
         : receiver(std::forward<R>(r)), own_env(::beman::execution::get_env(this->receiver)), context(this->own_env) {}
 };
-}
+} // namespace beman::task::detail
 
 // ----------------------------------------------------------------------------
 

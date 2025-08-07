@@ -46,15 +46,14 @@ struct awaiter_op_t<Awaiter, ParentPromise, false> {
 };
 
 template <typename Value, typename Env, typename OwnPromise, typename ParentPromise>
-class awaiter : public ::beman::task::detail::state_base<Value, Env>, ::beman::task::detail::state_rep<Env, ::beman::task::detail::handle<OwnPromise>> {
+class awaiter : public ::beman::task::detail::state_base<Value, Env>,
+                ::beman::task::detail::state_rep<Env, ::beman::task::detail::handle<OwnPromise>> {
   public:
     using stop_token_type = typename ::beman::task::detail::state_base<Value, Env>::stop_token_type;
     using scheduler_type  = typename ::beman::task::detail::state_base<Value, Env>::scheduler_type;
 
-    explicit awaiter(::beman::task::detail::handle<OwnPromise> h) :
-        ::beman::task::detail::state_rep<Env, ::beman::task::detail::handle<OwnPromise>>(std::move(h))
-    {
-    }
+    explicit awaiter(::beman::task::detail::handle<OwnPromise> h)
+        : ::beman::task::detail::state_rep<Env, ::beman::task::detail::handle<OwnPromise>>(std::move(h)) {}
     constexpr auto await_ready() const noexcept -> bool { return false; }
     auto           await_suspend(::std::coroutine_handle<ParentPromise> parent) noexcept {
         this->scheduler.emplace(
@@ -83,7 +82,9 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env>, ::beman::t
         return this->actual_complete();
     }
     auto actual_complete() -> std::coroutine_handle<> {
-        return this->::beman::task::detail::state_base<Value, Env>::no_completion_set() ? this->parent.promise().unhandled_stopped() : ::std::move(this->parent);
+        return this->::beman::task::detail::state_base<Value, Env>::no_completion_set()
+                   ? this->parent.promise().unhandled_stopped()
+                   : ::std::move(this->parent);
     }
     auto do_get_scheduler() -> scheduler_type override { return *this->scheduler; }
     auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
