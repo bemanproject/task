@@ -109,7 +109,11 @@ class promise_type
     auto get_scheduler() const noexcept -> scheduler_type { return this->get_state()->get_scheduler(); }
     auto get_allocator() const noexcept -> allocator_type { return this->allocator; }
     auto get_stop_token() const noexcept -> stop_token_type { return this->get_state()->get_stop_token(); }
-    auto get_environment() const noexcept -> const Environment& { return this->get_state()->get_environment(); }
+    auto get_environment() const noexcept -> const Environment& {
+        assert(this);
+        assert(this->get_state());
+        return this->get_state()->get_environment();
+    }
 
   private:
     using env_t = ::beman::task::detail::promise_env<promise_type>;

@@ -72,6 +72,7 @@ class task {
     }
     template <typename ParentPromise>
     auto as_awaitable(ParentPromise&) -> ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise> {
+        assert(this->handle.get());
         return ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise>(::std::move(this->handle));
     }
 
@@ -88,20 +89,13 @@ class task {
     struct domain {
         template <typename DS>
         auto transform_sender(DS&&, auto&&...) const noexcept {
-            std::cout << "task::domain::transform_sender\n";
             return dom_sender{};
         }
     };
     struct env {
-        auto query(const ::beman::execution::get_domain_t&) const noexcept -> domain {
-            std::cout << "task::env::get_domain\n";
-            return domain{};
-        }
+        auto query(const ::beman::execution::get_domain_t&) const noexcept -> domain { return domain{}; }
     };
-    auto xget_env() const noexcept {
-        std::cout << "task::get_env\n";
-        return env{};
-    }
+    auto xget_env() const noexcept { return env{}; }
 
   private:
     ::beman::task::detail::handle<promise_type> handle;

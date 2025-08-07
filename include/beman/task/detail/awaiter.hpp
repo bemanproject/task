@@ -46,20 +46,23 @@ struct awaiter_op_t<Awaiter, ParentPromise, false> {
 };
 
 template <typename Value, typename Env, typename OwnPromise, typename ParentPromise>
-class awaiter : public ::beman::task::detail::state_base<Value, Env>,
-                ::beman::task::detail::state_rep<Env, ::beman::task::detail::handle<OwnPromise>> {
+class awaiter : public ::beman::task::detail::state_base<Value, Env> {
   public:
     using stop_token_type = typename ::beman::task::detail::state_base<Value, Env>::stop_token_type;
     using scheduler_type  = typename ::beman::task::detail::state_base<Value, Env>::scheduler_type;
 
-    explicit awaiter(::beman::task::detail::handle<OwnPromise> h)
-        : ::beman::task::detail::state_rep<Env, ::beman::task::detail::handle<OwnPromise>>(std::move(h)) {}
+    explicit awaiter(::beman::task::detail::handle<OwnPromise> h) : handle(std::move(h)) {}
     constexpr auto await_ready() const noexcept -> bool { return false; }
-    auto           await_suspend(::std::coroutine_handle<ParentPromise> parent) noexcept {
+    struct env_receiver {
+        ParentPromise* parent;
+        auto           get_env() const noexcept { return parent->get_env(); }
+    };
+    auto await_suspend(::std::coroutine_handle<ParentPromise> parent) noexcept {
+        this->state_rep.emplace(env_receiver{&parent.promise()});
         this->scheduler.emplace(
             this->template from_env<scheduler_type>(::beman::execution::get_env(parent.promise())));
         this->parent = ::std::move(parent);
-        return this->receiver.start(this);
+        return this->handle.start(this);
     }
     auto await_resume() { return this->result_resume(); }
 
@@ -82,20 +85,20 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env>,
         return this->actual_complete();
     }
     auto actual_complete() -> std::coroutine_handle<> {
-        return this->::beman::task::detail::state_base<Value, Env>::no_completion_set()
-                   ? this->parent.promise().unhandled_stopped()
-                   : ::std::move(this->parent);
+        return this->no_completion_set() ? this->parent.promise().unhandled_stopped() : ::std::move(this->parent);
     }
     auto do_get_scheduler() -> scheduler_type override { return *this->scheduler; }
     auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
         return ::std::exchange(*this->scheduler, other);
     }
     auto do_get_stop_token() -> stop_token_type override { return {}; }
-    auto do_get_environment() -> Env& override { return this->context; }
+    auto do_get_environment() -> Env& override { return this->state_rep->context; }
 
-    ::std::optional<scheduler_type>                       scheduler;
-    ::std::coroutine_handle<ParentPromise>                parent{};
-    ::std::optional<awaiter_op_t<awaiter, ParentPromise>> reschedule{};
+    ::beman::task::detail::handle<OwnPromise>                            handle;
+    ::std::optional<::beman::task::detail::state_rep<Env, env_receiver>> state_rep;
+    ::std::optional<scheduler_type>                                      scheduler;
+    ::std::coroutine_handle<ParentPromise>                               parent{};
+    ::std::optional<awaiter_op_t<awaiter, ParentPromise>>                reschedule{};
 };
 } // namespace beman::task::detail
 

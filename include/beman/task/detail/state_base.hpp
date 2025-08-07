@@ -24,7 +24,10 @@ class state_base : public ::beman::task::detail::result_type<::beman::task::deta
 
     auto complete() -> std::coroutine_handle<> { return this->do_complete(); }
     auto get_stop_token() -> stop_token_type { return this->do_get_stop_token(); }
-    auto get_environment() -> Environment& { return this->do_get_environment(); }
+    auto get_environment() -> Environment& {
+        assert(this);
+        return this->do_get_environment();
+    }
     auto get_scheduler() -> scheduler_type { return this->do_get_scheduler(); }
     auto set_scheduler(scheduler_type other) -> scheduler_type { return this->do_set_scheduler(other); }
 
