@@ -93,13 +93,9 @@ class task {
         }
     };
     struct env {
-        auto query(const ::beman::execution::get_domain_t&) const noexcept -> domain {
-            return domain{};
-        }
+        auto query(const ::beman::execution::get_domain_t&) const noexcept -> domain { return domain{}; }
     };
-    auto xget_env() const noexcept {
-        return env{};
-    }
+    auto xget_env() const noexcept { return env{}; }
 
   private:
     ::beman::task::detail::handle<promise_type> handle;

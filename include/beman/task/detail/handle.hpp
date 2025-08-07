@@ -32,7 +32,7 @@ class handle {
     auto release() -> ::std::coroutine_handle<P> {
         return ::std::coroutine_handle<P>::from_promise(*this->h.release());
     }
-    P* get() const noexcept { return this->h.get(); }
+    P*   get() const noexcept { return this->h.get(); }
     auto get_env() const noexcept {
         assert(this->h.get());
         return ::beman::execution::get_env(*this->h);
