@@ -57,7 +57,7 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
         ParentPromise* parent;
         auto           get_env() const noexcept { return parent->get_env(); }
     };
-    auto           await_suspend(::std::coroutine_handle<ParentPromise> parent) noexcept {
+    auto await_suspend(::std::coroutine_handle<ParentPromise> parent) noexcept {
         this->state_rep.emplace(env_receiver{&parent.promise()});
         this->scheduler.emplace(
             this->template from_env<scheduler_type>(::beman::execution::get_env(parent.promise())));
@@ -96,9 +96,9 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
 
     ::beman::task::detail::handle<OwnPromise>                            handle;
     ::std::optional<::beman::task::detail::state_rep<Env, env_receiver>> state_rep;
-    ::std::optional<scheduler_type>                       scheduler;
-    ::std::coroutine_handle<ParentPromise>                parent{};
-    ::std::optional<awaiter_op_t<awaiter, ParentPromise>> reschedule{};
+    ::std::optional<scheduler_type>                                      scheduler;
+    ::std::coroutine_handle<ParentPromise>                               parent{};
+    ::std::optional<awaiter_op_t<awaiter, ParentPromise>>                reschedule{};
 };
 } // namespace beman::task::detail
 
