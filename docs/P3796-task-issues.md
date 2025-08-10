@@ -20,6 +20,17 @@ were brought up. The issues were reported using various means. This
 paper describes the issues and proposes potential changes to address
 them.
 
+# TODO
+
+- add `operator co_await` discussion
+- add `co_yield` from `catch`-block
+- add parallel scheduler vs. `task_scheduler`
+- add discussion of https://wg21.link/p3802
+    - add symmetric transfer discussion
+    - add early destruction discussion
+    - add always `co_await` discussion
+- check for other issues
+
 # Change History
 
 ## R0 Initial Revision
