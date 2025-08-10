@@ -15,11 +15,13 @@ namespace beman::task::detail {
 template <typename P>
 class handle {
   private:
-    using deleter = decltype([](auto p) {
-        if (p) {
-            std::coroutine_handle<P>::from_promise(*p).destroy();
+    struct deleter {
+        auto operator()(P* p) noexcept -> void {
+            if (p) {
+                std::coroutine_handle<P>::from_promise(*p).destroy();
+            }
         }
-    });
+    };
     std::unique_ptr<P, deleter> h;
 
   public:

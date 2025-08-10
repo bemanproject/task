@@ -5,6 +5,7 @@
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_SINGLE_THREAD_CONTEXT
 
 #include <beman/execution/execution.hpp>
+#include <functional>
 #include <thread>
 
 // ----------------------------------------------------------------------------
@@ -13,7 +14,9 @@ namespace beman::task::detail {
 class single_thread_context {
   private:
     ::beman::execution::run_loop loop;
-    ::std::thread                thread{[this] { this->loop.run(); }};
+    ::std::thread                thread{&single_thread_context::run, this};
+
+    static auto run(single_thread_context* self) -> void { self->loop.run(); }
 
   public:
     single_thread_context() = default;
