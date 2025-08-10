@@ -48,7 +48,7 @@ inline constexpr struct into_optional_t : beman::execution::sender_adaptor_closu
         }
 
         template <typename Env>
-        auto get_type(Env&&) const {
+        static auto get_type(Env&&) {
             return find_type(
                 ::beman::execution::value_types_of_t<Upstream, std::remove_cvref_t<Env>, type_list, type_list>());
         }
@@ -69,18 +69,21 @@ inline constexpr struct into_optional_t : beman::execution::sender_adaptor_closu
                                    type_list<::beman::execution::set_stopped_t()>,
                                    type_list<>>{});
         }
-
+        template <typename Receiver>
+        struct make_object {
+            template <typename... A>
+            auto operator()(A&&... a) const
+                -> decltype(get_type(::beman::execution::get_env(std::declval<Receiver>()))) {
+                if constexpr (sizeof...(A) == 0u)
+                    return {};
+                else
+                    return {std::forward<A>(a)...};
+            }
+        };
         template <typename Receiver>
         auto connect(Receiver&& receiver) && {
             return ::beman::execution::connect(
-                ::beman::execution::then(
-                    std::move(this->upstream),
-                    []<typename... A>(A&&... a) -> decltype(get_type(::beman::execution::get_env(receiver))) {
-                        if constexpr (sizeof...(A) == 0u)
-                            return {};
-                        else
-                            return {std::forward<A>(a)...};
-                    }),
+                ::beman::execution::then(std::move(this->upstream), make_object<Receiver>{}),
                 std::forward<Receiver>(receiver));
         }
     };
