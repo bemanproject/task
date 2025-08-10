@@ -72,8 +72,8 @@ inline constexpr struct into_optional_t : beman::execution::sender_adaptor_closu
         template <typename Receiver>
         struct make_object {
             template <typename... A>
-            auto operator()(A&&... a) const
-                -> decltype(get_type(::beman::execution::get_env(std::declval<Receiver>()))) {
+            auto
+            operator()(A&&... a) const -> decltype(get_type(::beman::execution::get_env(std::declval<Receiver>()))) {
                 if constexpr (sizeof...(A) == 0u)
                     return {};
                 else
