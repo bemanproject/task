@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 set(ALL_EXAMPLES
+    aggregate-return
     tls-scheduler
     customize
     issue-symmetric-transfer

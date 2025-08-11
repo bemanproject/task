@@ -22,6 +22,11 @@ them.
 
 # TODO
 
+- add `co_return {}`
+- `change_coroutine_scheduler` requires thie scheduler to be assignable
+- `task::connect()` and `task::as_awaitable()` should be r-value qualified
+- `task_schduler::ts-sender::connect()` should be r-value qualified and use appropriate `move()`s
+- `result_type::result` vs. `std::monostate`
 - add `operator co_await` discussion
 - add `co_yield` from `catch`-block
 - add parallel scheduler vs. `task_scheduler`
@@ -34,6 +39,10 @@ them.
 # Change History
 
 ## R0 Initial Revision
+
+## R1: added more issues and discussion
+
+- Consider supporting `co_return { ... }`
 
 # General
 
@@ -1106,6 +1115,40 @@ asynchronous model, failure to capture and restore data in TLS is a
 likely source of errors. However, it will be necessary to specify
 what data needs to be stored, i.e., the problems can't be automatically
 avoided.
+
+### Consider Supporting co_return { args... };
+
+The current specification of `return_value` in the `promise_type`
+specifies the function without a default type for the template
+parameter:
+
+```
+template <class V>
+void return_value(V&& value); // present only if is_void<T> is false
+```
+
+As a result it isn't possible to use aggregate initialization without
+mentioning the type. For example, the following code isn't valid:
+
+```
+struct aggregate { int value{0} };
+[]() -> task<aggregate, std::env<>> { co_return {}; };
+[]() -> task<aggregate, std::env<>> { co_return { 42 }; };
+```
+
+To better match the normal functions, the template
+parameter should be defaulted which would make the code above valid:
+
+```
+template <class V @[` = T`]{.add}@>
+void return_value(V&& value); // present only if is_void<T> is false
+```
+
+There isn't anything broken with the specification but adding the
+default type improves usability. If necessary, this change can be
+applied in a future revision of the standard. It would be nice to
+fix it for C++26.
+
 
 # Conclusion
 

@@ -26,7 +26,7 @@ class promise_base {
      * \brief Set the value result.
      * \internal
      */
-    template <typename T>
+    template <typename T = Value>
     void return_value(T&& value) {
         this->get_state()->set_value(::std::forward<T>(value));
     }
