@@ -9,10 +9,12 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 int main() {
-    struct aggregate { int value = 0; };
+    struct aggregate {
+        int value = 0;
+    };
 
-    ex::sync_wait([]()->ex::task<aggregate>{ co_return aggregate{42}; }());
-    ex::sync_wait([]()->ex::task<aggregate>{ co_return aggregate{}; }());
-    ex::sync_wait([]()->ex::task<aggregate>{ co_return {42}; }());
-    ex::sync_wait([]()->ex::task<aggregate>{ co_return {}; }());
+    ex::sync_wait([]() -> ex::task<aggregate> { co_return aggregate{42}; }());
+    ex::sync_wait([]() -> ex::task<aggregate> { co_return aggregate{}; }());
+    ex::sync_wait([]() -> ex::task<aggregate> { co_return {42}; }());
+    ex::sync_wait([]() -> ex::task<aggregate> { co_return {}; }());
 }

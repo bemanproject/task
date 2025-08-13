@@ -38,7 +38,7 @@ ex::task<int, error_context> fun(int i) {
         // successful return of a value
         co_return 17;
     case 4:
-        co_yield ex::with_error(std::make_error_code(std::errc::io_error));
+        co_yield ex::with_error{std::make_error_code(std::errc::io_error)};
         break;
     }
 

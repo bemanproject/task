@@ -22,7 +22,6 @@ them.
 
 # TODO
 
-- add `co_return {}`
 - `change_coroutine_scheduler` requires thie scheduler to be assignable
 - `task::connect()` and `task::as_awaitable()` should be r-value qualified
 - `task_schduler::ts-sender::connect()` should be r-value qualified and use appropriate `move()`s
@@ -43,6 +42,7 @@ them.
 ## R1: added more issues and discussion
 
 - Consider supporting `co_return { ... }`
+- Added a response to [P3802r0](https://wg21.link/P3801r0) "Concerns about the design of std::execution::task"
 
 # General
 
@@ -858,11 +858,11 @@ objects held by the coroutine frame may be destroyed only long after
 the respective completion function was called.
 
 This behaviour is an oversight in the specification and not intentional
-at all. Instead, there should probably be a statement that the
-coroutine frame is destroyed before the any of the completion
-functions is invoked. The implication is that the results can't be
-stored in the coroutine frame but that is fine as the best place
-store them is in the operation state.
+at all. Instead, there should be a statement that the coroutine
+frame is destroyed before any of the completion functions is invoked.
+The implication is that the results can't be stored in the promise
+type but that isn't a huge constraint as the best place store them
+is in the operation state.
 
 ### `task<T, E>` Has No Default Arguments
 
@@ -1149,6 +1149,143 @@ default type improves usability. If necessary, this change can be
 applied in a future revision of the standard. It would be nice to
 fix it for C++26.
 
+# Response to ["Concerns about the design of std::execution::task"](https://wg21.link/P3801r0) 
+
+The paper ["Concerns about the design of std::execution::task"](P3802r0)
+raises three major points and three minor points. The three major points
+are:
+
+1. Synchronous completions can result in stack overflow. This problem
+    was discussed in the proposal ["Add a Coroutine Task
+    Type"](https://wg21.link/p3552).  If coroutine uses use an
+    actually scheduling scheduler there is no issue with stackoverflow
+    unless implementation "optimize" `affine_on` to complete
+    synchronously in some cases and they don't guard against
+    stackoverflow, e.g., using a "trampoline scheduler". Also, the
+    danger of stackoverflow isn't actually specific to `task` but
+    to any synchronous completion, especially if it has a loop-like
+    construct.
+
+    The concern also mentioned that there is no support for symmetric
+    transfer between tasks. This point is already discussed above
+    in section [No Support For Symmetric
+    Transfer](#no-support-for-symmetric-transfer).
+
+2. One concern addresses that the life-time of variables local to
+    coroutines is surprising: there is no requirement to destroy
+    the coroutine frame before completing the operation. This issue
+    is discussed in [The Coroutine Frame Is Destroyed Too
+    Late](#the-coroutine-frame-is-destroyed-too-late) and the fix
+    is to explicitly speciy that the coroutine frame has to be
+    destroyed before completing the operation. The only implication
+    is that the result of the operation needs to be stored in the
+    operation state rather than the promise type which is, however,
+    a reasonable approach anyway.
+
+3. It is raised as a concern that that `task` doesn't defined against
+    capturing reference which may be out of scope before the `task`
+    is executed. Here is a minimal example demonstrating the problem
+    (the example in the paper uses `co` instead of `task` and omitted
+    the `move(task)` but it is clear what is intended):
+
+        task<void, env<>> g() {
+            auto t = [](const int& v) -> task<int, env<>> { co_return v; }(42);
+            auto v = co_await std::move(t);
+        }
+    
+    The subtle problem with this code is the argument `42` is turned
+    into a temporary `int` which is captured by `const int&` in the
+    coroutine frame. Once the expression completes this temporary
+    goes out of scope and is destroyed. When `t` gets `c_await`ed the
+    body of the function accesses a stale object. It is worth noting
+    that the relevant references can be hidden, i.e., they don't
+    necessarily show up in the signature of the coroutine.
+
+    This problem and an approach to avoid it is explained at length
+    in Aaron Jacobs's C++Now 2024 talk ["Coroutines at
+    Scale"](https://youtu.be/k-A12dpMYHo?si=oZUownmZrbolDfJS). The
+    proposed solution is to return an object which can only be
+    `co_await`ed immediately. While having such a coroutines would
+    certainly be beneficial and it could be the recommended coroutine
+    for use from within another coroutine, it isn't a viable
+    replacement for `task` in all contexts:
+
+    1. It is intended that `task`s can be used as arguments to sender
+    algorithms, e.g., to `when_all` to execute multiple asynchronous
+    operations potentially concurrently, e.g.:
+
+            task<void, env<>> do_work(std::string value) { /* work */ co_return; }
+            task<void, env<>> execute_all() {
+                co_await when_all(
+                    do_work("arguments 1"),
+                    do_work("arguments 2")
+                );
+            };
+
+    2. It is intended that `task`s can be used with `counting_scope`
+    (although to do so it is necessary to provide an environment
+    with a scheduler).  There is no scoping relating between
+    the `counting_scope` and the argument to `spawn`.
+
+    3. It is intended that `task<T, E>` is used to encapsulate
+    the definition of an asynchronous operation into a function
+    which can be implemented in a separate translation unit and
+    that corresponding objects are returned from functions.
+
+    While the idea of limiting the scope of `task` was considered
+    (admittedly that isn't relected in the proposal paper), I don't
+    think there is a way to incorporate the proposed safety mechanism
+    into `task`. It can be incorporated into a different coroutine
+    type which can be `co_await`ed by `task`, though.
+
+The three minor points are:
+
+1. The use of `co_yield with_error(e)` is "clunky". There is no
+disagreement here. That seems to be a weak reason to block inclusion
+of `task` into C++26. In a future revision of the C++ standard it
+may become possible that `co_return with_error(e)` can be supported
+(currently that isn't possible because a promise type cannot provide
+both `return_value` and `return_void` functions). Using `co_return`
+for both errors and normal returns would be a problem when returning
+an object of type `with_error` as normal result (this is, however,
+a rather weird case):
+
+    struct error_env {
+        using error_types = completion_signatures<set_error_t(int)>;
+    };
+    []() -> task<with_error<int>, error_env> {
+        co_return with_error(17); // error or success?
+    }
+
+2. The use of `co_await scheduler(sched);` does not result in the
+coroutine being resumed on `sched`: due to scheduler affinity the
+coroutine is resumed on the coroutine's scheduler, not on `sched`
+(unless, of course, these two scheduler are identical). To change
+a scheduler something else, specifically `co_await change_coroutine_scheduler(sched)`
+needs to be used. The use of `co_await scheduler(sched);` was used
+by a sender/receiver library and the experience was to not use this
+exact appraoch as. The hinted at proposal is to use `co_yield sched;`
+to change the scheduler: just because `co_yield` is used for return
+errors using `with_error(e)` doesn't mean it can't be used for other
+uses and `co_yield x;` where `x` is a scheduler could change the
+scheduler. However, it is quite intentional to use an explicitly
+visible type like `change_coroutine_scheduler` to make changing the
+scheduler visible. I have no objection to using
+`co_yield change_coroutine_scheduler(sched);` instead of using
+`co_await` if that is the preference.
+
+3. Coroutine cancellation is ad-hoc: the
+[`std::execution`](https://wg21.link/p2300) proposal introduced the
+use of `unhandled_stopped` to deal with cancellation. This use
+wasn't part of the [`task` proposal](https://wg21.link/P3552). I
+don't think it is reasonable to not have a coroutine `task` because
+there could be a nicer language level approach in the future.
+
+I think I understand the concerns raised. I don't think this any
+of them warrants removing the `task` from the standard document.
+The argument that we should only standardize perfect design would
+actually lead to hardly anything getting standardized because pretty
+much everything is imperfect on some level.
 
 # Conclusion
 
@@ -1165,7 +1302,7 @@ was that doing so would be possible with the current specification
 and it just didn't spell out how `co_await` a `task` from a `task`
 actually works.
 
-In any case, some fixed of the specification are needed.
+However, some fixed of the specification are needed.
 
 # Potential Polls
 

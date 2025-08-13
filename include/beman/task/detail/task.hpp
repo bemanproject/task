@@ -67,7 +67,7 @@ class task {
     ~task()                          = default;
 
     template <typename Receiver>
-    auto connect(Receiver receiver) -> state<Receiver> {
+    auto connect(Receiver receiver) && -> state<Receiver> {
         return state<Receiver>(std::forward<Receiver>(receiver), std::move(this->handle));
     }
     template <typename ParentPromise>
@@ -75,27 +75,6 @@ class task {
         assert(this->handle.get());
         return ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise>(::std::move(this->handle));
     }
-
-    struct dom_sender {
-        using sender_concept        = ::beman::execution::sender_t;
-        using completion_signatures = ::beman::execution::completion_signatures< ::beman::execution::set_value_t()>;
-        struct state {
-            using operation_state_concept = ::beman::execution::operation_state_t;
-            auto start() & noexcept {}
-        };
-
-        auto connect(auto&&) noexcept -> state { return state{}; }
-    };
-    struct domain {
-        template <typename DS>
-        auto transform_sender(DS&&, auto&&...) const noexcept {
-            return dom_sender{};
-        }
-    };
-    struct env {
-        auto query(const ::beman::execution::get_domain_t&) const noexcept -> domain { return domain{}; }
-    };
-    auto xget_env() const noexcept { return env{}; }
 
   private:
     ::beman::task::detail::handle<promise_type> handle;
