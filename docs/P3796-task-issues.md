@@ -22,17 +22,9 @@ them.
 
 # TODO
 
-- `change_coroutine_scheduler` requires thie scheduler to be assignable
 - `task::connect()` and `task::as_awaitable()` should be r-value qualified
 - `task_schduler::ts-sender::connect()` should be r-value qualified and use appropriate `move()`s
 - `result_type::result` vs. `std::monostate`
-- add `operator co_await` discussion
-- add `co_yield` from `catch`-block
-- add parallel scheduler vs. `task_scheduler`
-- add discussion of https://wg21.link/p3802
-    - add symmetric transfer discussion
-    - add early destruction discussion
-    - add always `co_await` discussion
 - check for other issues
 
 # Change History
@@ -41,8 +33,12 @@ them.
 
 ## R1: added more issues and discussion
 
-- Consider supporting `co_return { ... }`
-- Added a response to [P3802r0](https://wg21.link/P3801r0) "Concerns about the design of std::execution::task"
+- Added the proposal to support `co_return { ... };` ([link](#consider-supporting-co_return-args))
+- Added a response to [P3801r0](https://wg21.link/P3801r0) "Concerns about the design of std::execution::task" ([link](#response-to-concerns-about-the-design-of-stdexecutiontask))
+- Added a concrete reason why `co_yield with_error(e)` is "clunky" ([link](#response-to-concerns-about-the-design-of-stdexecutiontask))
+- Added a discussion of `change_coroutine_scheduler` requiring the scheduler to be assignable ([link](#co_await-change_coroutine_schedulersched-requires-assignable-scheduler))
+- Added a discussion of adding `operator co_await` ([link](#sender-unaware-coroutines-should-be-able-to-co_await-a-task))
+- Added a discussion of `bulk` vs. `task_scheduler` ([link](#bulk-vs.task_scheduler))
 
 # General
 
@@ -882,6 +878,76 @@ should be applied to [[execution.syn]](https://eel.is/c++draft/execution.syn):
 It isn't catastrophic if that change isn't made but it seems to
 improve usability without any drawbacks.
 
+### `bulk` vs. `task_scheduler`
+
+Normally, the scheduler type used by an operation can be deduced
+when a sender is `connect`ed to a receiver from the receiver's
+environment.  The body of a coroutine cannot know about the `receiver`
+the `task` sender gets `connect`ed to. The implication is that the
+type of the scheduler used by the coroutine needs to be known when
+the `task` is created. To still allow custom schedulers used when
+`connect`ing, the type-erase scheduler `task_scheduler` is used.
+However, that leads to surprises when algorithms are customized
+for a scheduler as is, e.g., the case for `bulk` when used with a
+`parallel_scheduler`: if `bulk` is `co_await`ed within a coroutine
+using `task_scheduler` it will use the default implementation of
+`bulk` which sequentially executes the work, even if the `task_scheduler`
+was initialized with a `parallel_scheduler` (the exact invocation may
+actually be slightly different or need to use `bulk_chunked` or
+`bulk_unchunked` but that isn't the point being made):
+
+```
+struct env {
+    auto query(ex::get_scheduler_t) const noexcept { return ex::parallel_scheduler(); }
+};
+struct work {
+    auto operator()(std::size_t s){ /*...*/ };
+};
+
+ex::sync_wait(
+    ex::write_env(ex::bulk(ex::just(), 16u, work{}),
+    env{}
+));
+ex::sync_wait(ex::write_env(
+    []()->ex::task<void, ex::env<>> { co_await ex::bulk(ex::just(), 16u, work{}); }(),
+    env{}
+));
+```
+
+The two invocations should probably both execute the work in parallel
+but the coroutine version doesn't: it uses the `task_scheduler`
+which doesn't have a specialized version of `bulk` to potentially
+delegate in a type-erased form to the underlying scheduler. It is
+straight forward to move the `write_env` wrapper inside the coroutine
+which fixes the problem in this case but this need introduces the
+potential for a subtle performance bug. The problem is sadly not
+limited to a particular scheduler or a particular algorithm: any
+scheduler/algorithm combination which may get specialized can suffer
+from the specialized algorithm not being picked up.
+
+There are a few ways this problem can be addressed (this list of
+options is almost certainly incomplete):
+
+1. Accept the situation as is and advise users to be careful about
+customized algorithms like `bulk` when using `task_scheduler`.
+2. Extend the interface of `task_scheduler` to deal with a set of
+algorithms for which it provides a type-erased interface. The
+interface would likely be more constrained and it would use virtual
+dispatch at run-time. However, the set of covered algorithms would
+necessarily be limited in some form.
+3. To avoid the trap, make the use of known algorithms incompatible
+with the use of `task_scheduler`, i.e., "customize" these algorithms
+for `task_scheduler` such that a compile-time error is produced.
+
+A user who knows that the main purpose of a coroutine is to executed
+an algorithm customized for a certain scheduler can use `task<T,
+E>` with an environment `E` specifying exactly that scheduler type.
+However, this use may be nested within some sender being `co_await`ed
+and users need to be aware that the customization wouldn't be picked
+up. Any approach I'm currently aware of will have the problem that
+customized versions of an algorithm are not used for algorithms we
+are currently unaware of.
+
 ### `unhandled_stopped()` Isn't `noexcept`
 
 The `unhandled_stopped()` member function of `task::promise_type`
@@ -1149,9 +1215,103 @@ default type improves usability. If necessary, this change can be
 applied in a future revision of the standard. It would be nice to
 fix it for C++26.
 
+### `co_await change_coroutine_scheduler(sched)` Requires Assignable Scheduler
+
+The specification of `change_coroutine_scheduler(sched)` uses `std::exchange` to
+put the scheduler into place (in [[task.promise] p11](https://eel.is/c++draft/exec#task.promise-11)):
+
+> ```
+> auto await_transform(change_coroutine_scheduler<Sch> sch) noexcept;`
+> ```
+> [11]{.pnum} Effects: Equivalent to:
+> ```
+> return await_transform(just(exchange(SCHED(*this), scheduler_type(sch.scheduler))), *this);
+> ```
+
+The problem is that `std::exchange(x, v)` expects `v` to be assignable from `v`
+there is no requirement for scheduler to be assignable. It would be possible to
+specify the operation in a way avoiding the assignment:
+
+> ```
+> @[`return await_transform(just(exchange(SCHED(*this), scheduler_type(sch.scheduler))), *this);`]{.rm}@
+> @[`auto* s{address_of(SCHED(*this))};`]{.add}@
+> @[`auto rc{std::move(*s)};`]{.add}@
+> @[`s->~scheduler_type();`]{.add}@
+> @[`new(s) scheduler_type(std::move(sch));`]{.add}@
+> @[`return std::move(rc);`]{.add}@
+> ```
+
+An alternative is to consider the presence of the assignment to be
+an indicator on whether the scheduler can be replaced: the possibility
+of changing the scheduler used for scheduler affinity means that
+the body of the coroutine may actually complete on a different
+scheduler than the scheduler it was originally started on. It can
+be determined statically whether `co_await change_coroutine_scheduler(s)`
+was used. As a result, when a `task` awaits another `task` it is
+potentially necessary to scheduler the continuation for the outer
+`task`. This possibility and the corresponding check may have a
+cost.  However, when the scheduler isn't assignable, it couldn't
+be replaced and that feature is statically checkable, i.e., any
+cost associated with the potential of the inner `task` changing the
+scheduler is avoided.
+
+It should be possible to relax the requirements for replacing
+schedulers in a future revision of the standard, i.e., this issues
+doesn't necessarily need to be resolved one way or the other for
+C++26.
+
+### Sender Unaware Coroutines Should Be Able To `co_await` A `task`
+
+The request here is to add an `operator co_await()` to `task`
+which returns an awaiter use to start the `task`. On the surface
+doing so should allow any coroutine to `co_await` a `task`. There
+are a few complications:
+
+1. If the `task<T, E>` is used within an environment `E` whose
+`scheduler_type` can't be default constructed the environment
+associated with the promise type `P` from the `std::coroutine_handle<P>`
+passed to `await_suspend` needs to have a `get_env` providing an
+environment with a query for `get_scheduler`. The default used
+(`task_scheduler`) is not default constructible because by
+default `task<T, E>` should be scheduler affine and to implement
+that the scheduler needs to be known. The implication is that the
+`operator co_await` can only be used when either the `task<T,
+E>` isn't scheduler affine or the `co_await`ing coroutine knows at
+least about the `get_scheduler` query, i.e., it isn't entirely
+sender agnostic.
+
+2. When `co_await`ing a sender within a `task<T, E>` it is
+always possible that sender completes with `set_stopped()`, i.e.,
+the coroutine gets cancelled. However, to actually implement that,
+the `co_await`ing coroutine needs to have hook which can be invoked
+to notify it about this cancellation. When using `as_awaitable(s)`
+this hook is to call `unhandled_stopped()` on the promise object.
+Thus, a sender agnostic coroutine trying to `co_await` a `st::task<T,
+E>` would need to know about this protocol or only support `task<T,
+E>` objects for which the `co_await`s cannot result in completing
+with `set_stopped()`.
+
+3. Other senders are not `co_await`able by sender agnostic coroutines.
+If a `task` wants to support `co_await`ing senders it needs to provide
+an `await_transform` which turns a sender into an awaitable, e.g., using
+`std::as_awaitable`. Why should that be different for `task`? As `task`
+is already a coroutine it seems this is a fairly weak argument, though.
+
+Given these constraints it is unclear whether it is worth adding
+an `operator co_await()` to `task`. If a user really wants to
+`co_await` a `task<T, E>`, it should be possible by adapting
+the object to provide a `get_scheduler` query (e.g., using
+`std::write_env`), to deal with potential a `set_stopped()` completion
+(e.g., using `upon_stopped`), and then doing something similar
+to `as_awaitable` with the result, just without the need to have
+an `unhandled_stopped`. As there are various changes on what
+schedulers should be provided and how to deal with the `set_stopped()`
+completion it seems reasonable to not add support for `operator
+co_await()` at this time.
+
 # Response to ["Concerns about the design of std::execution::task"](https://wg21.link/P3801r0) 
 
-The paper ["Concerns about the design of std::execution::task"](P3802r0)
+The paper ["Concerns about the design of std::execution::task"](P3801r0)
 raises three major points and three minor points. The three major points
 are:
 
@@ -1241,10 +1401,11 @@ are:
 The three minor points are:
 
 1. The use of `co_yield with_error(e)` is "clunky". There is no
-disagreement here. That seems to be a weak reason to block inclusion
-of `task` into C++26. In a future revision of the C++ standard it
-may become possible that `co_return with_error(e)` can be supported
-(currently that isn't possible because a promise type cannot provide
+disagreement here. A concrete reason why `co_yield with_error(e)`
+isn't ideal is that `co_yield` cannot be used within a `catch`
+block. In a future revision of the C++ standard it may become
+possible that `co_return with_error(e)` can be supported (currently
+that isn't possible in general because a promise type cannot provide
 both `return_value` and `return_void` functions). Using `co_return`
 for both errors and normal returns would be a problem when returning
 an object of type `with_error` as normal result (this is, however,

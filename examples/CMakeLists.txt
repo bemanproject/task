@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 set(ALL_EXAMPLES
+    bulk
     dangling-references
     rvalue-task
     aggregate-return

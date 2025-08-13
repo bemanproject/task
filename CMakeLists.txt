@@ -34,9 +34,9 @@ set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME}Targets)
 
 FetchContent_Declare(
     execution
-    # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
-    GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG fc77f77
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
+    # GIT_REPOSITORY https://github.com/bemanproject/execution
+    # GIT_TAG fc77f77
 )
 FetchContent_MakeAvailable(execution)
 
