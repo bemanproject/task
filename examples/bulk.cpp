@@ -19,7 +19,7 @@ int main() {
         auto query(ex::get_scheduler_t) const noexcept { return ex::parallel_scheduler(); }
     };
     struct work {
-        auto operator()(std::size_t s) { /*...*/ };
+        auto operator()(std::size_t) { /*...*/ };
     };
 
     ex::sync_wait(ex::write_env(ex::bulk(ex::just(), 16u, work{}), env{}));
