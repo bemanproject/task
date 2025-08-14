@@ -71,7 +71,7 @@ class task {
         return state<Receiver>(std::forward<Receiver>(receiver), std::move(this->handle));
     }
     template <typename ParentPromise>
-    auto as_awaitable(ParentPromise&) -> ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise> {
+    auto as_awaitable(ParentPromise&) && -> ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise> {
         assert(this->handle.get());
         return ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise>(::std::move(this->handle));
     }

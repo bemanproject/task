@@ -7,9 +7,10 @@
 
 namespace ex = beman::execution;
 namespace beman::execution {
-    inline constexpr struct par_t {} par{};
-    using parallel_scheduler = inline_scheduler;
-}
+inline constexpr struct par_t {
+} par{};
+using parallel_scheduler = inline_scheduler;
+} // namespace beman::execution
 
 // ----------------------------------------------------------------------------
 
@@ -18,16 +19,11 @@ int main() {
         auto query(ex::get_scheduler_t) const noexcept { return ex::parallel_scheduler(); }
     };
     struct work {
-        auto operator()(std::size_t s){ /*...*/ };
+        auto operator()(std::size_t s) { /*...*/ };
     };
 
-    ex::sync_wait(
-        ex::write_env(ex::bulk(ex::just(), 16u, work{}),
-        env{}
-    ));
+    ex::sync_wait(ex::write_env(ex::bulk(ex::just(), 16u, work{}), env{}));
 
-    ex::sync_wait(ex::write_env(
-        []()->ex::task<void, ex::empty_env> { co_await ex::bulk(ex::just(), 16u, work{}); }(),
-        env{}
-    ));
+    ex::sync_wait(
+        ex::write_env([]() -> ex::task<void, ex::empty_env> { co_await ex::bulk(ex::just(), 16u, work{}); }(), env{}));
 }
