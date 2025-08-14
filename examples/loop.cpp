@@ -73,7 +73,7 @@ static_assert(ex::scheduler<log_scheduler<ex::task_scheduler>>);
 
 namespace {
 [[maybe_unused]] ex::task<void> loop(auto count) {
-    for (int i{}; i < count; ++i)
+    for (decltype(count) i{}; i < count; ++i)
         // co_await ex::just(i);
         co_await [](int x) -> ex::task<> {
             std::cout << "before co_await: " << &x << ": " << x << "\n";
@@ -92,6 +92,6 @@ int main(int ac, char* av[]) {
             ex::detail::make_env(ex::get_scheduler, log_scheduler(co_await ex::read_env(ex::get_scheduler))));
     }(count));
 #if 0
-    ex::sync_wait(ex::detail::write_env(loop(count), ex::detail::make_env(ex::get_scheduler, ex::inline_scheduler{})));
+     ex::sync_wait(ex::detail::write_env(loop(count), ex::detail::make_env(ex::get_scheduler, ex::inline_scheduler{})));
 #endif
 }

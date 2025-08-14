@@ -28,7 +28,7 @@ int main() {
 
     ex::sync_wait(execute_all());
     ex::sync_wait([]() -> ex::task<void, ex::empty_env> {
-        auto                  t = [](const int/* this would be added: &*/ v) -> ex::task<int, ex::empty_env> { co_return v; }(42);
+        auto t = [](const int /* this would be added: &*/ v) -> ex::task<int, ex::empty_env> { co_return v; }(42);
         [[maybe_unused]] auto v = co_await std::move(t);
     }());
 }
