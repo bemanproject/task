@@ -1,7 +1,7 @@
 ---
 title: Coroutine Task Issues
-document: P3796R0
-date: 2025-07-15
+document: P3796R1
+date: 2025-08-14
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -24,10 +24,21 @@ them.
 
 ## R0 Initial Revision
 
+## R1: added more issues and discussion
+
+- Added the proposal to support `co_return { ... };` ([link](#consider-supporting-co_return-args))
+- Added a response to [P3801r0](https://wg21.link/P3801r0) "Concerns about the design of std::execution::task" ([link](#response-to-concerns-about-the-design-of-stdexecutiontask))
+- Added a concrete reason why `co_yield with_error(e)` is "clunky" ([link](#response-to-concerns-about-the-design-of-stdexecutiontask))
+- Added a discussion of `change_coroutine_scheduler` requiring the scheduler to be assignable ([link](#co_await-change_coroutine_schedulersched-requires-assignable-scheduler))
+- Added a discussion of adding `operator co_await` ([link](#sender-unaware-coroutines-should-be-able-to-co_await-a-task))
+- Added a discussion of `bulk` vs. `task_scheduler` ([link](#bulk-vs.-task_scheduler))
+- Added discussion of missing rvalue qualification ([link](#missing-rvalue-qualification))
+- Various minor fixes
+
 # General
 
 After LWG voted to forward the [task
-proposal](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html)
+proposal](https://wg21.link/p3552r3)
 to be forwarded to plenary for inclusion into C++26 some issues
 were brought up. The concerns range from accidental omissions (e.g.,
 `unhandled_stopped` lacking `noexcept`) via wording issues and
@@ -98,13 +109,13 @@ name while the proposal isn't adopted.
 
 ### `affine_on` Default Implementation Lacks a Specification
 
-The wording of
-[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on)
+The wording of [`affine_on`](https://eel.is/c++draft/exec#affine.on)
 doesn't have a specification for the default implementation. For
 other algorithms the default implementation is specified. To resolve
 this concern add a new paragraph in
-[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on)
-to provide a specification for the default implementation:
+[[exec.affine.on]](https://eel.is/c++draft/exec#affine.on) to provide
+a specification for the default implementation (probably in front of
+the current paragraph 5):
 
 ::: add
 > [5]{.pnum} Let `sndr` and `env` be subexpressions such that `Sndr`
@@ -139,8 +150,7 @@ gets standardised.
 ### `affine_on` Semantics Are Not Clear
 
 The wording in
-[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on)
-p5 says:
+[`affine_on` p5](https://eel.is/c++draft/exec#affine.on-5) says:
 
 > ...  Calling `start(op)` will start `sndr` on the current execution
 > agent and execution completion operations on `out_rcvr` on an
@@ -152,7 +162,7 @@ p5 says:
 > completion on `out_rcvr` shall be executed on an unspecified
 > execution agent.
 
-The sentence If the current execution resource is the same as the
+The sentence "If the current execution resource is the same as the
 execution resource associated with `sch` is not clear to which
 execution resource is the "current execution resource". It could
 be the "current execution agent" that was used to call `start(op)`,
@@ -161,7 +171,7 @@ on.
 
 The intended meaning for "current execution resource" was to refer
 to the execution resource of the execution agent that was used to
-call `stop(op)`. The specification could be clarified by changing
+call `start(op)`. The specification could be clarified by changing
 the wording to become:
 
 > ...  Calling `start(op)` will start `sndr` on the current execution
@@ -179,7 +189,7 @@ between `continues_on` and `affine_on` is. The `continues_on`
 semantics already requires that the resulting sender completes on
 the specified schedulers execution agent. It does not specify that
 it must evaluate a `schedule()` (although that is what the default
-Implementation does), and so in theory it already permits an
+implementation does), and so in theory it already permits an
 implementation/customisation to skip the schedule (e.g. if the child
 senders completion scheduler was equal to the target scheduler).
 
@@ -228,7 +238,7 @@ relax the requirement that `affine_on` completes on `sch` if `sender`
 doesn't actually change schedulers and completes inline: if `start(op)`
 gets invoked on an execution agents which matches `sch`'s execution
 resources the guarantee holds but `affine_on` would be allowed to
-complete on the execution agent `start(op)` was invoked. It is upon
+complete on the execution agent `start(op)` was invoked on. It is upon
 the user to invoke `start(op)` on the correct execution agent.
 
 Another difference to `continues_on` is that `affine_on` can be
@@ -237,7 +247,7 @@ separately customised.
 ### `affine_on`'s Shape May Not Be Correct
 
 The `affine_on` algorithm defined in
-[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on) takes two arguments; a
+[[exec.affine.on]](https://eel.is/c++draft/exec#affine.on) takes two arguments; a
 [`sender`](https://eel.is/c++draft/exec.snd.concepts) and a
 [`scheduler`](https://eel.is/c++draft/exec.sched).
 
@@ -260,20 +270,20 @@ that it will be started on from the receivers environment and promise
 to complete on that context.
 
 For example, the
-[`await_transform`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html?validation_key=7c6057b778f7a41d2ba63fd94676bf5e#class-taskpromise_type-task.promise)
+[`await_transform`](https://eel.is/c++draft/exec#task.promise-10)
 function could potentially be changed to return:
 `as_awaitable(affine_on(std::forward<Sndr>(sndr)))`.  Then we could
 define the `affine_on.transform_sender(sndr, env)` expression (which
 provides the default implementation) to be equivalent to
 `continues_on(sndr, get_scheduler(env))`.
 
-Such an approach would also a require change to the semantic
+Such an approach would also require a change to the semantic
 requirements of `get_scheduler(get_env(rcvr))` to require that
 `start(op)` is called on that context.
 
 This change isn't strictly necessary, though. The interface of
 `affine_on` as is can be used. Making this change does improve the
-design. Nothing outside of `task` is currently using `affine_on`
+design. Nothing outside of `task` currently uses `affine_on`
 and as it is an algorithm tailored for `task`'s needs it seems
 reasonable to make it fit this use case exactly. This change would
 also align with the direction that the execution agent used to
@@ -302,7 +312,7 @@ to resume on its associated context.
 For some cases this may not be an issue, but for other cases,
 resuming on the right execution context may be important for
 correctness, even during exception unwind or due to cancellation.
-For example, destructors may require running in a UI thread in order
+For example, destructors may require running on a UI thread in order
 to release UI resources. Or the associated scheduler may be a strand
 (which runs all tasks scheduled to it sequentially) in order to
 synchronise access to shared resources used by destructors.
@@ -318,10 +328,10 @@ associated context.
 One option to work around this with the status-quo would be to
 define a scheduler adapter that adapted the underlying `schedule()`
 operation to prevent passing through stop-requests from the parent
-environment (e.g. applying the [`unstoppable`](https://wg21.link/p3284)
-adapter). If failing to reschedule onto the associated context was
-a fatal error, you could also apply a `terminate_on_error` adaptor
-as well.
+environment (e.g. applying the
+[`unstoppable`](https://eel.is/c++draft/exec.unstoppable) adapter).
+If failing to reschedule onto the associated context was a fatal
+error, you could also apply a `terminate_on_error` adaptor as well.
 
 Then the user could apply this adapter to the scheduler before
 passing it to the `task`.
@@ -385,7 +395,7 @@ For example:
 - `affine_on(just(args...))` could be simplified to `just(args...)`
 - `affine_on(on(sch, sndr))` can be simplified to `on(sch, sndr)`
     as on already provides `affine_on`-like semantics
-- The `counting_scope::join` sender currently already provides
+- The [`counting_scope::join`](https://eel.is/c++draft/exec.counting.scopes.general) sender currently already provides
     `affine_on`-like semantics.
     - We could potentially simplify this sender to just complete
         inline unless the join-sender is wrapped in `affine_on`, in
@@ -446,13 +456,13 @@ started and stopped:
 ### Starting A `task` Should Not Unconditionally Reschedule
 
 In
-[[task.promise]]((https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise))
-p6, the wording for `initial_suspend` says that it unconditionally
+[[task.promise] p6](https://eel.is/c++draft/exec#task.promise-6),
+the wording for `initial_suspend` says that it unconditionally
 suspends and reschedules onto the associated scheduler. The intent
 of this wording seems to be that the coroutine ensures execution
 initially starts on the associated scheduler by executing a schedule
 operation and then resuming the coroutine from the initial suspend
-point inside the set_value completion handler of the schedule
+point inside the `set_value` completion handler of the schedule
 operation. The effect of this would be that every call to a coroutine
 would have to round-trip through the scheduler, which, depending
 on the behaviour of the schedule operation, might relegate it to the
@@ -470,7 +480,7 @@ pass additional context information, e.g., via implementation
 specific properties on the receiver's environment: while the
 `get_scheduler` query may not provide the necessary guarantee that
 the returned scheduler is the scheduler the operation was started
-on a different, non-forwardable query could provide this guarantee.
+on a different, a non-forwardable query could provide this guarantee.
 
 A possible alternative is to require that `start(op)`, where `op`
 is the result of `connect(sndr, rcvr)`, is invoked on an execution
@@ -493,7 +503,7 @@ of the `affine_on` algorithm and `as_awaitable` operation.
 
 Similar to the previous issue, a `task` needs to resume on the
 expected scheduler. The definition of `await_transform` which is used
-for a `task` is defined in [[task.promise]]((https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)) paragraph 10
+for a `task` is defined in [[task.promise] p10](https://eel.is/c++draft/exec#task.promise-10)
 (the `co_await`ed `task` would be the `sndr` parameter):
 
 ```
@@ -529,8 +539,8 @@ provides a domain with a custom transformation for `affine_on`.
 
 The specification doesn't mention any use of symmetric transfer.
 Further, the `task` gets adapted by `affine_on` in `await_transform`
-([[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
-paragraph 10) which produces a different sender than `task` which needs
+([[task.promise] p10](https://eel.is/c++draft/exec#task.promise-10)
+) which produces a different sender than `task` which needs
 special treatment to use symmetric transfer. With symmetric transfer
 stack overflow can be avoided when operation complete immediately, e.g.
 
@@ -620,14 +630,16 @@ of received used with `co_await`.
 
 ### Issue: Flexible Allocator Position
 
-For `task<T, E>` with position of an `std::allocator_arg` can be
-anywhere in the argument list. For `generator` the `std::allocator_arg`
-argument needs to be the first argument. That is consistent with
-other uses of `std::allocator_arg`. `task` should also require the
-`std::allocator_arg` argument to be the first argument.
+For `task<T, E>` the position of an `std::allocator_arg` can be
+anywhere in the argument list except it can't be the last argument
+(as it needs to be followed by an allocator). For `generator` the
+`std::allocator_arg` argument needs to be the first argument. That
+is consistent with other uses of `std::allocator_arg`. `task` should
+also require the `std::allocator_arg` argument to be the first
+argument.
 
 The reason why `task` deviates from the approach normally taken is
-that the consistent with non-coroutines is questionable: the primary
+that the consistency with non-coroutines is questionable: the primary
 reason why the `std::allocator_arg` is needed in the first position
 is that allocation is delegated to `std::uses_allocator` construction.
 This approach, however, doesn't apply to coroutines at all: the
@@ -670,10 +682,10 @@ requirement on `generator` in a future revision of the C++ standard.
 
 ### Shadowing The Environment Allocator Is Questionable
 
-The `get_allocator` query on the environment of receiver passed to
+The `get_allocator` query on the environment of the receiver passed to
 `co_await`ed senders always returns the allocator determined when
 the coroutine frame is created.  The allocator provided by the
-environment of receiver the `task` is `connect`ed to is hidden.
+environment of the receiver the `task` is `connect`ed to is hidden.
 
 Creating a coroutine (calling the coroutine function) chooses the
 allocator for the coroutine frame, either explicitly specified or
@@ -716,7 +728,7 @@ may situations the upstream stop token will be an `inplace_stop_token`
 and this is also the token type exposed downstream. In these cases
 the `promise_type` should store neither a stop source nor a stop
 token: instead the stop token should be obtained from the upstream
-stream environment. Necessarily storing a stop source and a stop
+environment. Necessarily storing a stop source and a stop
 token would increase the size of the promise type by multiple
 pointers.  On top of that, to forward the state of an upstream stop
 token via a new stop source requires registration/deregistration
@@ -726,12 +738,12 @@ The expected implementation is, indeed, to get the stop token from
 the operation state: when the operation state is created, it is
 known whether the upstream stop token is compatible with the
 statically determined stop token exposed by `task` to `co_await`ed
-operations via the respective receiver's environment. It the type
+operations via the respective receiver's environment. If the type
 is compatible there is no need to store anything beyond the receiver
 from which a stop token can be obtained using the `get_stop_token`
 query when needed. Otherwise, the operation state can store an
 optional stop source which gets initialised and connected to the
-upstream stop toke via a stop callback when the first stop token
+upstream stop token via a stop callback when the first stop token
 is requested.
 
 The exposition-only members are not meant to imply that a corresponding
@@ -765,8 +777,8 @@ discussed separately.
 ### Task Is Not Actually Lazily Started
 
 The wording for `task<...>::promise_type::initial_suspend` in
-[[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
-p6 may imply that a `task` is eagerly started:
+[[task.promise] p6](https://eel.is/c++draft/exec#task.promise-6)
+may imply that a `task` is eagerly started:
 
 > `auto initial_suspend() noexcept;`
 >
@@ -792,13 +804,13 @@ resumed immediately, possibly changing the text like this:
 >     agent of the execution resource associated with `SCHED(*this)`
 >     [when it gets resumed]{.add}.
 
-The proposed fix from the issue is to specify that `initial_suspend()`
+The proposed fix for the issue is to specify that `initial_suspend()`
 always returns `suspend_always{}` and require that `start(...)`
 calls `handle.resume()` to resume the coroutine on the appropriate
 scheduler after `SCHED(*this)` has been initialised. The corresponding
 change could be
 
-Change [[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise) paragraph 6:
+Change [[task.promise] p6](https://eel.is/c++draft/exec#task.promise-6):
 
 > `auto initial_suspend() noexcept;`
 >
@@ -833,16 +845,16 @@ reaching `final_suspend` the coroutine frame lingers until the
 operation state object is destroyed. This happens when the `task`
 isn't resumed because a `co_await`ed sender completed with
 `set_stopped()` or when the `task` completes using `co_yield when_error(e)`.
-In these cases the order of destruction of object may be unexpected:
+In these cases the order of destruction of objects may be unexpected:
 objects held by the coroutine frame may be destroyed only long after
 the respective completion function was called.
 
 This behaviour is an oversight in the specification and not intentional
-at all. Instead, there should probably be a statement that the
-coroutine frame is destroyed before the any of the completion
-functions is invoked. The implication is that the results can't be
-stored in the coroutine frame but that is fine as the best place
-store them is in the operation state.
+at all. Instead, there should be a statement that the coroutine
+frame is destroyed before any of the completion functions is invoked.
+The implication is that the results can't be stored in the promise
+type but that isn't a huge constraint as the best place store them
+is in the operation state.
 
 ### `task<T, E>` Has No Default Arguments
 
@@ -862,10 +874,80 @@ should be applied to [[execution.syn]](https://eel.is/c++draft/execution.syn):
 It isn't catastrophic if that change isn't made but it seems to
 improve usability without any drawbacks.
 
+### `bulk` vs. `task_scheduler`
+
+Normally, the scheduler type used by an operation can be deduced
+when a sender is `connect`ed to a receiver from the receiver's
+environment.  The body of a coroutine cannot know about the `receiver`
+the `task` sender gets `connect`ed to. The implication is that the
+type of the scheduler used by the coroutine needs to be known when
+the `task` is created. To still allow custom schedulers used when
+`connect`ing, the type-erase scheduler `task_scheduler` is used.
+However, that leads to surprises when algorithms are customised
+for a scheduler as is, e.g., the case for `bulk` when used with a
+`parallel_scheduler`: if `bulk` is `co_await`ed within a coroutine
+using `task_scheduler` it will use the default implementation of
+`bulk` which sequentially executes the work, even if the `task_scheduler`
+was initialised with a `parallel_scheduler` (the exact invocation may
+actually be slightly different or need to use `bulk_chunked` or
+`bulk_unchunked` but that isn't the point being made):
+
+```
+struct env {
+    auto query(ex::get_scheduler_t) const noexcept { return ex::parallel_scheduler(); }
+};
+struct work {
+    auto operator()(std::size_t s){ /*...*/ };
+};
+
+ex::sync_wait(
+    ex::write_env(ex::bulk(ex::just(), 16u, work{}),
+    env{}
+));
+ex::sync_wait(ex::write_env(
+    []()->ex::task<void, ex::env<>> { co_await ex::bulk(ex::just(), 16u, work{}); }(),
+    env{}
+));
+```
+
+The two invocations should probably both execute the work in parallel
+but the coroutine version doesn't: it uses the `task_scheduler`
+which doesn't have a specialised version of `bulk` to potentially
+delegate in a type-erased form to the underlying scheduler. It is
+straight forward to move the `write_env` wrapper inside the coroutine
+which fixes the problem in this case but this need introduces the
+potential for a subtle performance bug. The problem is sadly not
+limited to a particular scheduler or a particular algorithm: any
+scheduler/algorithm combination which may get specialised can suffer
+from the specialised algorithm not being picked up.
+
+There are a few ways this problem can be addressed (this list of
+options is almost certainly incomplete):
+
+1. Accept the situation as is and advise users to be careful about
+customised algorithms like `bulk` when using `task_scheduler`.
+2. Extend the interface of `task_scheduler` to deal with a set of
+algorithms for which it provides a type-erased interface. The
+interface would likely be more constrained and it would use virtual
+dispatch at run-time. However, the set of covered algorithms would
+necessarily be limited in some form.
+3. To avoid the trap, make the use of known algorithms incompatible
+with the use of `task_scheduler`, i.e., "customise" these algorithms
+for `task_scheduler` such that a compile-time error is produced.
+
+A user who knows that the main purpose of a coroutine is to executed
+an algorithm customised for a certain scheduler can use `task<T,
+E>` with an environment `E` specifying exactly that scheduler type.
+However, this use may be nested within some sender being `co_await`ed
+and users need to be aware that the customisation wouldn't be picked
+up. Any approach I'm currently aware of will have the problem that
+customised versions of an algorithm are not used for algorithms we
+are currently unaware of.
+
 ### `unhandled_stopped()` Isn't `noexcept`
 
 The `unhandled_stopped()` member function of `task::promise_type`
-[[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
+[[task.promise]](https://eel.is/c++draft/exec#task.promise)
 is not currently marked as `noexcept`.
 
 As this method is generally called from the `set_stopped`
@@ -878,7 +960,7 @@ base-class
 ([[exec.with.awaitable.senders]](https://eel.is/c++draft/exec.with.awaitable.senders#1)
 p1) is also marked `noexcept`.
 
-This change should be applied to [[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise):
+This change should be applied to [[task.promise]](https://eel.is/c++draft/exec#task.promise):
 
 > ```
 >     ...
@@ -902,12 +984,12 @@ This change should be applied to [[task.promise]](https://wiki.edg.com/pub/Wg21s
 The environment returned from `get_env(rcvr)` for the receiver used
 to `connect` to `co_await`ed sender is described in terms of members
 of the `promise_type::@_state_@` in
-[[task.promise](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)]
-paragraph 15. In particular the `@_state_@` contains a member
-`@_own-env_@` which gets initialised via the upstream receiver's
-environment (if the corresponding expression is valid). As the
-environment `@_own-env_@` is initialised with a temporary, `@_own-env_@`
-will need to create a copy of whatever it is holding.
+[[task.promise] p15](https://eel.is/c++draft/exec#task.promise-15).
+In particular the `@_state_@` contains a member `@_own-env_@` which
+gets initialised via the upstream receiver's environment (if the
+corresponding expression is valid). As the environment `@_own-env_@`
+is initialised with a temporary, `@_own-env_@` will need to create
+a copy of whatever it is holding.
 
 As the environment exposed to `co_await`ed senders via the
 `get_env(rcvr)` is statically determined when the `task` is created,
@@ -916,20 +998,20 @@ environment needs to be type erase. Some of the queries (`get_scheduler`,
 `get_stop_token`, and `get_allocator`) are known and already receive
 treatment by the `task` itself. However, the `task` cannot know about
 user-defined properties which may need to be type-erased as well. To
-all the `Environment` to possibly type-erase properties from the
+allow the `Environment` to possibly use type-erase properties from the
 upstream receiver, an `own-env-t` object is created and a reference to
 the object is passed to the `Environment` constructor (if there are
 suitable constructors). Thus, the entire use of `own-env-t` is about
 enabling storage of whatever is needed to type-erase the result of
 user-defined queries. Ideally, this functionality isn't needed and
 the `Environment` parameter doesn't specify an `env_type`. If it is
-needed the type-erase will likely need to store some data.
+needed the type-erasure will likely need to store some data.
 
 ### No Completion Scheduler
 
 The concern raised is that `task` doesn't define a `get_env` that
 returns an environment with a `get_completion_scheduler<Tag>` query.
-As a result, it will be necessary to reschedule in situations although
+As a result, it will be necessary to reschedule in some situations although
 the `task` already completes on the correct scheduler.
 
 The query `get_completion_scheduler(env)` operates on the sender's
@@ -953,7 +1035,7 @@ case `task` should be revisited.
 ### Awaitable non-`sender`s Are Not Supported
 
 The overload of `await_transform` described in
-[[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
+[[task.promise]](https://eel.is/c++draft/exec#task.promise-10)
 is constrained to require arguments to satisfy the
 [`sender`](https://eel.is/c++draft/exec.snd.concepts) concept.
 However, this precludes awaiting types that implement the
@@ -971,7 +1053,7 @@ operation.
 
 The rationale for this is that the argument needs to be passed to
 the
-[`affine_on`](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#executionaffine_on-exec.affine.on)
+[`affine_on`](https://eel.is/c++draft/exec#exec.affine.on)
 algorithm which currently requires its argument to model
 [`sender`](https://eel.is/c++draft/exec.snd.concepts). This requirement in turn is
 there because it is unclear how to guarantee scheduler affinity with an awaitable-only
@@ -1032,27 +1114,29 @@ inclusion into a future revision of the C++ standard, too.
 
 However, what is relevant to the `task` specification is that the
 wording for `unhandled_stopped` in
-[[task.promise]](https://wiki.edg.com/pub/Wg21sofia2025/StrawPolls/P3552R3.html#class-taskpromise_type-task.promise)
+[[task.promise]](https://eel.is/c++draft/exec#task.promise)
 paragraph 13 doesn't spell out that the `set_stopped` completion
 is invoked on the correct scheduler.
 
 ### A Future Coroutine Feature Could Avoid `co_yield` For Errors
 
 The mechanism to complete with an error without using an exception
-uses `co_yield with_error(x)`. This use may surprise users as
-`co_yield`ing is normally assumed not to be a final operation. A
-future language change may provide a better way to achieve the
-objective of reporting errors without using exceptions.
+uses [`co_yield
+with_error(x)`](https://eel.is/c++draft/exec#task.promise-9). This
+use may surprise users as `co_yield`ing is normally assumed not to
+be a final operation. A future language change may provide a better
+way to achieve the objective of reporting errors without using
+exceptions.
 
 Using not, yet, proposed features which may become part of a future
 revision of the C++ standard may always provide facilities which
 result in a better design for pretty much anything. There is no
 current `task` implementation and certainly none which promises ABI
 stability. Assuming a corresponding language change gets proposed
-reasonably early for the next cycle, implementation can take it into
+reasonably early for the next cycle, implementations can take it into
 account for possibly improving the interface without the need to
 break ABI. The shape of the envisioned language change is unknown
-but most likely it is an extension which hopefully be integrated
+but most likely it is an extension which hopefully integrates
 with the existing design. The functionality to use `co_yield`
 would, however, continue to exist until it eventually gets
 deprecated and removed (assuming a better alternative emerges).
@@ -1069,13 +1153,13 @@ running on the same thread replaces used TLS data or the task gets
 resumed on a different thread of a thread pool. In that case it is
 necessary to capture the TLS variables prior to suspending and
 restoring them prior to resuming the coroutine.  There is currently
-no way to actually do that.
+no sepcial way to actually do that.
 
 The sender/receiver approach to propagating context information
 isn't using TLS but rather the environments accessed via the receiver.
-However, existing software does use TLS and at least for migration
-corresponding support may be necessary. One way to implement this
-functionality is using a scheduler adapter with a customised
+However, existing software does use TLS and at least for a migration
+period corresponding support may be necessary. One way to implement
+this functionality is using a scheduler adapter with a customised
 `affine_on` algorithm:
 
 - When the `affine_on` algorithm is started, it captures the relevant
@@ -1083,18 +1167,372 @@ functionality is using a scheduler adapter with a customised
     for the adapted scheduler with a receiver observing the
     completions.
 - When the adapted scheduler invokes any of the completion signals
-    the TLS data is restored before invoke the algorithms completion
+    the TLS data is restored before invoke the algorithm's completion
     signal.
 
 Support for optionally capturing some state before starting a child
 operation and restoring the captured started before resuming could
 be added to the `task`, avoiding the need to use custom scheduling.
 Doing so would yield a nicer and easier to use interface. In
-environment where TLS is currently used and developers move to an
+environments where TLS is currently used and developers move to an
 asynchronous model, failure to capture and restore data in TLS is a
 likely source of errors. However, it will be necessary to specify
 what data needs to be stored, i.e., the problems can't be automatically
 avoided.
+
+### `return_value` And `return_void` Have No Specification
+
+The functions `return_value` and `return_void` declared for the
+`task<...>::promise_type` in
+[[task.promise]](https://eel.is/c++draft/task.promise) (only one
+of them is present in a given `promise_type`) are entirely missing
+from the specification. To fix this problem the specifications need
+to be added:
+
+::: add
+```
+void return_void();                 // present only if is_void_v<T> is true;
+```
+
+[x]{.pnum} _Effects_: does nothing.
+
+```
+template<class V>
+  void return_value(V&& value);     // present only if is_void_v<T> is false;
+```
+
+[x+1]{.pnum} _Effects_: Equivalent to <code>_result_.emplace(std::forward<V>(value));</code>
+
+:::
+
+
+### Consider Supporting co_return { args... };
+
+The current [declaration of `return_value`](https://eel.is/c++draft/task.promise) in the
+`promise_type` specifies the function without a default type for
+the template parameter:
+
+```
+template <class V>
+void return_value(V&& value); // present only if is_void<T> is false
+```
+
+As a result it isn't possible to use aggregate initialisation without
+mentioning the type. For example, the following code isn't valid:
+
+```
+struct aggregate { int value{0} };
+[]() -> task<aggregate, std::env<>> { co_return {}; };
+[]() -> task<aggregate, std::env<>> { co_return { 42 }; };
+```
+
+To better match the normal functions, the template
+parameter should be defaulted which would make the code above valid:
+
+```
+template <class V @[` = T`]{.add}@>
+void return_value(V&& value); // present only if is_void<T> is false
+```
+
+There isn't anything broken with the specification but adding the
+default type improves usability. If necessary, this change can be
+applied in a future revision of the standard. It would be nice to
+fix it for C++26.
+
+### `co_await change_coroutine_scheduler(sched)` Requires Assignable Scheduler
+
+The specification of `change_coroutine_scheduler(sched)` uses `std::exchange` to
+put the scheduler into place (in [[task.promise] p11](https://eel.is/c++draft/exec#task.promise-11)):
+
+> ```
+> auto await_transform(change_coroutine_scheduler<Sch> sch) noexcept;`
+> ```
+> [11]{.pnum} Effects: Equivalent to:
+> ```
+> return await_transform(just(exchange(SCHED(*this), scheduler_type(sch.scheduler))), *this);
+> ```
+
+The problem is that `std::exchange(x, v)` expects `x` to be assignable from `v`
+but there is no requirement for scheduler to be assignable. It would be possible to
+specify the operation in a way avoiding the assignment:
+
+> ```
+> @[`return await_transform(just(exchange(SCHED(*this), scheduler_type(sch.scheduler))), *this);`]{.rm}@
+> @[`auto* s{address_of(SCHED(*this))};`]{.add}@
+> @[`auto rc{std::move(*s)};`]{.add}@
+> @[`s->~scheduler_type();`]{.add}@
+> @[`new(s) scheduler_type(std::move(sch));`]{.add}@
+> @[`return std::move(rc);`]{.add}@
+> ```
+
+An alternative is to consider the presence of the assignment to be
+an indicator of whether the scheduler can be replaced: the possibility
+of changing the scheduler used for scheduler affinity means that
+the body of the coroutine may actually complete on a different
+scheduler than the scheduler it was originally started on. It can
+be determined statically whether `co_await change_coroutine_scheduler(s)`
+was used. As a result, when a `task` awaits another `task` it is
+potentially necessary to scheduler the continuation for the outer
+`task`. This possibility and the corresponding check may have a
+cost.  However, when the scheduler isn't assignable, it couldn't
+be replaced and that feature is statically checkable, i.e., any
+cost associated with the potential of the inner `task` changing the
+scheduler is avoided.
+
+It should be possible to relax the requirements for replacing
+schedulers in a future revision of the standard, i.e., this issues
+doesn't necessarily need to be resolved one way or the other for
+C++26.
+
+### Sender Unaware Coroutines Should Be Able To `co_await` A `task`
+
+The request here is to add an `operator co_await()` to `task`
+which returns an awaiter used to start the `task`. On the surface
+doing so should allow any coroutine to `co_await` a `task`. Unfortunately,
+here are a few complications:
+
+1. If the `task<T, E>` is used with an environment `E` whose
+`scheduler_type` can't be default constructed the environment
+associated with the promise type `P` from the `std::coroutine_handle<P>`
+passed to `await_suspend` needs to have a `get_env` providing an
+environment with a query for `get_scheduler`. The default used
+(`task_scheduler`) is not default constructible because by
+default `task<T, E>` should be scheduler affine and to implement
+that the scheduler needs to be known. The implication is that the
+`operator co_await` can only be used when either the `task<T,
+E>` isn't scheduler affine or the `co_await`ing coroutine knows at
+least about the `get_scheduler` query, i.e., it isn't entirely
+sender agnostic.
+
+2. When `co_await`ing a sender within a `task<T, E>` it is
+always possible that a sender completes with `set_stopped()`, i.e.,
+the coroutine gets cancelled. However, to actually implement that,
+the `co_await`ing coroutine needs to have a hook which can be invoked
+to notify it about this cancellation. When using `as_awaitable(s)`
+this hook is to call `unhandled_stopped()` on the promise object.
+Thus, a sender agnostic coroutine trying to `co_await` a `st::task<T,
+E>` would need to know about this protocol or only support `task<T,
+E>` objects for which the `co_await`s cannot result in completing
+with `set_stopped()`.
+
+3. Other senders are not `co_await`able by sender agnostic coroutines.
+If a `task` wants to support `co_await`ing senders it needs to provide
+an `await_transform` which turns a sender into an awaitable, e.g., using
+`as_awaitable`. Why should that be different for `task`? As `task`
+is already a coroutine it seems this is a fairly weak argument, though.
+
+Given these constraints it is unclear whether it is worth adding
+an `operator co_await()` to `task`. If a user really wants to
+`co_await` a `task<T, E>`, it should be possible by adapting
+the object to provide a `get_scheduler` query (e.g., using
+`std::write_env`), to deal with the potential of a `set_stopped()` completion
+(e.g., using `upon_stopped`), and then doing something similar
+to `as_awaitable` with the result, just without the need to have
+an `unhandled_stopped`. As there are various choices of what
+schedulers should be provided and how to deal with the `set_stopped()`
+completion it seems reasonable to not add support for `operator
+co_await()` at this time.
+
+### Missing Rvalue Qualification
+
+The nested sender of a `task_scheduler` isn't necessary copyable.
+As the operation is type erased, the
+<code>task_scheduler::_ts-sender_::connect</code> should be rvalue
+qualified, i.e., in [[exec.task.scheduler]
+p8](https://eel.is/c++draft/exec#task.scheduler-8) add rvalue
+qualification to `connect`:
+
+```
+namespace execution {
+  class task_scheduler::@<code>_ts-sender_</code>@ { // @<code>_exposition only_</code>@
+  public:
+    using sender_concept = sender_t;
+
+    template <receiver R>
+      state<R> connect(R&& rcvr)@[` &&`]{.add}@;
+  };
+}
+```
+
+In [[exec.task.scheduler] p10](https://eel.is/c++draft/exec#task.scheduler-10) add
+rvalue qualification to `connect`:
+
+```
+template<receiver Rcvr>
+  state<Rcvr> connect(Rcvr&& rcvr)@[` &&`]{.add}@;
+```
+
+Coroutines aren't copyable. When using objects holding a
+`coroutine_handle<P>` such that the underlying `coroutine_handle<P>`
+gets transferred to a different object, the operation should be
+rvalue qualified and not all such operations currently are rvalue
+qualified. The `task<T, E>::connect` function should be rvalue
+qualified, i.e., change [[task.class] p1](https://eel.is/c++draft/exec#task.class):
+
+```
+namespace std::execution {
+  template <class T, class Environment>
+  class task {
+    ...
+    template <receiver R>
+    state<R> connect(R&& recv)@[` &&`]{.add}@;
+    ...
+  };
+}
+```
+
+Change [[task.members] p3](https://eel.is/c++draft/exec#task.members-3):
+
+```
+template <receiver R>
+state<R> connect(R&& recv)@[` &&`]{.add}@;
+```
+
+If an `as_awaitable` member is added to `task` (see [this issue](#starting-a-task-should-not-unconditionally-reschedule)) this member
+should also be rvalue qualified.
+
+# Response to ["Concerns about the design of std::execution::task"](https://wg21.link/P3801r0)
+
+The paper ["Concerns about the design of std::execution::task"](P3801r0)
+raises three major points and three minor points. The three major points
+are:
+
+1. Synchronous completions can result in stack overflow. This problem
+    was discussed in the proposal ["Add a Coroutine Task
+    Type"](https://wg21.link/p3552).  If a coroutine uses an actually
+    scheduling scheduler there is no issue with stack overflow
+    unless an implementation "optimises" `affine_on` to complete
+    synchronously in some cases and they don't guard against stack
+    overflow, e.g., using a "trampoline scheduler". Also, the danger
+    of stack overflow isn't actually specific to `task` but applies
+    to any synchronous completion, especially if it happens from a
+    loop-like construct. In that sense the issue exists without
+    `task` although using a `task` may make it more likely that
+    users encounter this issue.
+
+    The concern also mentioned that there is no support for symmetric
+    transfer between tasks. This point is already discussed above
+    in section [No Support For Symmetric
+    Transfer](#no-support-for-symmetric-transfer).
+
+2. One concern addresses that the life-time of variables local to
+    coroutines is surprising: there is no requirement to destroy
+    the coroutine frame before completing the operation. This issue
+    is discussed in [The Coroutine Frame Is Destroyed Too
+    Late](#the-coroutine-frame-is-destroyed-too-late) and the fix
+    is to explicitly specify that the coroutine frame has to be
+    destroyed before completing the operation. The only implication
+    is that the result of the operation needs to be stored in the
+    operation state rather than the promise type which is, however,
+    a reasonable approach anyway.
+
+3. It is raised as a concern that that `task` doesn't defined against
+    capturing reference which may be out of scope before the `task`
+    is executed. Here is a minimal example demonstrating the problem
+    (the example in the paper uses `co` instead of `t` and omitted
+    the `move` but it is clear what is intended):
+
+        task<void, env<>> g() {
+            auto t = [](const int& v) -> task<int, env<>> { co_return v; }(42);
+            auto v = co_await std::move(t);
+        }
+
+    The subtle problem with this code is the argument `42` is turned
+    into a temporary `int` which is captured by `const int&` in the
+    coroutine frame. Once the expression completes this temporary
+    goes out of scope and is destroyed. When `t` gets `co_await`ed
+    the body of the function accesses an already destroyed object.
+    It is worth noting that the relevant references can be hidden,
+    i.e., they don't necessarily show up in the signature of the
+    coroutine (preventing `const&` parameters isn't a solution).
+
+    This problem and an approach to avoid it is explained at length
+    in Aaron Jacobs's C++Now 2024 talk ["Coroutines at
+    Scale"](https://youtu.be/k-A12dpMYHo?si=oZUownmZrbolDfJS). The
+    proposed solution is to return an object which can only be
+    `co_await`ed immediately. While having such a coroutines would
+    certainly be beneficial and it could be the recommended coroutine
+    for use from within another coroutine, it isn't a viable
+    replacement for `task` in all contexts:
+
+    1. It is intended that `task`s can be used as arguments to sender
+    algorithms, e.g., to `when_all` to execute multiple asynchronous
+    operations potentially concurrently, e.g.:
+
+            task<void, env<>> do_work(std::string value) { /* work */ co_return; }
+            task<void, env<>> execute_all() {
+                co_await when_all(
+                    do_work("arguments 1"),
+                    do_work("arguments 2")
+                );
+            };
+
+    2. It is intended that `task`s can be used with `counting_scope`
+    (although to do so it is necessary to provide an environment
+    with a scheduler).  There is no scoping relationship between
+    the `counting_scope` and the argument to `spawn`.
+
+    3. It is intended that `task<T, E>` is used to encapsulate
+    the definition of an asynchronous operation into a function
+    which can be implemented in a separate translation unit and
+    that corresponding objects are returned from functions.
+
+    While the idea of limiting the scope of `task` was considered
+    (admittedly that isn't reflected in the proposal paper), I don't
+    think there is a way to incorporate the proposed safety mechanism
+    into `task`. It can be incorporated into a different coroutine
+    type which can be `co_await`ed by `task`, though.
+
+The three minor points are:
+
+1. The use of `co_yield with_error(e)` is "clunky". There is no
+disagreement here. A concrete reason why `co_yield with_error(e)`
+isn't ideal is that `co_yield` cannot be used within a `catch`
+block. In a future revision of the C++ standard it may become
+possible that `co_return with_error(e)` can be supported (currently
+that isn't possible in general because a promise type cannot provide
+both `return_value` and `return_void` functions). However, using
+`co_return` for both errors and normal returns introduces a small
+problem when returning an object of type `with_error` as normal a
+result (this is, however, a rather weird case):
+
+        struct error_env {
+            using error_types = completion_signatures<set_error_t(int)>;
+        };
+        []() -> task<with_error<int>, error_env> {
+            co_return with_error(17); // error or success?
+        }
+
+2. The use of `co_await scheduler(sched);` does not result in the
+coroutine being resumed on `sched`: due to scheduler affinity the
+coroutine is resumed on the coroutine's scheduler, not on `sched`
+(unless, of course, these two scheduler are identical). To change
+a scheduler something else, specifically `co_await change_coroutine_scheduler(sched)`,
+needs to be used. The use of `co_await scheduler(sched);` was used
+by a sender/receiver library to replace the coroutine's scheudler
+and the recommendation from this experience was to not use this
+exact approach. The hinted at proposal is to use `co_yield sched;`
+to change the scheduler: just because `co_yield` is used for returning
+errors using `with_error(e)` doesn't mean it can't be used for other
+uses and `co_yield x;` where `x` is a scheduler could change the
+scheduler. However, it is quite intentional to use an explicitly
+visible type like `change_coroutine_scheduler` to make changing the
+scheduler visible. I have no objection to using `co_yield
+change_coroutine_scheduler(sched);` instead of using `co_await` if
+that is the preference.
+
+3. Coroutine cancellation is ad-hoc: the
+[`std::execution`](https://wg21.link/p2300) proposal introduced the
+use of `unhandled_stopped` to deal with cancellation. This use
+wasn't part of the [`task` proposal](https://wg21.link/P3552). I
+don't think it is reasonable to not have a coroutine `task` because
+there could be a nicer language level approach in the future.
+
+I think I understand the concerns raised. I don't think that any
+of them warrants removing the `task` from the standard document.
+The argument that we should only standardise perfect design would
+actually lead to hardly anything getting standardised because pretty
+much everything is imperfect on some level.
 
 # Conclusion
 
@@ -1111,16 +1549,11 @@ was that doing so would be possible with the current specification
 and it just didn't spell out how `co_await` a `task` from a `task`
 actually works.
 
-In any case, some fixed of the specification are needed.
-
-# Potential Polls
-
-1. Should `task` be renamed to something else?
-2. Is the naming scheme `task@_year_@` an approach to be used?
+However, some fixes of the specification are needed.
 
 # Acknowledgement
 
 The issue descriptions are largely based on [this
 draft](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org)
-written by Lewis Baker. Lewis Baker and Tomasz Kamiski contributed
+written by Lewis Baker. Lewis Baker and Tomasz Kamiński contributed
 to the discussions towards addressing the issues.

@@ -1,6 +1,6 @@
 #-dk: note to self: PATH=/opt/llvm-19.1.6/bin:$PATH LDFLAGS=-fuse-ld=lld
 
-.PHONY: config test default compile clean distclean doc html pdf format tidy
+.PHONY: config test default compile clean distclean doc html pdf format clang-format tidy
 
 BUILDDIR = build
 PRESET  = gcc-release
@@ -26,7 +26,7 @@ compile:
 list:
 	cmake --workflow --list-presets
 
-format:
+clang-format format:
 	git clang-format main
 
 $(BUILDDIR)/tidy/compile_commands.json:
