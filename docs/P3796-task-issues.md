@@ -33,6 +33,7 @@ them.
 - Added a discussion of adding `operator co_await` ([link](#sender-unaware-coroutines-should-be-able-to-co_await-a-task))
 - Added a discussion of `bulk` vs. `task_scheduler` ([link](#bulk-vs.-task_scheduler))
 - Added discussion of missing rvalue qualification ([link](#missing-rvalue-qualification))
+- Added issue about missing specification for `return_value` and `return_void` ([link](#return_value-and-return_void-have-no-specification))
 - Various minor fixes
 
 # General
