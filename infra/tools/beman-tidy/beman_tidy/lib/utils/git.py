@@ -33,6 +33,10 @@ def get_repo_info(path: str):
         # Get the current branch
         current_branch = repo.active_branch.name
 
+        # Get the default branch
+        split_head = repo.git.symbolic_ref("refs/remotes/origin/HEAD").split("/")
+        default_branch = split_head[-1]
+
         # Get the commit hash
         commit_hash = repo.head.commit.hexsha
 
@@ -47,6 +51,7 @@ def get_repo_info(path: str):
             "name": repo_name,
             "remote_url": remote_url,
             "current_branch": current_branch,
+            "default_branch": default_branch,
             "commit_hash": commit_hash,
             "status": status,
             "unstaged_changes": unstaged_changes,
@@ -64,6 +69,13 @@ def get_beman_standard_config_path():
     Get the path to the Beman Standard YAML configuration file.
     """
     return Path(__file__).parent.parent.parent / ".beman-standard.yml"
+
+
+def get_beman_recommendated_license_path():
+    """
+    Get the path to the Beman recommended license file.
+    """
+    return Path(__file__).parent.parent.parent / "LICENSE"
 
 
 def load_beman_standard_config(path=get_beman_standard_config_path()):
