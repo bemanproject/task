@@ -17,4 +17,4 @@ jobs:
         uses: actions/checkout@v4
       - name: beman submodule consistency check
         run: |
-          (set -o pipefail; ${{ inputs.infra_path }}/tools/beman-submodule/beman-submodule status | grep -qvF '+')
+          (set -eo pipefail; while read line ; do echo $line | grep -qvF '+' ; done < <(${{ inputs.infra_path }}/tools/beman-submodule/beman-submodule status))
