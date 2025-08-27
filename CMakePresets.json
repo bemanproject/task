@@ -94,17 +94,6 @@
       }
     },
     {
-      "name": "msvc-debug",
-      "displayName": "MSVC Debug Build",
-      "inherits": [
-        "_root-config",
-        "_debug-base"
-      ],
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "infra/cmake/msvc-toolchain.cmake"
-      }
-    },
-    {
       "name": "msvc-release",
       "displayName": "MSVC Release Build",
       "inherits": [
@@ -165,13 +154,6 @@
       ]
     },
     {
-      "name": "msvc-debug",
-      "configurePreset": "msvc-debug",
-      "inherits": [
-        "_root-build"
-      ]
-    },
-    {
       "name": "msvc-release",
       "configurePreset": "msvc-release",
       "inherits": [
@@ -220,11 +202,6 @@
       "name": "appleclang-release",
       "inherits": "_test_base",
       "configurePreset": "appleclang-release"
-    },
-    {
-      "name": "msvc-debug",
-      "inherits": "_test_base",
-      "configurePreset": "msvc-debug"
     },
     {
       "name": "msvc-release",
@@ -332,23 +309,6 @@
         {
           "type": "test",
           "name": "appleclang-release"
-        }
-      ]
-    },
-    {
-      "name": "msvc-debug",
-      "steps": [
-        {
-          "type": "configure",
-          "name": "msvc-debug"
-        },
-        {
-          "type": "build",
-          "name": "msvc-debug"
-        },
-        {
-          "type": "test",
-          "name": "msvc-debug"
         }
       ]
     },

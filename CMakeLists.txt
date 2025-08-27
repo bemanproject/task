@@ -34,20 +34,11 @@ set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME}Targets)
 
 FetchContent_Declare(
     execution
-    # SOURCE_DIR <path-to>/execution
+    # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG fa6d441
+    GIT_TAG a5843eb
 )
 FetchContent_MakeAvailable(execution)
-FetchContent_Declare(
-    net
-    # SOURCE_DIR <path-to>/net
-    GIT_REPOSITORY https://github.com/bemanproject/net
-    GIT_TAG ea1fd8f
-)
-if(NOT WIN32)
-    FetchContent_MakeAvailable(net)
-endif()
 
 add_subdirectory(src/beman/task)
 

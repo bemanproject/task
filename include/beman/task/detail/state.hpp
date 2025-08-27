@@ -4,8 +4,9 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_STATE
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_STATE
 
-#include <beman/task/detail/state_base.hpp>
 #include <beman/task/detail/promise_type.hpp>
+#include <beman/task/detail/state_base.hpp>
+#include <beman/task/detail/state_rep.hpp>
 #include <beman/task/detail/stop_source.hpp>
 #include <type_traits>
 #include <utility>
@@ -13,37 +14,6 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::task::detail {
-template <typename C, typename Receiver>
-struct state_rep {
-    std::remove_cvref_t<Receiver> receiver;
-    C                             context;
-    template <typename R>
-    state_rep(R&& r) : receiver(std::forward<R>(r)), context() {}
-};
-template <typename C, typename Receiver>
-    requires requires { C(::beman::execution::get_env(std::declval<std::remove_cvref_t<Receiver>&>())); } &&
-             (not requires(const Receiver& receiver) {
-                 typename C::template env_type<decltype(::beman::execution::get_env(receiver))>;
-             })
-struct state_rep<C, Receiver> {
-    std::remove_cvref_t<Receiver> receiver;
-    C                             context;
-    template <typename R>
-    state_rep(R&& r) : receiver(std::forward<R>(r)), context(::beman::execution::get_env(this->receiver)) {}
-};
-template <typename C, typename Receiver>
-    requires requires(const Receiver& receiver) {
-        typename C::template env_type<decltype(::beman::execution::get_env(receiver))>;
-    }
-struct state_rep<C, Receiver> {
-    using upstream_env = decltype(::beman::execution::get_env(std::declval<std::remove_cvref_t<Receiver>&>()));
-    std::remove_cvref_t<Receiver>               receiver;
-    typename C::template env_type<upstream_env> own_env;
-    C                                           context;
-    template <typename R>
-    state_rep(R&& r)
-        : receiver(std::forward<R>(r)), own_env(::beman::execution::get_env(this->receiver)), context(this->own_env) {}
-};
 
 template <typename Task, typename T, typename C, typename Receiver>
 struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::state_rep<C, Receiver> {
@@ -72,6 +42,7 @@ struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::s
 
     auto                    start() & noexcept -> void { this->handle.start(this).resume(); }
     std::coroutine_handle<> do_complete() override {
+        this->handle.reset();
         this->result_complete(::std::move(this->receiver));
         return std::noop_coroutine();
     }

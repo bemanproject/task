@@ -162,6 +162,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<>> {
     auto set_value(T&& value) -> void {
         this->result.template emplace<1u>(::std::forward<T>(value));
     }
+    auto no_completion_set() const noexcept -> bool { return this->result.index() == 0u; }
 
     /**
      * \brief Call the completion function according to the current result.

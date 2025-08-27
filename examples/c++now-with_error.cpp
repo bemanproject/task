@@ -26,10 +26,10 @@ struct context {
 ex::task<int, context> error_return(int arg) noexcept {
     try {
         if (arg == 1)
-            co_yield ex::with_error(E{arg});
+            co_yield ex::with_error{E{arg}};
         co_return arg * 17;
     } catch (...) {
-        unreachable("no error should escape co_yield with_error(E{0})");
+        unreachable("no error should escape co_yield with_error{E{0}}");
         std::terminate();
     }
 }
@@ -40,7 +40,7 @@ struct ctxt {
 
 ex::task<int, ctxt> call(int v) {
     if (v == 1)
-        co_yield ex::with_error(-1);
+        co_yield ex::with_error{-1};
     co_return 2 * v;
 }
 } // namespace
