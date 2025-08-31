@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 set(ALL_EXAMPLES
+    issue-co_await-task
+    issue-co_await-non-sender
     odd-return
     bulk
     dangling-references

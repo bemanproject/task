@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  ins {background-color:#A0FFA0}
+  del {background-color:#FFA0A0}
+</style>
+<title>co_await change_coroutine_scheduler(s) requires assignable</title>
+</head>
+<body>
+<h3><code>co_await change_coroutine_scheduler(s)</code> requires assignable</h3>
+<p><b>Section:</b> 33.13.6.5 <a href="https://wg21.link/task.promise">[task.promise]</a></p>
+<p><b>Submitter:</b> Dietmar K&uuml;hl</p>
+<p><b>Discussion:</b></p>
+<p>
+The specification of <code>change_coroutine_scheduler(sched)</code> uses
+<code>std::exchange</code> to put the scheduler into place (in <a
+href="https://wg21.link/task.promise#11">[task.promise] paragraph
+11</a>). The problem is that <code>std::exchange(x, v)</code> expects
+<code>x</code> to be assignable from <code>v</code> but there is
+no requirement for scheduler to be assignable.
+</p>
+<p><b>Proposed resolution:</b></p>
+<p>
+Change the wording in <a href="https://wg21.link/task.promise#11">[task.promise] paragraph 11</a>
+to avoid the use of <code>std::exchange</code> and transfer the using
+construction:
+<blockquote>
+<pre>
+template&lt;class Sch&gt;
+  auto await_transform(change_coroutine_scheduler&lt;Sch&gt; sch) noexcept;
+</pre>
+<p>
+-11- <i>Effects</i>: Equivalent to:
+</p>
+<pre>
+<del>return await_transform(just(exchange(SCHED(*this), scheduler_type(sch.scheduler))), *this);</del><ins>
+auto* s{address_of(<i>SCHED</i>(*this))};
+auto rc{std::move(*s)};
+s->~scheduler_type();
+new(s) scheduler_type(std::move(sch));
+return std::move(rc);
+</ins>
+</pre>
+</blockquote>
+</p>
+</body>
+</html>

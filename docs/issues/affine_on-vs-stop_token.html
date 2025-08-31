@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  ins {background-color:#A0FFA0}
+  del {background-color:#FFA0A0}
+</style>
+<title>affine_on shouldn't forward the stop token to the scheduling operation</title>
+</head>
+<body>
+<h3><code>affine_on</code> shouldn't forward the stop token to the scheduling operation</h3>
+<p><b>Section:</b> 33.13.3 <a href="https://wg21.link/exec.affine.on">[exec.affine.on]</a></p>
+<p><b>Submitter:</b> Dietmar K&uuml;hl</p>
+<p><b>Discussion:</b></p>
+<p>
+The main purpose of <code>affine_on</code> is to make sure work
+resumes on a specific execution context. The scheduling operation
+may take some time and work may be cancelled in the meantime. If
+this cancellation causes the scheduling to be cancelled work cleaning
+up after the cancellation would be executed on the wrong execution
+context. Thus, the stop token from the receiver's environment should
+only be forwarded when <code>connect</code>ing the sender but not
+to scheduling operation.
+</p>
+<p><b>Proposed resolution:</b></p>
+<p>
+TODO-RESOLUTION
+</p>
+</body>
+</html>

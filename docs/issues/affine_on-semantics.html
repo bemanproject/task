@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  ins {background-color:#A0FFA0}
+  del {background-color:#FFA0A0}
+</style>
+<title>affine_on semantics</title>
+</head>
+<body>
+<h3><code>affine_on</code> semantics</h3>
+<p><b>Section:</b> 33.13.3 <a href="https://wg21.link/exec.affine.on">[exec.affine.on]</a></p>
+<p><b>Submitter:</b> Dietmar K&uuml;hl</p>
+<p><b>Discussion:</b></p>
+<p>
+The specification of <code>affine_on</code> uses "current execution
+resource" and it is unclear what that means exactly. Additionally,
+it is unclear what the difference between <code>affine_on</code>
+and <code>continues_on</code> is. The main intention of
+<code>affine_on</code> is to avoid unnecessary scheduling which
+<code>continues_on</code> is already allowed to do in some cases,
+too.
+</p>
+<p>
+The intended semantics is that <code>affine_on</code> will either
+complete inline on what execution it was started on or it will
+complete asynchronously on the specified execution context. With
+this formulation <code>affine_on</code> may complete on one of two
+different execution context if it is started on an execution context
+that is different from the one specified by the scheduler.
+</p>
+<p><b>Proposed resolution:</b></p>
+<p>
+TODO-RESOLUTION
+</p>
+</body>
+</html>
