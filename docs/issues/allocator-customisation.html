@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  ins {background-color:#A0FFA0}
+  del {background-color:#FFA0A0}
+</style>
+<title>task uses unusual allocator customisation</title>
+</head>
+<body>
+<h3>task uses unusual allocator customisation</h3>
+<p><b>Section:</b> 33.13.6.5 <a href="https://wg21.link/task.promise">[task.promise]</a></p>
+<p><b>Submitter:</b> Dietmar K&uuml;hl</p>
+<p><b>Discussion:</b></p>
+<p>
+Unlike <code>generator</code> the allocator customisation of
+<code>task</code> constraints the allocator type used for the
+coroutine from to be the convertible to the configurated
+<code>allocator_type</code>. This prevents easy use of an allocator
+especially when no allocator is configured and the default
+(<code>std::allocator&lt;std::byte&gt;</code>) is used. The reason
+for this constraint is that the <code>get_allocator</code> is
+forwarded to <code>co_await</code>ed senders and is intended to be
+the same as the allocator used for the coroutine frame.
+</p>
+<p>
+It may be reasonable to allow use of an arbitrary allocator when
+there is no explicit configuration of the <code>allocator_type</code>.
+In this case it may also be resonable to not support the
+<code>get_allocator</code> query when <code>co_await</code>ing
+senders.
+</p>
+<p><b>Proposed resolution:</b></p>
+<p>
+TODO-RESOLUTION
+</p>
+</body>
+</html>

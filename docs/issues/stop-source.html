@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  ins {background-color:#A0FFA0}
+  del {background-color:#FFA0A0}
+</style>
+<title>task's stop source is always created</title>
+</head>
+<body>
+<h3><code>task</code>'s stop source is always created</h3>
+<p><b>Section:</b> 33.13.6.5 <a href="https://wg21.link/task.promise">[task.promise]</a></p>
+<p><b>Submitter:</b> Dietmar K&uuml;hl</p>
+<p><b>Discussion:</b></p>
+<p>
+The type <code>task&lt;...&gt;::promise_type</code> has exposition-only
+members <code><i>source</i></code> and <code><i>token</i></code>.
+These can be interpreted as always existing which would be a
+performance issue for former and an unnecessary constraints for the
+latter (because stop tokens aren't required to be default constructible).
+</p>
+<b>
+The intent is that the stop token obtained from the
+<code>get_stop_token</code> query of the receiver's environment is
+used. Only if this type is different from the <code>task</code>'s
+<code>stop_token_type</code> a stop source of type
+<code>stop_source_type</code> needs to be created when the
+<code>get_stop_token</code> query is used on the promise type's
+environment. The stop token doesn't need to be stored at all: it
+can either be obtained from the receiver's environment or from the
+stop source. The fix is to show the stop source as an optionally
+present member of of the operation state and it should be of type
+<code>std::optional&lt;stop_source_type&gt;</code> to imply that
+it is only created when accessed.
+</b>
+<p><b>Proposed resolution:</b></p>
+<p>
+TODO-RESOLUTION
+</p>
+</body>
+</html>

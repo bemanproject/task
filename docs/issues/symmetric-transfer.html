@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  ins {background-color:#A0FFA0}
+  del {background-color:#FFA0A0}
+</style>
+<title>task doesn't support symmetric transfer</title>
+</head>
+<body>
+<h3><code>task</code> doesn't support symmetric transfer</h3>
+<p><b>Section:</b> 33.13.6.2 <a href="https://wg21.link/task.class">[task.class]</a></p>
+<p><b>Submitter:</b> Dietmar K&uuml;hl</p>
+<p><b>Discussion:</b></p>
+<p>
+The specification of <code>task</code> doesn't require symmetric
+transfer which can help with stack overflow. Also, when another
+<code>task</code> is <code>co_await</code>ed the scheduler on which
+the <code>task</code> resumes is known and can be used to avoid
+unnecessary scheduling by comparing the scheduler currently installed
+by in two <code>task</code>s involved.
+</p>
+<p><b>Proposed resolution:</b></p>
+<p>
+TODO-RESOLUTION
+</p>
+</body>
+</html>

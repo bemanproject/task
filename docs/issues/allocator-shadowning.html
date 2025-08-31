@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  ins {background-color:#A0FFA0}
+  del {background-color:#FFA0A0}
+</style>
+<title>task shadows the environment's allocator</title>
+</head>
+<body>
+<h3><code>task</code> shadows the environment's allocator</h3>
+<p><b>Section:</b> 33.13.6.5 <a href="https://wg21.link/task.promise">[task.promise]</a></p>
+<p><b>Submitter:</b> Dietmar K&uuml;hl</p>
+<p><b>Discussion:</b></p>
+<p>
+Normally, the <code>get_allocator</code> query forwards the allocator
+from the receiver's environment. For <code>task</code> the
+<code>get_allocator</code> query used for <code>co_await</code>ed
+senders uses the allocator passed when creating the coroutine or
+the default if there was none. It should use the receiver's
+environment, at least, if the receiver's environment supports a
+<code>get_allocator</code> query.
+</p>
+<p>
+Supporting the receiver's allocator isn't always possible: the used
+allocator type needs to be known whe then coroutine is created. At
+that time the receiver isn't known, yet. As a result the receiver's
+environment may provide an allocator which is incompatible with the
+allocator type used by the coroutine. It may be possible to use the
+receiver's allcoator is it is convertible to the allocator type
+used by the coroutine and to produce a compile-time error otherwise.
+</p>
+<p><b>Proposed resolution:</b></p>
+<p>
+TODO-RESOLUTION
+</p>
+</body>
+</html>
