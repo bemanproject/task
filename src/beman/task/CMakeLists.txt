@@ -14,12 +14,12 @@ target_sources(
     beman.task
     PUBLIC
         FILE_SET HEADERS
-        BASE_DIRS ${PROJECT_SOURCE_DIR}/include
-        FILES
-            ${PROJECT_SOURCE_DIR}/include/beman/execution/task.hpp
-            ${PROJECT_SOURCE_DIR}/include/beman/lazy/lazy.hpp
-            ${PROJECT_SOURCE_DIR}/include/beman/task/task.hpp
-            ${DETAIL_HEADERS}
+            BASE_DIRS ${PROJECT_SOURCE_DIR}/include
+            FILES
+                ${PROJECT_SOURCE_DIR}/include/beman/execution/task.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/lazy/lazy.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/task/task.hpp
+                ${DETAIL_HEADERS}
 )
 
 set_target_properties(beman.task PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
@@ -28,8 +28,7 @@ target_link_libraries(beman.task PUBLIC beman::execution)
 install(
     TARGETS beman.task
     EXPORT beman.task
-    DESTINATION
-    $<$<CONFIG:Debug>:debug/>${CMAKE_INSTALL_LIBDIR}
+    DESTINATION $<$<CONFIG:Debug>:debug/>${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION $<$<CONFIG:Debug>:debug/>${CMAKE_INSTALL_BINDIR}
     FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
