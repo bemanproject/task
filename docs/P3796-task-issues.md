@@ -1,7 +1,7 @@
 ---
 title: Coroutine Task Issues
-document: P3796R1
-date: 2025-08-14
+document: D3796R2
+date: 2025-09-27
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -35,6 +35,10 @@ them.
 - Added discussion of missing rvalue qualification ([link](#missing-rvalue-qualification))
 - Added issue about missing specification for `return_value` and `return_void` ([link](#return_value-and-return_void-have-no-specification))
 - Various minor fixes
+
+## R2
+
+- Added references to LWG issues and US body comments where applicable
 
 # General
 
@@ -110,6 +114,8 @@ name while the proposal isn't adopted.
 
 ### `affine_on` Default Implementation Lacks a Specification
 
+[LWG 4344](https://wg21.link/LWG4344) US 236
+
 The wording of [`affine_on`](https://eel.is/c++draft/exec#affine.on)
 doesn't have a specification for the default implementation. For
 other algorithms the default implementation is specified. To resolve
@@ -149,6 +155,8 @@ the techniques to avoid scheduling assuming the necessary infrastructure
 gets standardised.
 
 ### `affine_on` Semantics Are Not Clear
+
+[LWG 4330](https://wg21.link/LWG4330) US 233
 
 The wording in
 [`affine_on` p5](https://eel.is/c++draft/exec#affine.on-5) says:
@@ -247,6 +255,8 @@ separately customised.
 
 ### `affine_on`'s Shape May Not Be Correct
 
+[LWG 4331](https://wg21.link/LWG4331) US 234
+
 The `affine_on` algorithm defined in
 [[exec.affine.on]](https://eel.is/c++draft/exec#affine.on) takes two arguments; a
 [`sender`](https://eel.is/c++draft/exec.snd.concepts) and a
@@ -292,6 +302,8 @@ invoke `start(op)` matches the execution resource of
 `get_scheduler(get_env(rcvr))`.
 
 ### `affine_on` Shouldn't Forward Stop Requests To Scheduling Operations
+
+[LWG 4332](https://wg21.link/LWG4332) US 235
 
 The `affine_on` algorithm is used by the `task` coroutine to ensure
 that the coroutine always resumes back on its associated scheduler
@@ -383,6 +395,8 @@ Other ways this could be tackled include:
     not be changed.
 
 ### `affine_on` Customisation For Other Senders
+
+[LWG 4329](https://wg21.link/LWG4329) US 232
 
 Assuming the the `affine_on` algorithm semantics are changed to
 just require that it completes either inline or on the context of
@@ -538,6 +552,8 @@ provides a domain with a custom transformation for `affine_on`.
 
 ### No Support For Symmetric Transfer
 
+[LWG 4348](https://wg21.link/LWG4348) US 246
+
 The specification doesn't mention any use of symmetric transfer.
 Further, the `task` gets adapted by `affine_on` in `await_transform`
 ([[task.promise] p10](https://eel.is/c++draft/exec#task.promise-10)
@@ -581,6 +597,8 @@ customisation also customises `as_awaitable`.
 ## Allocation
 
 ### Unusual Allocator Customisation
+
+[LWG 4333](https://wg21.link/LWG4333) US 253
 
 The allocator customisation mechanism is inconsistent with the
 design of `generator` allocator customisation: with `generator`,
@@ -630,6 +648,8 @@ specified in the `Environment` argument to `task`, the
 of received used with `co_await`.
 
 ### Issue: Flexible Allocator Position
+
+[LWG 4334](https://wg21.link/LWG4334) US 254
 
 For `task<T, E>` the position of an `std::allocator_arg` can be
 anywhere in the argument list except it can't be the last argument
@@ -683,6 +703,8 @@ requirement on `generator` in a future revision of the C++ standard.
 
 ### Shadowing The Environment Allocator Is Questionable
 
+[LWG 4337](https://wg21.link/LWG4337) US 255
+
 The `get_allocator` query on the environment of the receiver passed to
 `co_await`ed senders always returns the allocator determined when
 the coroutine frame is created.  The allocator provided by the
@@ -722,6 +744,8 @@ the desired behaviour using the environment.
 ## Stop Token Management
 
 ### A Stop Source Always Needs To Be Created
+
+[LWG 4347](https://wg21.link/LWG4347) US 257
 
 The specification of the `promise_type` contains exposition-only
 members for a stop source and a stop token. It is expected that in
@@ -776,6 +800,8 @@ The remaining concerns aren't as coupled to other concerns and
 discussed separately.
 
 ### Task Is Not Actually Lazily Started
+
+[LWG 4349](https://wg21.link/LWG4349) US 258
 
 The wording for `task<...>::promise_type::initial_suspend` in
 [[task.promise] p6](https://eel.is/c++draft/exec#task.promise-6)
@@ -841,6 +867,8 @@ This specification just shows the class completion definition.
 
 ### The Coroutine Frame Is Destroyed Too Late
 
+[LWG 4339](https://wg21.link/LWG4339) US 242
+
 When the `task` completes from a suspended coroutine without ever
 reaching `final_suspend` the coroutine frame lingers until the
 operation state object is destroyed. This happens when the `task`
@@ -859,6 +887,8 @@ is in the operation state.
 
 ### `task<T, E>` Has No Default Arguments
 
+[LWG 4343](https://wg21.link/LWG4343) US 243
+
 The current specification of `task<T, E>` doesn't have any default arguments
 in its first declaration in [[execution.syn]](https://eel.is/c++draft/execution.syn). The intent was to default the
 type `T` to `void` and the environment `E` to `env<>`. That is, this change
@@ -876,6 +906,8 @@ It isn't catastrophic if that change isn't made but it seems to
 improve usability without any drawbacks.
 
 ### `bulk` vs. `task_scheduler`
+
+[LWG 4336](https://wg21.link/LWG4336) US 238
 
 Normally, the scheduler type used by an operation can be deduced
 when a sender is `connect`ed to a receiver from the receiver's
@@ -946,6 +978,8 @@ customised versions of an algorithm are not used for algorithms we
 are currently unaware of.
 
 ### `unhandled_stopped()` Isn't `noexcept`
+
+[LWG 4340](https://wg21.link/LWG4340) US 252
 
 The `unhandled_stopped()` member function of `task::promise_type`
 [[task.promise]](https://eel.is/c++draft/exec#task.promise)
@@ -1183,6 +1217,8 @@ avoided.
 
 ### `return_value` And `return_void` Have No Specification
 
+[LWG 4346](https://wg21.link/LWG4346) US 250
+
 The functions `return_value` and `return_void` declared for the
 `task<...>::promise_type` in
 [[task.promise]](https://eel.is/c++draft/task.promise) (only one
@@ -1208,6 +1244,8 @@ template<class V>
 
 
 ### Consider Supporting co_return { args... };
+
+[LWG 4345](https://wg21.link/LWG4345) US 251
 
 The current [declaration of `return_value`](https://eel.is/c++draft/task.promise) in the
 `promise_type` specifies the function without a default type for
@@ -1241,6 +1279,8 @@ applied in a future revision of the standard. It would be nice to
 fix it for C++26.
 
 ### `co_await change_coroutine_scheduler(sched)` Requires Assignable Scheduler
+
+[LWG 4337](https://wg21.link/LWG4337) US 256
 
 The specification of `change_coroutine_scheduler(sched)` uses `std::exchange` to
 put the scheduler into place (in [[task.promise] p11](https://eel.is/c++draft/exec#task.promise-11)):
@@ -1286,6 +1326,8 @@ doesn't necessarily need to be resolved one way or the other for
 C++26.
 
 ### Sender Unaware Coroutines Should Be Able To `co_await` A `task`
+
+[LWG 4338](https://wg21.link/LWG4338) US 245
 
 The request here is to add an `operator co_await()` to `task`
 which returns an awaiter used to start the `task`. On the surface
@@ -1336,6 +1378,8 @@ co_await()` at this time.
 
 ### Missing Rvalue Qualification
 
+[LWG 4342](https://wg21.link/LWG4342) US 237
+
 The nested sender of a `task_scheduler` isn't necessary copyable.
 As the operation is type erased, the
 <code>task_scheduler::_ts-sender_::connect</code> should be rvalue
@@ -1362,6 +1406,8 @@ rvalue qualification to `connect`:
 template<receiver Rcvr>
   state<Rcvr> connect(Rcvr&& rcvr)@[` &&`]{.add}@;
 ```
+
+[LWG 4341](https://wg21.link/LWG4341) US 244
 
 Coroutines aren't copyable. When using objects holding a
 `coroutine_handle<P>` such that the underlying `coroutine_handle<P>`
