@@ -3,6 +3,7 @@
 
 #include <beman/task/detail/affine_on.hpp>
 #include <beman/task/detail/single_thread_context.hpp>
+#include <beman/task/detail/inline_scheduler.hpp>
 #include <beman/execution/execution.hpp>
 #ifdef NDEBUG
 #undef NDEBUG
@@ -14,14 +15,23 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 namespace {
+template <ex::scheduler Scheduler>
 struct receiver {
     using receiver_concept = ex::receiver_t;
+
+    std::remove_cvref_t<Scheduler> scheduler;
+    auto get_env() const noexcept {
+        return ex::detail::make_env(ex::get_scheduler, scheduler);
+    }
 
     void set_value(auto&&...) && noexcept {}
     void set_error(auto&&) && noexcept {}
     void set_stopped() && noexcept {}
 };
-static_assert(ex::receiver<receiver>);
+template <ex::scheduler Scheduler>
+receiver(Scheduler&& sched) -> receiver<Scheduler>;
+
+static_assert(ex::receiver<receiver<beman::task::detail::inline_scheduler>>);
 } // namespace
 
 int main() {
@@ -36,7 +46,7 @@ int main() {
 
     [[maybe_unused]] auto s(beman::task::affine_on(ex::just(42), context.get_scheduler()));
     static_assert(ex::sender<decltype(s)>);
-    [[maybe_unused]] auto st(ex::connect(std::move(s), receiver{}));
+    [[maybe_unused]] auto st(ex::connect(std::move(s), receiver{context.get_scheduler()}));
 #if 0
      ex::sync_wait(beman::task::affine_on(ex::just(42), context.get_scheduler())
 #else

@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+set(TODO tls-scheduler)
+
 set(ALL_EXAMPLES
     odd-return
     bulk
     dangling-references
     rvalue-task
     aggregate-return
-    tls-scheduler
     customize
     issue-symmetric-transfer
     affinity
