@@ -16,7 +16,7 @@ struct affine_on_t {
     struct sender;
 
     template <::beman::execution::sender Sender>
-    auto operator()(Sender&& sndr, auto&&) const {
+    auto operator()(Sender&& sndr) const {
         using result_t = sender<::std::remove_cvref_t<Sender>>;
         static_assert(::beman::execution::sender<result_t>);
         return result_t(::std::forward<Sender>(sndr));

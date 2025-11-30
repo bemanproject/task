@@ -82,7 +82,7 @@ class promise_type
             return ::beman::execution::as_awaitable(::std::forward<Sender>(sender), *this);
         } else {
             return ::beman::execution::as_awaitable(
-                ::beman::task::affine_on(::std::forward<Sender>(sender), this->get_scheduler()), *this);
+                ::beman::task::affine_on(::std::forward<Sender>(sender)), *this);
         }
     }
     auto await_transform(::beman::task::detail::change_coroutine_scheduler<scheduler_type> c) {
