@@ -76,7 +76,7 @@ a better design than was previously documented:
   <li>
     The work needs to be resumed on the correct scheduler even when
     the work is stopped, i.e., the scheduling operation shall be
-    `connect`ed to a receiver whose environment's `get_stop_token` 
+    `connect`ed to a receiver whose environment's `get_stop_token`
     query yields an `unstoppable_token`. In addition, the
     schedule operation shall not have a `set_stopped_t()` completion
     signature if the environment's `get_stop_token` query yields
