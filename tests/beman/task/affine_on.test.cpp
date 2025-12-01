@@ -20,9 +20,7 @@ struct receiver {
     using receiver_concept = ex::receiver_t;
 
     std::remove_cvref_t<Scheduler> scheduler;
-    auto get_env() const noexcept {
-        return ex::detail::make_env(ex::get_scheduler, scheduler);
-    }
+    auto get_env() const noexcept { return ex::detail::make_env(ex::get_scheduler, scheduler); }
 
     void set_value(auto&&...) && noexcept {}
     void set_error(auto&&) && noexcept {}
@@ -48,7 +46,7 @@ int main() {
     static_assert(ex::sender<decltype(s)>);
     [[maybe_unused]] auto st(ex::connect(std::move(s), receiver{context.get_scheduler()}));
 #if 0
-     ex::sync_wait(beman::task::affine_on(ex::just(42), context.get_scheduler())
+      ex::sync_wait(beman::task::affine_on(ex::just(42), context.get_scheduler())
 #else
     ex::sync_wait(beman::execution::continues_on(ex::just(42), context.get_scheduler())
 #endif
