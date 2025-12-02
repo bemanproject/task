@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-set(TODO tls-scheduler)
+set(TODO
+    tls-scheduler
+    into_optional
+)
 
 set(ALL_EXAMPLES
     odd-return
@@ -29,7 +32,6 @@ set(ALL_EXAMPLES
     escaped-exception
     friendly
     hello
-    into_optional
     issue-affine_on
     issue-frame-allocator
     issue-start-reschedules
