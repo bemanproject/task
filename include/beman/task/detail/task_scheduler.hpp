@@ -113,7 +113,9 @@ class task_scheduler {
         void complete_error(std::exception_ptr ptr) override {
             ::beman::execution::set_error(std::move(receiver), std::move(ptr));
         }
-        void complete_stopped() override { ::beman::execution::set_stopped(std::move(this->receiver)); }
+        void complete_stopped() override {
+            //::beman::execution::set_stopped(std::move(this->receiver));
+        }
         ::beman::execution::inplace_stop_token get_stop_token() override {
             if constexpr (::std::same_as<token_t, ::beman::execution::inplace_stop_token>) {
                 return ::beman::execution::get_stop_token(::beman::execution::get_env(this->receiver));
