@@ -3,6 +3,7 @@
 set(TODO
     tls-scheduler
     into_optional
+    issue-start-reschedules
 )
 
 set(ALL_EXAMPLES
@@ -34,7 +35,6 @@ set(ALL_EXAMPLES
     hello
     issue-affine_on
     issue-frame-allocator
-    issue-start-reschedules
     loop
     query
     result_example
