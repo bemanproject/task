@@ -5,6 +5,7 @@
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_AFFINE_ON
 
 #include <beman/execution/execution.hpp>
+#include <beman/execution/detail/meta_unique.hpp>
 #include <beman/task/detail/inline_scheduler.hpp>
 #include <utility>
 #include <tuple>
@@ -69,7 +70,7 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
         struct to_variant_t;
         template <typename... Sig>
         struct to_variant_t<::beman::execution::completion_signatures<Sig...>> {
-            using type = ::std::variant<typename to_tuple_t<Sig>::type...>;
+            using type = ::beman::execution::detail::meta::unique<::std::variant<typename to_tuple_t<Sig>::type...>>;
         };
 
         using operation_state_concept = ::beman::execution::operation_state_t;
@@ -109,6 +110,7 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
             template <typename E>
             auto set_error(E&& error) noexcept -> void {
                 static_assert(::beman::execution::receiver<work_receiver>);
+                // static_assert(std::same_as<completion_signatures, value_type);
                 this->s->value
                     .template emplace<::std::tuple<::beman::execution::set_error_t, ::std::remove_cvref_t<E>>>(
                         ::beman::execution::set_error, ::std::forward<E>(error));
