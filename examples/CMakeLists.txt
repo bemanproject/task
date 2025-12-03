@@ -4,11 +4,11 @@ set(TODO
     tls-scheduler
     into_optional
     issue-start-reschedules
-    task_scheduler
-    loop
 )
 
 set(ALL_EXAMPLES
+    task_scheduler
+    loop
     odd-return
     bulk
     dangling-references
