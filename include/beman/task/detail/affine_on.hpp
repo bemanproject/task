@@ -92,8 +92,7 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
                     s->value);
             }
             auto get_env() const noexcept -> ::beman::execution::empty_env { /*-dk:TODO */ return {}; }
-            auto set_error(auto&&) noexcept -> void { /*-dk:TODO remove */ }
-            // auto set_stopped() noexcept -> void { /*-dk:TODO remove */ }
+            // auto set_error(auto&&) noexcept -> void { /*-dk:TODO remove */ }
         };
 
         struct work_receiver {

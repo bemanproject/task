@@ -4,6 +4,8 @@ set(TODO
     tls-scheduler
     into_optional
     issue-start-reschedules
+    task_scheduler
+    loop
 )
 
 set(ALL_EXAMPLES
@@ -35,11 +37,9 @@ set(ALL_EXAMPLES
     hello
     issue-affine_on
     issue-frame-allocator
-    loop
     query
     result_example
     stop
-    task_scheduler
 )
 set(xALL_EXAMPLES issue-symmetric-transfer)
 set(xALL_EXAMPLES customize)
