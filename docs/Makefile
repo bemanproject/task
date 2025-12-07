@@ -4,7 +4,7 @@ default: doc
 
 doc: doc-html
 
-doc-html: P3552-task.html P3796-task-issues.html
+doc-html: P3552-task.html P3796-task-issues.html affinity.html
 
 doc-pdf: P3552-task.pdf P3796-task-issues.pdf
 
