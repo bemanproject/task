@@ -4,25 +4,26 @@ set(TODO
     tls-scheduler
     into_optional
     issue-start-reschedules
+    loop
 )
 
 set(ALL_EXAMPLES
     task_scheduler
-    loop
-    odd-return
     bulk
+    c++now-allocator
+    c++now-cancel
+    c++now-errors
+    alloc
+    affinity
+    odd-return
     dangling-references
     rvalue-task
     aggregate-return
     customize
+    issue-affine_on
     issue-symmetric-transfer
-    affinity
-    alloc
     c++now-affinity
-    c++now-allocator
     c++now-basic
-    c++now-cancel
-    c++now-errors
     c++now-query
     c++now-result-types
     c++now-return
@@ -35,7 +36,6 @@ set(ALL_EXAMPLES
     escaped-exception
     friendly
     hello
-    issue-affine_on
     issue-frame-allocator
     query
     result_example

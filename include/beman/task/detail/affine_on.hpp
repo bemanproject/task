@@ -7,6 +7,7 @@
 #include <beman/execution/execution.hpp>
 #include <beman/execution/detail/meta_unique.hpp>
 #include <beman/task/detail/inline_scheduler.hpp>
+#include <concepts>
 #include <utility>
 #include <tuple>
 #include <variant>
@@ -36,26 +37,13 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
 
     template <typename Env>
     auto get_completion_signatures(const Env& env) const& noexcept {
-        if constexpr (elide_schedule<decltype(::beman::execution::get_scheduler(::std::declval<Env>()))>) {
-            return ::beman::execution::get_completion_signatures(
-                ::std::remove_cvref_t<Sender>(::std::move(this->template get<2>())), env);
-        } else {
-            return ::beman::execution::get_completion_signatures(
-                ::beman::execution::continues_on(this->template get<1>(), ::beman::execution::get_scheduler(env)),
-                env);
-        }
+        return ::beman::execution::get_completion_signatures(::std::remove_cvref_t<Sender>(this->template get<1>()),
+                                                             env);
     }
     template <typename Env>
     auto get_completion_signatures(const Env& env) && noexcept {
-        if constexpr (elide_schedule<decltype(::beman::execution::get_scheduler(::std::declval<Env>()))>) {
-            return ::beman::execution::get_completion_signatures(
-                ::std::remove_cvref_t<Sender>(::std::move(this->template get<1>())), env);
-        } else {
-            return ::beman::execution::get_completion_signatures(
-                ::beman::execution::continues_on(::std::move(this->template get<1>()),
-                                                 ::beman::execution::get_scheduler(env)),
-                env);
-        }
+        return ::beman::execution::get_completion_signatures(
+            ::std::remove_cvref_t<Sender>(::std::move(this->template get<1>())), env);
     }
 
     template <::beman::execution::receiver Receiver>
@@ -77,7 +65,6 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
         using completion_signatures   = decltype(::beman::execution::get_completion_signatures(
             ::std::declval<Sender>(), ::beman::execution::get_env(::std::declval<Receiver>())));
         using value_type              = typename to_variant_t<completion_signatures>::type;
-        // static_assert(std::same_as<void, value_type>);
 
         struct schedule_receiver {
             using receiver_concept = ::beman::execution::receiver_t;
@@ -85,7 +72,7 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
             auto   set_value() noexcept -> void {
                 static_assert(::beman::execution::receiver<schedule_receiver>);
                 std::visit(
-                    [this](auto&& v) {
+                    [this](auto&& v) -> void {
                         std::apply(
                             [this](auto tag, auto&&... a) { tag(std::move(this->s->receiver), ::std::move(a)...); },
                             v);
@@ -93,7 +80,6 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
                     s->value);
             }
             auto get_env() const noexcept -> ::beman::execution::empty_env { /*-dk:TODO */ return {}; }
-            // auto set_error(auto&&) noexcept -> void { /*-dk:TODO remove */ }
         };
 
         struct work_receiver {
@@ -110,7 +96,6 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
             template <typename E>
             auto set_error(E&& error) noexcept -> void {
                 static_assert(::beman::execution::receiver<work_receiver>);
-                // static_assert(std::same_as<completion_signatures, value_type);
                 this->s->value
                     .template emplace<::std::tuple<::beman::execution::set_error_t, ::std::remove_cvref_t<E>>>(
                         ::beman::execution::set_error, ::std::forward<E>(error));
@@ -146,6 +131,21 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
                                                     schedule_receiver{this})),
               work_op_(::beman::execution::connect(::std::forward<S>(s), work_receiver{this})) {
             static_assert(::beman::execution::operation_state<state>);
+            if constexpr (not ::std::same_as<
+                              ::beman::execution::completion_signatures<::beman::execution::set_value_t()>,
+                              decltype(::beman::execution::get_completion_signatures(
+                                  ::beman::execution::schedule(
+                                      ::beman::execution::get_scheduler(::beman::execution::get_env(this->receiver))),
+                                  ::beman::execution::get_env(this->receiver)))>) {
+                static_assert(std::same_as<void,
+                                           decltype(::beman::execution::get_scheduler(
+                                               ::beman::execution::get_env(this->receiver)))>);
+            }
+            static_assert(::std::same_as<::beman::execution::completion_signatures<::beman::execution::set_value_t()>,
+                                         decltype(::beman::execution::get_completion_signatures(
+                                             ::beman::execution::schedule(::beman::execution::get_scheduler(
+                                                 ::beman::execution::get_env(this->receiver))),
+                                             ::beman::execution::get_env(this->receiver)))>);
         }
         auto start() & noexcept -> void { ::beman::execution::start(this->work_op_); }
     };
@@ -157,6 +157,12 @@ struct affine_on_t::sender : ::beman::execution::detail::product_type<::beman::t
 
     template <::beman::execution::receiver Receiver>
     auto connect(Receiver&& receiver) && {
+        static_assert(::std::same_as<::beman::execution::completion_signatures<::beman::execution::set_value_t()>,
+                                     decltype(::beman::execution::get_completion_signatures(
+                                         ::beman::execution::schedule(
+                                             ::beman::execution::get_scheduler(::beman::execution::get_env(receiver))),
+                                         ::beman::execution::get_env(receiver)))>,
+                      "affine_on requires that the receiver's scheduler is infallible");
         if constexpr (elide_schedule<decltype(::beman::execution::get_scheduler(
                           ::beman::execution::get_env(receiver)))>) {
             return ::beman::execution::connect(::std::move(this->template get<1>()),
