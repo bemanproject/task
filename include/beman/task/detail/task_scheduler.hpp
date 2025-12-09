@@ -27,8 +27,6 @@ namespace beman::task::detail {
  * Completion signatures:
  *
  * - `ex::set_value_t()`
- * - `ex::set_error_t(std::error_code)`
- * - `ex::set_error_t(std::exception_ptr)`
  * - `ex::set_stopped()`
  *
  * Usage:
@@ -127,11 +125,7 @@ class task_scheduler {
 
       public:
         using sender_concept = ::beman::execution::sender_t;
-        using completion_signatures =
-            ::beman::execution::completion_signatures<::beman::execution::set_value_t(),
-                                                      ::beman::execution::set_error_t(std::error_code),
-                                                      ::beman::execution::set_error_t(std::exception_ptr),
-                                                      ::beman::execution::set_stopped_t()>;
+        using completion_signatures = ::beman::execution::completion_signatures<::beman::execution::set_value_t()>;
 
         template <::beman::execution::scheduler S>
         explicit sender(S&& s) : inner_sender(static_cast<concrete<S>*>(nullptr), std::forward<S>(s)) {}

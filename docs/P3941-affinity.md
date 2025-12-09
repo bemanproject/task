@@ -1,6 +1,6 @@
 ---
 title: Scheduler Affinity
-document: D0000R0
+document: D3941R0
 date: 2025-12-07
 audience:
     - Concurrency Working Group (SG1)
@@ -256,6 +256,10 @@ completed to be suitable to continue running.
 TODO
 
 ## Removing `change_coroutine_scheduler`
+
+TODO
+
+## `affine_on` Default Implementation
 
 TODO
 
