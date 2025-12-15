@@ -39,7 +39,7 @@ meet its objective at run-time.
 There are a few NB comments raised about the way `affine_on` works:
 </p>
 <ul>
-   <li>[US 232-366](https://github.com/cplusplus/nbballot/issues/941): specify customization of `affine_on` when the scheduler doesn't change.</li>
+   <li>[US 232-366](https://github.com/cplusplus/nbballot/issues/941): specify customisation of `affine_on` when the scheduler doesn't change.</li>
    <li>[US 233-365](https://github.com/cplusplus/nbballot/issues/940): clarify `affine_on` vs. `continues_on`.</li>
    <li>[US 234-364](https://github.com/cplusplus/nbballot/issues/939): remove scheduler parameter from `affine_on`.</li>
    <li>[US 235-363](https://github.com/cplusplus/nbballot/issues/938): `affine_on` should not forward the stop token to the scheduling operation.</li>
@@ -84,23 +84,23 @@ a better design than was previously specified:
   </li>
   <li>
     When a sender knows that it will complete on the scheduler it
-    was start on, it should be possible to customize the `affine_on`
-    algorithm to avoid rescheduling. This customization can be
+    was start on, it should be possible to customise the `affine_on`
+    algorithm to avoid rescheduling. This customisation can be
     achieved by `connect`ing to the result of an `affine_on` member
     function called on the child sender, if such a member function
-    is present, when `connect`ing an `affine_on` sendering
+    is present, when `connect`ing an `affine_on` sender.
   </li>
 </ol>
 
 <p>
 None of these changes really contradict any earlier design: the
-shape and behavior of the `affine_on` algorithm wasn't fully fleshed
-out. Tightening the behavior scheduler affinity and the `affine_on`
+shape and behaviour of the `affine_on` algorithm wasn't fully fleshed
+out. Tightening the behaviour scheduler affinity and the `affine_on`
 algorithm has some implications on some other components:
 </p>
 <ol>
   <li>
-    If `affine_on` requires an infallible scheluder at least
+    If `affine_on` requires an infallible scheduler modelled at least
     `inline_scheduler`, `task_scheduler`, and `run_loop::scheduler`
     should be infallible (i.e., they always complete successfully
     with `set_value()`). `parallel_scheduler` can probably not be
@@ -110,7 +110,7 @@ algorithm has some implications on some other components:
     The scheduling semantics when changing a `task`'s scheduler
     using `co_await change_coroutine_scheduler(@_sch_@)`
     become somewhat unclear and this functionality should be removed.
-    Similar semantics are better modeled using
+    Similar semantics are better modelled using
     `co_await on(@_sch_@, @_nested-task_@)`.
   </li>
   <li>
@@ -130,7 +130,7 @@ work to be executed and the scheduler on which to continue as
 arguments. When SG1 requested that a similar but different algorithms
 is to be used to implement scheduler affinity, `continues_on` was
 just replaced by `affine_on` with the same shape but the potential
-to get customized differently.
+to get customised differently.
 </p>
 <p>
 The scheduler used for affinity is the scheduler communicated via
@@ -209,7 +209,7 @@ The current working draft specifies 4 schedulers:
   <li>
   [`inline_scheduler`](https://wg21.link/exec.inline.scheduler) which
   just completes with `set_value()` when `start()`ed, i.e., this
-  scheduler is already infallibe.
+  scheduler is already infallible.
   </li>
   <li>
   [`task_scheduler`](https://wg21.link/exec.task.scheduler) is a
@@ -241,7 +241,7 @@ The current working draft specifies 4 schedulers:
   </li>
   <li>
   The [`parallel_scheduler`](https://wg21.link/exec.par.scheduler)
-  provides an interface to a replacable implementation of a thread
+  provides an interface to a replaceable implementation of a thread
   pool. The current interface allows
   [`parallel_scheduler`](https://wg21.link/exec.par.scheduler) to
   complete with `set_error_t(std::exception_ptr)` as well as with
@@ -257,7 +257,7 @@ only infallible schedulers. If there are fallible schedulers, there
 aren't any good options for using them with a `task`.  Note that
 `affine_on` can fail and get cancelled (due to the main work failing
 or getting cancelled) but `affine_on` can still guarantee that
-execution resumes on the expect exuection agent when it uses an
+execution resumes on the expect execution agent when it uses an
 infallible scheduler.
 </p>
 <p>
@@ -286,7 +286,7 @@ The user can transform the scheduling failure into a call to
 </li>
 <li>
 The user can consider resuming on an execution agent where the
-adapting scheduluer can schedule to infallibly (e.g., the execution
+adapting scheduler can schedule to infallibly (e.g., the execution
 agent on which operation completed) but which is different from
 execution agent associated with the adapted scheduler to be suitable
 to continue running.  In that case the scheduling operation would
@@ -319,7 +319,7 @@ used scheduler is infallible. The main issue here is that there is no
 automatic static checking whether that is the case.
 </p>
 
-### Considerations On Infallibe Schedulers
+### Considerations On Infallible Schedulers
 
 In an ideal world, all schedulers would be infallible. It is unclear
 if that is achievable. If schedulers need to be allowed to be fallible,
@@ -334,17 +334,17 @@ If constraining `affine_on` to only infallible schedulers turns out
 to be too strong, the constraint can be relaxed in a future revision
 of the standard by explicitly opting out of that constraints, e.g.,
 using an additional argument. For `task` to make use of it, it too
-would need an explicit mechnasism to indicate that its `affine_on`
+would need an explicit mechanisms to indicate that its `affine_on`
 use should opt out of the constraint, e.g., by adding a suitable
 `static` member to the environment template argument.
 
-## `affine_on` Customization
+## `affine_on` Customisation
 
 Senders which don't cause the execution agent to be changed like
-`just` or the various queries should be able to customize `affine_on`
-to avoid unnecessary scheduding. Sadly, a proposal
+`just` or the various queries should be able to customise `affine_on`
+to avoid unnecessary scheduling. Sadly, a proposal
 ([P3206](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3206r0.pdf))
-to standardize properties which could be used to determine how a
+to standardise properties which could be used to determine how a
 sender completes didn't make much progress, yet. An implementation
 can make use of similar techniques using an implementation-specific
 protocol. If a future standard defines a standard approach to
@@ -390,7 +390,7 @@ this use is somewhat problematic in two ways:
 2. The `task`'s execution may finish on a different than the original
     scheduler. To allow symmetric transfer between two `task`s each
     `task` needs to complete on the correct scheduler. Thus, the
-    `task` needs to be prepared to change to the orginal scheduler
+    `task` needs to be prepared to change to the original scheduler
     before actually completing.  To do so, it is necessary to know
     the original scheduler and also to have storage for the state
     needed to change to a different scheduler.  It can't be statically
@@ -412,7 +412,7 @@ co_await ex::starts_on(s, [](@_parameters_@)->task<@_T_@, @_E_@> { @_logic_@ }(@
 Using this approach the use of the scheduler `s` is clearly limited
 to the nested coroutine. The scheduler affinity is fully taken care
 of by the use of `affine_on` when `co_await`ing work. There is no
-need to provide storage or checks needed for the potiential of
+need to provide storage or checks needed for the potential of
 having a `task` return to the original scheduler if the scheduler
 isn't actually changed by a `task`.
 
@@ -454,7 +454,7 @@ is quite different from effectively just using `continues_on`:
 2. The `affine_on` algorithm should only allow to get `connect`ed to a
     receiver `r` whose scheduler `sched` obtained by
     `get_scheduler(get_env(r))` is infallible, i.e.,
-    `get_completion_signatures(schedule(sched), e)` with an envionment
+    `get_completion_signatures(schedule(sched), e)` with an environment
     `e` where `get_stop_token(e)` yields `never_stop_token` returns
     `completion_signatures<set_value_t()>`.
 3. When `affine_on` gets `connect`ed, the scheduling operation state needs
