@@ -1,7 +1,7 @@
 ---
 title: Scheduler Affinity
-document: D3941R0
-date: 2025-12-07
+document: P3941R0
+date: 2025-12-14
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -18,15 +18,15 @@ toc: true
 One important design of `std::execution::task` is that a coroutine
 resumes after a `co_await` on the same scheduler as the one it was
 executing on prior to the `co_await`. To achieve this, `task`
-transforms the awaited object <code><i>obj</i></code> using
-<code>affine_on(<i>obj</i>, <i>sched</i>)</code> where
-<code><i>sched</i></code> is the corresponding scheduler. There
-were multiple concerns raised against the specification of `affine_on`
-and discussed as part of [P3796R1](https://wg21.link/P3796R1).  This
-proposal is intended to specifically address the concerns raised
-relating to `task`'s scheduler affinity and in particular `affine_on`.
-The gist of this proposal is impose constraints on `affine_on` to
-guarantee it can meet its objective at run-time.
+transforms the awaited object `@_obj_@` using
+`affine_on(@_obj_@, @_sched_@)` where `@_sched_@` is the corresponding
+scheduler. There were multiple concerns raised against the specification
+of `affine_on` and discussed as part of
+[P3796R1](https://wg21.link/P3796R1).  This proposal is intended
+to specifically address the concerns raised relating to `task`'s
+scheduler affinity and in particular `affine_on`.  The gist of this
+proposal is impose constraints on `affine_on` to guarantee it can
+meet its objective at run-time.
 </p>
 
 # Change History
@@ -56,7 +56,7 @@ a better design than was previously specified:
     scheduler on which it was started itself. The correct receiver
     may actually be hard to determine while building the work graph.
     However, this scheduler can be communicated using
-    <code>get_scheduler(get_env(<i>rcvr</i>))</code> when an algorithm
+    `get_scheduler(get_env(@_rcvr_@))` when an algorithm
     is `start`ed. This requirement is more general than just
     `affine_on` and is introduced by
     [P3718R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html):
@@ -64,11 +64,11 @@ a better design than was previously specified:
     parameter, i.e., the sender for the work to be executed.
   </li>
   <li>
-    The scheduler <code><i>sched</i></code> on which the work needs
-    to resume has to guarantee that it is possible to resume in the
+    The scheduler `@_sched_@` on which the work needs
+    to resume has to guarantee that it is possible to resume on the
     correct execution agent. The implication is that scheduling work needs
     to be infallible, i.e., the completion signatures of
-    <code>scheduler(<i>sched</i>)</code> cannot contain a
+    `scheduler(@_sched_@)` cannot contain a
     `set_error_t(E)` completion signature. This requirement should
     be checked statically.
   </li>
@@ -108,10 +108,10 @@ algorithm has some implications on some other components:
   </li>
   <li>
     The scheduling semantics when changing a `task`'s scheduler
-    using <code>co_await change_coroutine_scheduler(<i>sch</i>)</code>
+    using `co_await change_coroutine_scheduler(@_sch_@)`
     become somewhat unclear and this functionality should be removed.
-    Similar semantics are better modeled using <code>co_await
-    on(<i>sch</i>, <i>nested-task</i>)</code>.
+    Similar semantics are better modeled using
+    `co_await on(@_sch_@, @_nested-task_@)`.
   </li>
   <li>
     The name `affine_on` isn't particular good and wasn't designed.
@@ -133,16 +133,18 @@ just replaced by `affine_on` with the same shape but the potential
 to get customized differently.
 </p>
 <p>
-For scheduler affinity the scheduler to resume on can, however,
-also be communicated via the `get_scheduler` query on the receiver's
-environment. The result from `get_scheduler` is also the scheduler
-any use of `affine_on` would use when invoking the algorihtm. In
-the context of the `task` coroutine this scheduler can be obtained
-via the promise type but in general it is actually not straight
-forward to get hold of this scheduler because it is only provided
-by `connect`. It is much more reasonable to have `affine_on` only
-take the work, i.e., a sender, as argument and determine the scheduler
-to resume on from the receiver's environment in `connect`.
+The scheduler used for affinity is the scheduler communicated via
+the `get_scheduler` query on the receiver's environment: the scheduler
+argument passed to the `affine_on` algorithm would need to match
+the scheduler obtained from `get_scheduler` query.  In the context
+of the `task` coroutine this scheduler can be obtained via the
+promise type but in general it is actually not straight forward to
+get hold of this scheduler because the receiver and hence its
+associated scheduler is only provided by `connect`. It is much more
+reasonable to have `affine_on` only take the work, i.e., a sender,
+as argument and determine the scheduler to resume on from the
+receiver's
+environment in `connect`.
 </p>
 <p>
 Thus, instead of using
@@ -156,10 +158,10 @@ affine_on(@_sndr_@)
 </p>
 <p>
 Note that this change implies that an operation state resulting
-from `connect`ing `affine_on` to a receiver <code><i>rcvr</i></code>
+from `connect`ing `affine_on` to a receiver `@_rcvr_@`
 is `start`ed on the execution agent associated with the scheduler obtained
-from <code>get_scheduler(get_env(<i>rcvr</i>))</code>. The same
-requirement is also assumed to be meet when `start`ing the operation
+from `get_scheduler(get_env(@_rcvr_@))`. The same
+requirement is also assumed to be met when `start`ing the operation
 state resulting from `connect`ing a `task`. While it is possible to
 statically detect whether the query is valid and provides a scheduler
 it cannot be detected if the scheduler matches the execution agent on which
@@ -167,7 +169,9 @@ it cannot be detected if the scheduler matches the execution agent on which
 [P3718r0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html)
 proposes to add this exact requirement to
 [[exec.get.scheduler]](https://wg21.link/exec.get.scheduler).
-
+</p>
+<p>
+This change addresses [US 234-364](https://github.com/cplusplus/nbballot/issues/939) ([LWG4331](https://cplusplus.github.io/LWG/issue4331)).
 </p>
 
 ## Infallible Schedulers
@@ -176,15 +180,27 @@ The objective of `affine_on(@_sndr_@)` is to execute `@_sndr_@` and
 to complete on the execution agent on which the operation was
 `start`ed. Let `sch` be the scheduler obtained from
 `get_scheduler(get_env(@_rcvr_@))` where `@_rcvr_@` is the receiver
-used when `connect`ing `affine_on(@_sndr_@)`. If `connect`ing and
-`start`ing the result of `schedule(@_sch_@)` is successful, `affine_on`
-can achieve its objective. However, if this scheduling operation
-fails, i.e., it completes with `set_error(@_e_@)`, or if it gets
-cancelled, i.e., it completes with `set_stopped()`, the execution
-agent on which the scheduling operation resumes is unclear and
-`affine_on` cannot guarantee its promise. Thus, it seems reasonable
-to require that a scheduler used with `affine_on` is infallible, at
-least when used appropriately.
+used when `connect`ing `affine_on(@_sndr_@)` (the discussion in
+this section also applies if the scheduler would be taken as a
+parameter, i.e., if the [previous change](#affine_on-shape) isn't
+applied this discussion still applies). If `connect`ing the result
+of `schedule(@_sch_@)` fails (i.e., `connect(schedule(@_sch_@),
+@_rcvr_@)` throws where `@_rcvr_@` is a suitable receiver), `affine_on`
+can avoid `start`ing the main work and fail on the execution agent
+where it was `start`ed.  Otherwise, if it obtained an operation
+state `@_os_@` from `connect(scheduler(@_sch_@), @_rcvr_@)`,
+`affine_on` would `start` its main work and would `start(@_os_@)`
+on the execution agent where the main work completed. If `start(@_os_@)`
+is always successful, `affine_on` can achieve its objective. However,
+if this scheduling operation fails, i.e., it completes with
+`set_error(@_e_@)`, or if it gets cancelled, i.e., it completes
+with `set_stopped()`, the execution agent on which the scheduling
+operation resumes is unclear and `affine_on` cannot guarantee its
+promise. Thus, it seems reasonable to require that a scheduler used
+with `affine_on` is infallible, at least when used appropriately
+(i.e., when providing a receiver whose associated stop token is an
+`unstoppable_token`).
+
 </p>
 <p>
 The current working draft specifies 4 schedulers:
@@ -237,30 +253,248 @@ The current working draft specifies 4 schedulers:
 In general it seems unlikely that all schedulers can be constrained
 to be infallible. As a result `affine_on` and, by extension, `task`
 won't be usable with all schedulers if `affine_on` insists on using
-only infallible schedulers. Note that `affine_on` can fail and get
-cancelled but in all cases its promise is that it resumes on the
-original scheduler. Thus, a `set_error(@_e_@)` completion can't be
-used to indicate scheduling failure, either.
+only infallible schedulers. If there are fallible schedulers, there
+aren't any good options for using them with a `task`.  Note that
+`affine_on` can fail and get cancelled (due to the main work failing
+or getting cancelled) but `affine_on` can still guarantee that
+execution resumes on the expect exuection agent when it uses an
+infallible scheduler.
 </p>
 <p>
+This change addresses
+[US 235-363](https://github.com/cplusplus/nbballot/issues/938)
+([LWG4332](https://cplusplus.github.io/LWG/issue4332)). This change
+goes beyond the actual issue and clarifies that the scheduling
+operation used be `affine_on` needs to be always successful.
+</p>
+
+### Require Infallible Schedulers For `affine_on`
+
+<p>
+If `affine_on` promises in all cases that it resumes on the
+original scheduler it can only work with infallible schedulers.
 If a users wants to use a fallible scheduler with `affine_on` or
 `task` the scheduler will need to be adapted. The adapted scheduler
-can define what it means when the underlying scheduler fails. For
-example, the user can cause this failure to terminate the program
-or consider the execution agent on which the underlying scheduler
-completed to be suitable to continue running.
+can define what it means when the underlying scheduler fails. There
+are conceptually only two options (the exact details may vary) on how
+to deal with a failed scheduling operation:
 </p>
+<ol>
+<li>
+The user can transform the scheduling failure into a call to
+`std::terminate`.
+</li>
+<li>
+The user can consider resuming on an execution agent where the
+adapting scheduluer can schedule to infallibly (e.g., the execution
+agent on which operation completed) but which is different from
+execution agent associated with the adapted scheduler to be suitable
+to continue running.  In that case the scheduling operation would
+just succeed without necessarily running on the correct execution
+agent. However, there is no indication that scheduling to the adapted
+scheduler failed and the scheduler affinity may be impacted in this
+failure case.
+</li>
+</ol>
+
+The standard library doesn't provide a way to adapt schedulers
+easily.  However, it can certainly be done.
+
+### Allow Fallible Schedulers For `affine_on`
+
+<p>
+If the scheduler used with `affine_on` is allowed to fail, `affine_on`
+can't guarantee that it completes on the correct scheduler in case of
+an error completion. It could be specified that `affine_on` completes
+with `set_error(@_rcvr_@, scheduling_error{@_e_@})` when the scheduling
+operation completes with `set_error(@_r_@, @_e_@)` to make it detectable
+that it didn't complete on the correct scheduler. This situation is
+certainly not ideal but, at least, only affects the error completion and
+it can be made detectable.
+</p>
+<p>
+A use of `affine_on` which always needs to complete on a specific scheduler
+is still possible: in that case the user will need to make sure that the
+used scheduler is infallible. The main issue here is that there is no
+automatic static checking whether that is the case.
+</p>
+
+### Considerations On Infallibe Schedulers
+
+In an ideal world, all schedulers would be infallible. It is unclear
+if that is achievable. If schedulers need to be allowed to be fallible,
+it may be viable to require that all standard library schedulers
+are infallible. As outlined above that should be doable for all current
+schedulers except, possibly, `parallel_scheduler`. So, the proposed
+change is to require schedulers to be infallible when being used with
+`affine_on` (and, thus, being used by `task`) and to change as many of
+the standard C++ libraries to be infallible as possible.
+
+If constraining `affine_on` to only infallible schedulers turns out
+to be too strong, the constraint can be relaxed in a future revision
+of the standard by explicitly opting out of that constraints, e.g.,
+using an additional argument. For `task` to make use of it, it too
+would need an explicit mechnasism to indicate that its `affine_on`
+use should opt out of the constraint, e.g., by adding a suitable
+`static` member to the environment template argument.
 
 ## `affine_on` Customization
 
-TODO
+Senders which don't cause the execution agent to be changed like
+`just` or the various queries should be able to customize `affine_on`
+to avoid unnecessary scheduding. Sadly, a proposal
+([P3206](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3206r0.pdf))
+to standardize properties which could be used to determine how a
+sender completes didn't make much progress, yet. An implementation
+can make use of similar techniques using an implementation-specific
+protocol. If a future standard defines a standard approach to
+determine the necessary properties the implementation can pick up
+on those.
+
+The idea is to have `affine_on` define a `transform_sender(s)`
+member function which determines what sender should be returned.
+By default the argument is returned but if the child sender indicates
+that it doesn't actually change the execution agent the function
+would return the child sender. There are a number of senders for
+which this can be done:
+
+- `just`, `just_error`, and `just_stopped`
+- `read_env` and `write_env`
+- `then`, `upon_error`, and `upon_stopped` if the child sender
+    doesn't change the execution agent
+
+The proposal is to define a `transform_sender` member which uses
+an implementation-specific property to determine that a sender
+completes on the same execution agent as the one it was started on.
+In addition, it is recommended that this property gets defined by
+the various standard library senders where it can make a difference.
+
+This change addresses
+[US 232-366](https://github.com/cplusplus/nbballot/issues/941)
+([LWG4329](https://cplusplus.github.io/LWG/issue4329)), although
+not in a way allowing application code to plug into this mechanism.
+Such an approach can be designed in a future revision of the standard.
 
 ## Removing `change_coroutine_scheduler`
 
-TODO
+The current working paper specifies `change_coroutine_scheduler` to change
+the scheduler used by the coroutine for scheduler affinity. It turns out that
+this use is somewhat problematic in two ways:
+
+1. Changing the scheduler affects the coroutine until the end of
+    the coroutine or until `change_coroutine_scheduler` is `co_await`ed
+    again. It doesn't automatically reset. Thus, local variables
+    constructed before `change_coroutine_scheduler(s)` was 
+    `co_await`ed were constructed on the original scheduler and are
+    destroyed on the replaced scheduler.
+2. The `task`'s execution may finish on a different than the original
+    scheduler. To allow symmetric transfer between two `task`s each
+    `task` needs to complete on the correct scheduler. Thus, the
+    `task` needs to be prepared to change to the orginal scheduler
+    before actually completing.  To do so, it is necessary to know
+    the original scheduler and also to have storage for the state
+    needed to change to a different scheduler.  It can't be statically
+    detected whether `change_coroutine_scheduler(s)` is `co_await`ed
+    in the body of a coroutine and, thus, the necessary storage and
+    checks are needed even for `task`s which don't use
+    `change_coroutine_scheduler`.
+
+If there were no way to change the scheduler it would still be possible
+to execute using a different scheduler, although not as direct:
+instead of using `co_await change_coroutine_scheduler(s)` to change
+the scheduler used for affinity to `s` a nested `task` executing on `s`
+could be `co_await`ed:
+
+```c++
+co_await ex::starts_on(s, [](@_parameters_@)->task<@_T_@, @_E_@> { @_logic_@ }(@_arguments_@));
+```
+
+Using this approach the use of the scheduler `s` is clearly limited
+to the nested coroutine. The scheduler affinity is fully taken care
+of by the use of `affine_on` when `co_await`ing work. There is no
+need to provide storage or checks needed for the potiential of
+having a `task` return to the original scheduler if the scheduler
+isn't actually changed by a `task`.
+
+The proposal is remove `change_coroutine_scheduler` and the possibility
+of changing the scheduler within a `task`. The alternative to
+controlling the scheduler used for affinity from within a `task`
+is a bit verbose. This need under the control of the coroutine is
+likely relatively rare. Replacing the used scheduler for an existing
+`task` by nesting it within `on(s, t)` or `starts_on(s, t)` is
+fairly straightforward.
+
+This functionality was originally included because it is present
+for, at least, one of the existing libraries, although in a form
+which was recommended against.  The existing use changes the scheduler
+of a coroutine when `co_await`ing the result of `schedule(s)`; this
+exact approach was found to be fragile and surprising and the
+recommendation was to provide the functionality more explicit.
+
+This change is not associated with any national body comment.
+However, it is still important to do! It isn't adding any new
+functionality but removes a problematic way to achieve something
+which can be better achieved differently. If this change is not
+made the inherent cost of having the possibility of having
+`change_routine_scheduler` can't be removed later without breaking
+existing code.
 
 ## `affine_on` Default Implementation
 
-TODO
+Using the previous discussion leads to a definition of `affine_on` which
+is quite different from effectively just using `continues_on`:
 
-# Wording Changes
+1. The class `affine_on`
+    should define a `transform_sender` member function which returns the
+    child sender if this child sender indicates via an implementation
+    specific way that it doesn't change the execution agent. It
+    should be recommended that some of the standard library sender
+    algorithms (see above) to indicate that they don't change the
+    execution agent.
+2. The `affine_on` algorithm should only allow to get `connect`ed to a
+    receiver `r` whose scheduler `sched` obtained by
+    `get_scheduler(get_env(r))` is infallible, i.e.,
+    `get_completion_signatures(schedule(sched), e)` with an envionment
+    `e` where `get_stop_token(e)` yields `never_stop_token` returns
+    `completion_signatures<set_value_t()>`.
+3. When `affine_on` gets `connect`ed, the scheduling operation state needs
+    to be created by `connect`ing the scheduler's sender to a suitable receiver to guarantee
+    that the completion can be scheduled on the execution agent.
+    The stop token `get_stop_token(get_env(r))` for the receiver
+    `r` used for this `connect` shall be an `unstoppable_token`.
+    The child sender also needs to be `connect`ed with a receiver
+    which will capture the respective result upon completion and
+    start the scheduling operation.
+4. When the result operation state gets `start`ed it `start`s the
+    operation state from the child operation.
+5. Upon completion of the child operation the kind of completion and
+    the parameters, if any, are stored. If this operation throws,
+    the storage is set up to be as if `set_error(current_exception)`
+    were called. Once the parameters are stored, the scheduling
+    operation is started.
+6. Upon completion of the scheduling operation, the appropriate
+    completion function with the respective arguments is invoked.
+
+This behaviour is similar to `continues_on` but is subtly different
+with respect to when the scheduling operation state needs to be
+created and that any stop token from the receiver doesn't get
+forwarded. In addition `affine_on` is more constrained with respect
+to the schedulers it supports and the shape of the algorithm is
+different: `affine_on` gets the scheduler to execute on from the
+receiver it gets `connect`ed to.
+
+This change addresses
+[US 233-365](https://github.com/cplusplus/nbballot/issues/940)
+([LWG4330](https://cplusplus.github.io/LWG/issue4330)) and
+[US 236-362](https://github.com/cplusplus/nbballot/issues/937)
+([LWG](https://cplusplus.github.io/LWG/issue4344); the proposed
+resolution in this issue is incomplete).
+
+## Name Change
+
+The name `affine_on` isn't great. It may be worth giving the
+algorithm a better name.
+
+# Wording Changes: TODO
+
+To be done.
