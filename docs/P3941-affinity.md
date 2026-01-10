@@ -384,7 +384,7 @@ this use is somewhat problematic in two ways:
 1. Changing the scheduler affects the coroutine until the end of
     the coroutine or until `change_coroutine_scheduler` is `co_await`ed
     again. It doesn't automatically reset. Thus, local variables
-    constructed before `change_coroutine_scheduler(s)` was 
+    constructed before `change_coroutine_scheduler(s)` was
     `co_await`ed were constructed on the original scheduler and are
     destroyed on the replaced scheduler.
 2. The `task`'s execution may finish on a different than the original

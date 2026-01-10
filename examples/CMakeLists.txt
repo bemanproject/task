@@ -1,11 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-set(TODO
-    tls-scheduler
-    into_optional
-    issue-start-reschedules
-    loop
-)
+set(TODO tls-scheduler into_optional issue-start-reschedules loop)
 
 set(ALL_EXAMPLES
     task_scheduler
