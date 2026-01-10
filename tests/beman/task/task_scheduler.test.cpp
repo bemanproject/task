@@ -111,14 +111,7 @@ struct thread_context {
             }
             void complete() override {
                 this->callback.reset();
-                if (this->cmpl == thread_context::complete::success)
-                    ex::set_value(std::move(this->receiver));
-                else if (this->cmpl == thread_context::complete::failure)
-                    ex::set_error(std::move(this->receiver), std::make_error_code(std::errc::address_in_use));
-                else
-                    ex::set_error(
-                        std::move(this->receiver),
-                        std::make_exception_ptr(std::system_error(std::make_error_code(std::errc::address_in_use))));
+                ex::set_value(std::move(this->receiver));
             }
         };
         struct env {
@@ -128,9 +121,8 @@ struct thread_context {
             }
         };
         struct sender {
-            using sender_concept = ex::sender_t;
-            using completion_signatures =
-                ex::completion_signatures<ex::set_value_t(), ex::set_error_t(std::error_code)>;
+            using sender_concept        = ex::sender_t;
+            using completion_signatures = ex::completion_signatures<ex::set_value_t()>;
 
             thread_context*          ctxt;
             thread_context::complete cmpl;
@@ -242,66 +234,10 @@ int main() {
                       ex::then([&id2]() { assert(id2 == std::this_thread::get_id()); }));
 
         {
-            bool success{false};
-            bool failed{false};
-            bool exception{false};
-            ex::sync_wait(ex::schedule(ctxt1.get_scheduler(thread_context::complete::failure)) |
-                          ex::then([&success] { success = true; }) |
-                          ex::upon_error([&failed, &exception]<typename E>(const E&) {
-                              if constexpr (std::same_as<E, std::error_code>)
-                                  failed = true;
-                              else if constexpr (std::same_as<E, std::exception_ptr>)
-                                  exception = true;
-                          }));
-            assert(not success);
-            assert(failed);
-            assert(not exception);
-        }
-        {
-            bool success{false};
-            bool failed{false};
-            bool exception{false};
-            ex::sync_wait(ex::schedule(ctxt1.get_scheduler(thread_context::complete::exception)) |
-                          ex::then([&success] { success = true; }) |
-                          ex::upon_error([&failed, &exception]<typename E>(const E&) {
-                              if constexpr (std::same_as<E, std::error_code>)
-                                  failed = true;
-                              else if constexpr (std::same_as<E, std::exception_ptr>)
-                                  exception = true;
-                          }));
-            assert(not success);
-            assert(not failed);
-            assert(exception);
-        }
-        {
             ex::inplace_stop_source source;
             stop_result             result{stop_result::none};
             auto state{ex::connect(ex::schedule(ctxt1.get_scheduler(thread_context::complete::never)),
                                    stop_receiver{source.get_token(), result})};
-            assert(result == stop_result::none);
-            ex::start(state);
-            assert(result == stop_result::none);
-            source.request_stop();
-            assert(result == stop_result::stopped);
-        }
-        {
-            ex::inplace_stop_source source;
-            stop_result             result{stop_result::none};
-            auto                    state{ex::connect(
-                ex::schedule(ly::detail::task_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
-                stop_receiver{source.get_token(), result})};
-            assert(result == stop_result::none);
-            ex::start(state);
-            assert(result == stop_result::none);
-            source.request_stop();
-            assert(result == stop_result::stopped);
-        }
-        {
-            ex::stop_source source;
-            stop_result     result{stop_result::none};
-            auto            state{ex::connect(
-                ex::schedule(ly::detail::task_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
-                stop_receiver{source.get_token(), result})};
             assert(result == stop_result::none);
             ex::start(state);
             assert(result == stop_result::none);

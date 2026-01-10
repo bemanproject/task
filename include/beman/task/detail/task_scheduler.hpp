@@ -27,8 +27,6 @@ namespace beman::task::detail {
  * Completion signatures:
  *
  * - `ex::set_value_t()`
- * - `ex::set_error_t(std::error_code)`
- * - `ex::set_error_t(std::exception_ptr)`
  * - `ex::set_stopped()`
  *
  * Usage:
@@ -38,32 +36,16 @@ namespace beman::task::detail {
  */
 class task_scheduler {
     struct state_base {
-        virtual ~state_base()                                                               = default;
-        virtual void                                   complete_value()                     = 0;
-        virtual void                                   complete_error(::std::error_code)    = 0;
-        virtual void                                   complete_error(::std::exception_ptr) = 0;
-        virtual void                                   complete_stopped()                   = 0;
-        virtual ::beman::execution::inplace_stop_token get_stop_token()                     = 0;
+        virtual ~state_base()         = default;
+        virtual void complete_value() = 0;
     };
 
     struct inner_state {
         struct receiver;
-        struct env {
-            state_base* state;
-            auto query(::beman::execution::get_stop_token_t) const noexcept { return this->state->get_stop_token(); }
-        };
         struct receiver {
             using receiver_concept = ::beman::execution::receiver_t;
             state_base* state;
             void        set_value() && noexcept { this->state->complete_value(); }
-            void        set_error(std::error_code err) && noexcept { this->state->complete_error(err); }
-            void        set_error(std::exception_ptr ptr) && noexcept { this->state->complete_error(std::move(ptr)); }
-            template <typename E>
-            void set_error(E e) && noexcept {
-                this->state->complete_error(std::make_exception_ptr(std::move(e)));
-            }
-            void set_stopped() && noexcept { this->state->complete_stopped(); }
-            env  get_env() const noexcept { return {this->state}; }
         };
         static_assert(::beman::execution::receiver<receiver>);
 
@@ -88,46 +70,13 @@ class task_scheduler {
     template <::beman::execution::receiver Receiver>
     struct state : state_base {
         using operation_state_concept = ::beman::execution::operation_state_t;
-        struct stopper {
-            state* st;
-            void   operator()() noexcept {
-                state* self = this->st;
-                self->callback.reset();
-                self->source.request_stop();
-            }
-        };
-        using token_t =
-            decltype(::beman::execution::get_stop_token(::beman::execution::get_env(std::declval<Receiver>())));
-        using callback_t = ::beman::execution::stop_callback_for_t<token_t, stopper>;
-
-        std::remove_cvref_t<Receiver>           receiver;
-        inner_state                             s;
-        ::beman::execution::inplace_stop_source source;
-        ::std::optional<callback_t>             callback;
+        std::remove_cvref_t<Receiver> receiver;
+        inner_state                   s;
 
         template <::beman::execution::receiver R, typename PS>
         state(R&& r, PS& ps) : receiver(std::forward<R>(r)), s(ps->connect(this)) {}
         void start() & noexcept { this->s.start(); }
         void complete_value() override { ::beman::execution::set_value(std::move(this->receiver)); }
-        void complete_error(std::error_code err) override { ::beman::execution::set_error(std::move(receiver), err); }
-        void complete_error(std::exception_ptr ptr) override {
-            ::beman::execution::set_error(std::move(receiver), std::move(ptr));
-        }
-        void complete_stopped() override { ::beman::execution::set_stopped(std::move(this->receiver)); }
-        ::beman::execution::inplace_stop_token get_stop_token() override {
-            if constexpr (::std::same_as<token_t, ::beman::execution::inplace_stop_token>) {
-                return ::beman::execution::get_stop_token(::beman::execution::get_env(this->receiver));
-            } else {
-                if constexpr (not ::std::same_as<token_t, ::beman::execution::never_stop_token>) {
-                    if (not this->callback) {
-                        this->callback.emplace(
-                            ::beman::execution::get_stop_token(::beman::execution::get_env(this->receiver)),
-                            stopper{this});
-                    }
-                }
-                return this->source.get_token();
-            }
-        }
     };
 
     class sender;
@@ -175,12 +124,8 @@ class task_scheduler {
         poly<base, 4 * sizeof(void*)> inner_sender;
 
       public:
-        using sender_concept = ::beman::execution::sender_t;
-        using completion_signatures =
-            ::beman::execution::completion_signatures<::beman::execution::set_value_t(),
-                                                      ::beman::execution::set_error_t(std::error_code),
-                                                      ::beman::execution::set_error_t(std::exception_ptr),
-                                                      ::beman::execution::set_stopped_t()>;
+        using sender_concept        = ::beman::execution::sender_t;
+        using completion_signatures = ::beman::execution::completion_signatures<::beman::execution::set_value_t()>;
 
         template <::beman::execution::scheduler S>
         explicit sender(S&& s) : inner_sender(static_cast<concrete<S>*>(nullptr), std::forward<S>(s)) {}

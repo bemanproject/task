@@ -1,22 +1,24 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-set(TODO tls-scheduler)
+set(TODO tls-scheduler into_optional issue-start-reschedules loop)
 
 set(ALL_EXAMPLES
-    odd-return
+    task_scheduler
     bulk
+    c++now-allocator
+    c++now-cancel
+    c++now-errors
+    alloc
+    affinity
+    odd-return
     dangling-references
     rvalue-task
     aggregate-return
     customize
+    issue-affine_on
     issue-symmetric-transfer
-    affinity
-    alloc
     c++now-affinity
-    c++now-allocator
     c++now-basic
-    c++now-cancel
-    c++now-errors
     c++now-query
     c++now-result-types
     c++now-return
@@ -29,15 +31,10 @@ set(ALL_EXAMPLES
     escaped-exception
     friendly
     hello
-    into_optional
-    issue-affine_on
     issue-frame-allocator
-    issue-start-reschedules
-    loop
     query
     result_example
     stop
-    task_scheduler
 )
 set(xALL_EXAMPLES issue-symmetric-transfer)
 set(xALL_EXAMPLES customize)
