@@ -121,7 +121,7 @@ struct thread_context {
             }
         };
         struct sender {
-            using sender_concept = ex::sender_t;
+            using sender_concept        = ex::sender_t;
             using completion_signatures = ex::completion_signatures<ex::set_value_t()>;
 
             thread_context*          ctxt;
