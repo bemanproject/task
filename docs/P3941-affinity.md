@@ -495,6 +495,68 @@ resolution in this issue is incomplete).
 The name `affine_on` isn't great. It may be worth giving the
 algorithm a better name.
 
-# Wording Changes: TODO
+# Wording Changes
 
-To be done.
+Change [exec.affine.on] to use only one parameter, require an
+infallible scheduler from the receiver, and add a default implementation:
+
+[1]{.pnum}
+`affine_on` adapts a sender into one that completes on a [specified
+scheduler]{.rm}[receiver's scheduler]{.add}. If the algorithm
+determines that the adapted sender already completes on the correct
+scheduler it can avoid any scheduling operation.
+
+[2]{.pnum}
+The name `affine_on` denotes a pipeable sender adaptor object. For
+[a ]{.add} subexpression[s sch and]{.rm} `sndr`, if [`decltype((sch))`
+does not satisfy scheduler, or]{.rm} `decltype((sndr))` does not
+satisfy sender, <code>affine_on(sndr[, sch]{.rm})</code> is ill-formed.
+
+[3]{.pnum}
+Otherwise, the expression <code>affine_on(sndr[, sch]{.rm})</code>
+is expression-equivalent to:
+<code>transform_sender(_get-domain-early_(sndr), _make-sender_(affine_on,
+[sch]{.rm}[env&lt;&gt;()]{.add}, sndr))</code> except that `sndr`
+is evaluated only once.
+
+[4]{.pnum}
+The exposition-only class template <code>_impls-for_</code>
+([exec.snd.expos]) is specialized for `affine_on_t` as follows:
+
+```c++
+namespace std::execution {
+  template<>
+  struct impls-for<affine_on_t> : default-impls {
+    static constexpr auto get-attrs =
+      [](const auto&@[ data]{.rm}]@, const auto& child) noexcept -> decltype(auto) {
+        return @[_JOIN-ENV_(_SCHED-ATTRS_(data),_FWD-ENV_(]{.rm}@get_env(child)@[))]{.rm}@;
+      };
+  };
+}
+```
+
+[5]{.pnum}
+Let <code>_out_sndr_</code> be a subexpression denoting a sender
+returned from <code>affine_on(sndr[, sch]{.rm})</code> or one equal
+to such, and let <code>_OutSndr_</code> be the type
+<code>decltype((_out_sndr_))</code>. Let <code>_out_rcvr_</code>
+be a subexpression denoting a receiver that has an environment of
+type `Env` such that <code>sender_in&lt;_OutSndr_, Env&gt;</code>
+is `true`. [Let <code>_sch_</code> be the result of the expression
+<code>get_scheduler(get_env(_out_rcvr_))</code>. If the completion
+signatures of <code>schedule(_sch_)</code> contain a different
+completion signature than `set_value_t()` when using an environment
+where `get_stop_token()` returns an `unstoppable_token`, the
+expression <code>connect(<i>out_sndr</i>, <i>out_rcvr</i>)</code> is
+ill-formed.]{.add} Let `op` be an lvalue referring to the operation
+state that results from connecting <code>_out_sndr_</code> to
+<code>_out_rcvr_</code>.  Calling <code>start(_op_)</code> will
+start `sndr` on the current execution agent and execute completion
+operations on <code>_out_rcvr_</code> on an execution agent of the
+execution resource associated with [`sch`]{.rm}[<code>_sch_</code>]{.add}.
+If the current execution resource is the same as the execution
+resource associated with [`sch`]{.rm}[<code>_sch_</code>]{.add},
+the completion operation on <code>_out_rcvr_</code> may be called
+before <code>start(_op_)</code> completes. [If scheduling onto `sch`
+fails, an error completion on <code>_out_rcvr_</code> shall be
+executed on an unspecified execution agent.]{.rm}
