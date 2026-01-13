@@ -497,8 +497,11 @@ algorithm a better name.
 
 # Wording Changes
 
+::: ednote
 Change [exec.affine.on] to use only one parameter, require an
-infallible scheduler from the receiver, and add a default implementation:
+infallible scheduler from the receiver, and add a default implementation
+which allows customization of `affine_on` for child senders:
+:::
 
 [1]{.pnum}
 `affine_on` adapts a sender into one that completes on a [specified
@@ -535,6 +538,35 @@ namespace std::execution {
 }
 ```
 
+:::{.add}
+[?]{.pnum}
+Let `sndr` and `ev` be subexpressions such that `Sndr` is
+`decltype((sndr))`. If <code><i>sender-for</i>&lt;Sndr,
+affine_on_t&gt;</code> is `false`, then the expression
+`affine_on.transform_sender(sndr, ev)` is ill-formed; otherwise,
+if otherwise,
+it is equal to:
+
+```
+auto&[_, _, child] = sndr;
+using child_tag_t = tag_of_t<remove_cvref_t<decltype(child)>>;
+if constexpr (requires(const child_tag_t& t){ t.affine_on(child, env); })
+    return t.affine_on(child, env);
+else
+    return write_env(
+      schedule_from(get_scheduler(get_env(ev)), write_env(std::move(child), ev)),
+      JOIN-ENV(env{prop{get_stop_token, never_stop_token()}}, ev)
+    );
+```
+
+[Note 1: This causes the `affine_on(sndr)` sender to become
+`schedule_from(sch, sndr)` when it is connected with a receiver
+`rcvr` whose execution domain does not customize `affine_on`,
+for which `get_scheduler(get_env(rcvr))` is `sch`, and `affine_on`
+isn't specialized for the child sender.
+end note]
+:::
+
 [5]{.pnum}
 Let <code>_out_sndr_</code> be a subexpression denoting a sender
 returned from <code>affine_on(sndr[, sch]{.rm})</code> or one equal
@@ -560,3 +592,167 @@ the completion operation on <code>_out_rcvr_</code> may be called
 before <code>start(_op_)</code> completes. [If scheduling onto `sch`
 fails, an error completion on <code>_out_rcvr_</code> shall be
 executed on an unspecified execution agent.]{.rm}
+
+::: ednote
+Remove `change_coroutine_scheduler` from [execution.syn]:
+:::
+
+```
+namespace std::execution {
+  ...
+  // [exec.task.scheduler], task scheduler
+  class task_scheduler;
+
+  template<class E>
+  struct with_error {
+    using type = remove_cvref_t<E>;
+    type error;
+  };
+  template<class E>
+    with_error(E) -> with_error<E>;
+```
+::: rm
+```
+  template<scheduler Sch>
+  struct change_coroutine_scheduler {
+    using type = remove_cvref_t<Sch>;
+    type scheduler;
+  };
+  template<scheduler Sch>
+    change_coroutine_scheduler(Sch) -> change_coroutine_scheduler<Sch>;
+```
+:::
+```
+  // [exec.task], class template task
+  template<class T, class Environment>
+    class task;
+  ...
+}
+```
+
+::: ednote
+Adjust the use of `affine_on` and remove `change_coroutine_scheduler` from [task.promise]:
+:::
+
+```
+namespace std::execution {
+  template<class T, class Environment>
+  class task<T, Environment>::promise_type {
+  public:
+    ...
+
+    template<class A>
+      auto await_transform(A&& a);
+```
+::: rm
+```
+    template<class Sch>
+      auto await_transform(change_coroutine_scheduler<Sch> sch);
+```
+:::
+```
+
+    @_unspecified_@ get_env() const noexcept;
+
+    ...
+  }
+};
+```
+...
+
+```
+template<sender Sender>
+  auto await_transform(Sender&& sndr) noexcept;
+```
+[9]{.pnum}
+_Returns_: If `same_as<inline_scheduler, scheduler_type>` is `true` returns `as_awaitable(​std​::​​forward<Sender>(sndr), *this);` otherwise returns `as_awaitable(affine_on(​std​::​​forward<Sender>(sndr)@[, SCHED(*this)]{.rm}@), *this)`.
+
+::: rm
+```
+template<class Sch>
+  auto await_transform(change_coroutine_scheduler<Sch> sch) noexcept;
+```
+[10]{.pnum}
+_Effects_: Equivalent to:
+```
+return await_transform(just(exchange(SCHED(*this), scheduler_type(sch.scheduler))), *this);
+```
+:::
+
+```
+void unhandled_exception();
+```
+[11]{.pnum}
+_Effects_: If the signature `set_error_t(exception_ptr)` is not an element of `error_types`, calls `terminate()` ([except.terminate]). Otherwise, stores `current_exception()` into <code>_errors_</code>.
+
+...
+
+::: ednote
+In [exec.task.scheduler] change the constructor of `task_scheduler` to require that the scheduler passed
+is infallible
+:::
+
+```
+template<class Sch, class Allocator = allocator<void>>
+  requires(!same_as<task_scheduler, remove_cvref_t<Sch>>) && scheduler<Sch>
+explicit task_scheduler(Sch&& sch, Allocator alloc = {});
+```
+
+::: add
+[?]{.pnum}
+_Mandates_: Let `e` be an environment and let `E` be `decltype(e)`.
+If `unstoppable_token<decltype(get_stop_token(e))>` is `true`, then
+the type `completion_signatures_of_t<decltype(schedule(sch)), E>`
+only includes `set_value_t()`, otherwise it may additionally include
+`set_stopped_t()`.
+:::
+
+[2]{.pnum}
+_Effects_: Initialize <code><i>sch_</i></code> with `allocate_shared<remove_cvref_t<Sch>>(alloc,​ std​::​forward<Sch>​(sch))`.
+
+[3]{.pnum}
+_Recommended practice_: Implementations should avoid the use of
+dynamically allocated memory for small scheduler objects.
+
+[4]{.pnum}
+_Remarks_: Any allocations performed by construction of
+<code>_ts-sender_</code> or <code>_state_</code> objects resulting
+from calls on `*this` are performed using a copy of `alloc`.
+
+::: ednote
+In [exec.task.scheduler] change the <code><i>ts-sender</i></code> completion signatures
+to indicate that `task_scheduler` is infallible:
+:::
+
+[8]{.pnum}
+```
+namespace std::execution {
+  class task_scheduler::@_ts-sender_@ {     // @_exposition only_@
+  public:
+    using sender_concept = sender_t;
+
+    template<receiver Rcvr>
+      @_state_@<Rcvr> connect(Rcvr&& rcvr) &&;
+  };
+}
+```
+
+<code><i>ts-sender</i></code> is an exposition-only class that
+models `sender` ([exec.snd]) and for which
+<code>completion_signatures_of_t&lt;<i>ts-sender</i>[, E]{.add}&gt;</code>
+denotes[:]{.rm}[ `completion_signatures<set_value_t()>` if `unstoppable_token<decltype(get_stop_token(declval<E>()))>` is `true`, and
+otherwise `completion_signatures<set_value_t(), set_stopped_t()>`.]{.add}
+
+::: rm
+```
+completion_signatures<
+  set_value_t(),
+  set_error_t(error_code),
+  set_error_t(exception_ptr),
+  set_stopped_t()>
+```
+:::
+
+
+TODO:
+- make run_loop::scheduler infallible
