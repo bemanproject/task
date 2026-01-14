@@ -1,7 +1,7 @@
 ---
 title: Scheduler Affinity
-document: P3941R0
-date: 2025-12-14
+document: P3941R1
+date: 2026-01-14
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -30,6 +30,10 @@ meet its objective at run-time.
 </p>
 
 # Change History
+
+## R1
+
+- added wording
 
 ## R0 Initial Revision
 
@@ -544,8 +548,7 @@ Let `sndr` and `ev` be subexpressions such that `Sndr` is
 `decltype((sndr))`. If <code><i>sender-for</i>&lt;Sndr,
 affine_on_t&gt;</code> is `false`, then the expression
 `affine_on.transform_sender(sndr, ev)` is ill-formed; otherwise,
-if otherwise,
-it is equal to:
+if otherwise, it is equal to:
 
 ```
 auto&[_, _, child] = sndr;
@@ -565,6 +568,14 @@ else
 for which `get_scheduler(get_env(rcvr))` is `sch`, and `affine_on`
 isn't specialized for the child sender.
 end note]
+
+[?]{.pnum}
+_Recommended Practice_: Implementations should provide `affine_on`
+member functions for senders which are known to resume on the
+scheduler where they were started. Example senders for which that
+is the case are `just`, `just_error`, `just_stopped`, `read_env`,
+and `write_env`.
+
 :::
 
 [5]{.pnum}
@@ -753,6 +764,39 @@ completion_signatures<
 ```
 :::
 
+::: ednote
+In [exec.run.loop.types] change the paragraph defining the completion signatures:
+:::
 
-TODO:
-- make run_loop::scheduler infallible
+...
+
+```
+class run-loop-sender;
+```
+
+[5]{.pnum}
+<code><i>run-loop-sender</i></code> is an exposition-only type that satisfies `sender`.
+[Let `E` be the type of an environment. If `unstoppable_token<decltype(get_stop_token(declval<E>()))>` is `true`,
+then ]{.add} <code>completion_signatures_of_t&lt;<i>run-loop-sender</i>[, E]{.add}&gt;</code> is
+
+::: rm
+```
+  completion_signatures<set_value_t(), set_error_t(exception_ptr), set_stopped_t()>`
+```
+:::
+
+::: add
+```
+  completion_signatures<set_value_t()>
+```
+Otherwise it is
+```
+  completion_signatures<set_value_t(), set_stopped_t()>
+```
+:::
+
+[6]{.pnum} An instance of <code><i>run-loop-sender</i></code> remains
+valid until the end of the lifetime of its associated `run_loop`
+instance.
+
+...
