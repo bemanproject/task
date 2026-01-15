@@ -13,7 +13,7 @@ ex::task<> test(auto sched) {
     std::cout << "init =" << std::this_thread::get_id() << "\n";
     co_await ex::starts_on(sched, ex::just());
     // static_assert(std::same_as<void, decltype(ex::get_completion_signatures(ex::starts_on(sched, ex::just()),
-    // ex::empty_env{}))>);
+    // ex::env<>{}))>);
     co_await ex::just();
     std::cout << "final=" << std::this_thread::get_id() << "\n";
 }
