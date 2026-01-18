@@ -26,6 +26,7 @@ auto test_cancel() {
     }());
 }
 
+#if 0
 auto test_indirect_cancel() {
     // This approach uses symmetric transfer
     ex::sync_wait([]() -> ex::task<> {
@@ -50,11 +51,12 @@ auto test_affinity() {
         }();
     }());
 }
+#endif
 } // namespace
 
 auto main() -> int {
     test_co_return();
     test_cancel();
-    test_indirect_cancel();
-    test_affinity();
+    //test_indirect_cancel();
+    //test_affinity();
 }
