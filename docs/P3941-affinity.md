@@ -31,6 +31,10 @@ meet its objective at run-time.
 
 # Change History
 
+## R2
+
+- fixed typo in the wording for `affine_on::transform_sender`
+
 ## R1
 
 - added wording
@@ -548,13 +552,13 @@ Let `sndr` and `ev` be subexpressions such that `Sndr` is
 `decltype((sndr))`. If <code><i>sender-for</i>&lt;Sndr,
 affine_on_t&gt;</code> is `false`, then the expression
 `affine_on.transform_sender(sndr, ev)` is ill-formed; otherwise,
-if otherwise, it is equal to:
+it is equal to:
 
 ```
 auto&[_, _, child] = sndr;
 using child_tag_t = tag_of_t<remove_cvref_t<decltype(child)>>;
-if constexpr (requires(const child_tag_t& t){ t.affine_on(child, env); })
-    return t.affine_on(child, env);
+if constexpr (requires(const child_tag_t& t){ t.affine_on(child, ev); })
+    return t.affine_on(child, ev);
 else
     return write_env(
       schedule_from(get_scheduler(get_env(ev)), write_env(std::move(child), ev)),
@@ -781,7 +785,7 @@ then ]{.add} <code>completion_signatures_of_t&lt;<i>run-loop-sender</i>[, E]{.ad
 
 ::: rm
 ```
-  completion_signatures<set_value_t(), set_error_t(exception_ptr), set_stopped_t()>`
+  completion_signatures<set_value_t(), set_error_t(exception_ptr), set_stopped_t()>
 ```
 :::
 

@@ -36,7 +36,7 @@ FetchContent_Declare(
     execution
     # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG 4e5e6ac
+    GIT_TAG 5cb179e
 )
 FetchContent_MakeAvailable(execution)
 
