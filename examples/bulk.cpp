@@ -22,10 +22,8 @@ int main() {
         auto operator()(std::size_t) { /*...*/ };
     };
 
-#if 0
     ex::sync_wait(ex::write_env(ex::bulk(ex::just(), 16u, work{}), env{}));
 
     ex::sync_wait(
         ex::write_env([]() -> ex::task<void, ex::env<>> { co_await ex::bulk(ex::just(), 16u, work{}); }(), env{}));
-#endif
 }
