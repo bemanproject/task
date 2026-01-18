@@ -57,6 +57,6 @@ auto test_affinity() {
 auto main() -> int {
     test_co_return();
     test_cancel();
-    //test_indirect_cancel();
-    //test_affinity();
+    // test_indirect_cancel();
+    // test_affinity();
 }
