@@ -36,8 +36,8 @@ using identity_or_none_t = typename identity_or_none<T...>::type;
 #if 202202 <= __cpp_lib_expected
 template <ex::sender Sender>
 auto as_expected(Sender&& sndr) {
-    using value_type  = ex::value_types_of_t<Sender, ex::empty_env, std::tuple, identity_or_none_t>;
-    using error_type  = ex::error_types_of_t<Sender, ex::empty_env, identity_or_none_t>;
+    using value_type  = ex::value_types_of_t<Sender, ex::env<>, std::tuple, identity_or_none_t>;
+    using error_type  = ex::error_types_of_t<Sender, ex::env<>, identity_or_none_t>;
     using result_type = std::expected<value_type, error_type>;
 
     return std::forward<Sender>(sndr) |

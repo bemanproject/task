@@ -4,7 +4,6 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_TASK_TASK
 #define INCLUDED_INCLUDE_BEMAN_TASK_TASK
 
-#include <beman/task/detail/affine_on.hpp>
 #include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/task_scheduler.hpp>
 #include <beman/task/detail/inline_scheduler.hpp>
@@ -16,7 +15,6 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::task {
-using affine_on_t = ::beman::task::detail::affine_on_t;
 template <typename Context>
 using allocator_of_t = ::beman::task::detail::allocator_of_t<Context>;
 template <typename Context>
@@ -34,8 +32,6 @@ using ::beman::task::detail::with_error;
 } // namespace beman::task
 
 namespace beman::execution {
-using affine_on_t = ::beman::task::detail::affine_on_t;
-using ::beman::task::affine_on;
 template <typename Context>
 using allocator_of_t = ::beman::task::detail::allocator_of_t<Context>;
 template <typename Context>

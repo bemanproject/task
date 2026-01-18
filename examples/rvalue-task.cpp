@@ -32,7 +32,7 @@ void test(T&& task) {
 } // namespace
 
 int main() {
-    auto task = []() -> ex::task<void, ex::empty_env> { co_return; }();
+    auto task = []() -> ex::task<void, ex::env<>> { co_return; }();
     test(std::move(task));
     // test(task);
 }

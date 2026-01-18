@@ -4,7 +4,6 @@ list(
     APPEND
     task_tests
     msvc-asan-issue
-    affine_on
     allocator_of
     allocator_support
     completion
