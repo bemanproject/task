@@ -10,7 +10,7 @@ author:
     - name: Dietmar Kühl (Bloomberg)
       email: <dkuhl@bloomberg.net>
 source:
-    - https://github.com/bemanproject/task/doc/issues.md
+    - https://github.com/bemanproject/task/doc/P3941-affinity.md
 toc: true
 ---
 
