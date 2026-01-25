@@ -15,10 +15,8 @@ ex::task<> test(Sender&& sender) {
 int main() {
     ex::sync_wait(test(ex::just()));
     ex::sync_wait(test(ex::read_env(ex::get_scheduler)));
-#if 0
     ex::sync_wait(test(ex::read_env(ex::get_scheduler) |
                     ex::let_value([](auto sched) noexcept { return ex::just(); })));
     ex::sync_wait(test(ex::read_env(ex::get_scheduler) |
                        ex::let_value([](auto sched) { return ex::starts_on(sched, ex::just()); })));
-#endif
 }
