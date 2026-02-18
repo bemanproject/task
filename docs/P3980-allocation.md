@@ -187,6 +187,8 @@ namespace std::execution {
     @[void*]{.add}@ @[operator]{.add}@ @[new(size_t]{.add}@ @[size);]{.add}@
     template<@[class Alloc,]{.add}@ class... Args>
       void* operator new(size_t size, @[allocator_arg_t,]{.add}@ @[Alloc]{.add}@ @[alloc, ]{.add}@Args&&... @[args]{.rm}@);
+    @[template<class]{.add}@ @[This,]{.add}@ @[class]{.add}@ @[Alloc,]{.add}@ @[class ...]{.add}@ @[Args>]{.add}@
+      @[void*]{.add}@ @[operator]{.add}@ @[new(size_t]{.add}@ @[size,]{.add}@ @[const]{.add}@ @[This&,]{.add}@ @[allocator_arg_t,]{.add}@ @[Alloc]{.add}@ @[alloc,]{.add}@ @[Args&&...);]{.add}@
 
     void operator delete(void* pointer, size_t size) noexcept;
 
@@ -213,6 +215,8 @@ void* operator new(size_t size);
 ```
 template<@[class Alloc,]{.add}@ class... Args>
   void* operator new(size_t size, @[allocator_arg_t,]{.add}@ @[Alloc]{.add}@ @[alloc, ]{.add}@Args&&... @[args]{.rm}@);
+@[template<class]{.add}@ @[This,]{.add}@ @[class]{.add}@ @[Alloc,]{.add}@ @[class ...]{.add}@ @[Args>]{.add}@
+  @[void*]{.add}@ @[operator]{.add}@ @[new(size_t]{.add}@ @[size,]{.add}@ @[const]{.add}@ @[This&,]{.add}@ @[allocator_arg_t,]{.add}@ @[Alloc]{.add}@ @[alloc,]{.add}@ @[Args&&...);]{.add}@
 ```
 
 [17]{.pnum} [If there is no parameter with type `allocator_arg_t`
