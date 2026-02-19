@@ -5,6 +5,7 @@ add_library(beman::task ALIAS beman.task)
 
 target_sources(beman.task PRIVATE task.cpp)
 
+# TODO(CK): file(GLOB ...) must not used in production code!
 file(
     GLOB DETAIL_HEADERS
     "${PROJECT_SOURCE_DIR}/include/beman/task/detail/*.hpp"

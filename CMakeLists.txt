@@ -31,6 +31,14 @@ FetchContent_Declare(
     # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
     GIT_TAG 07d53da
+    SYSTEM
+    FIND_PACKAGE_ARGS
+        0.2.0
+        EXACT
+        NAMES
+        beman.execution
+        COMPONENTS
+        execution_headers
 )
 FetchContent_MakeAvailable(execution)
 
@@ -41,7 +49,7 @@ add_subdirectory(src/beman/task)
 include(./cmake/beman-install-library.cmake)
 beman_install_library(${CMAKE_PROJECT_NAME} TARGETS ${CMAKE_PROJECT_NAME}
     # TODO: DEPENDENCIES [===[beman.inplace_vector 1.0.0]===] [===[beman.scope 0.0.1 EXACT]===] fmt
-    DEPENDENCIES beman.execution
+    DEPENDENCIES [===[beman.execution 0.2.0 EXACT]===]
 )
 #===============================================================================
 
