@@ -16,7 +16,7 @@ repos:
     rev: v21.1.8
     hooks:
     - id: clang-format
-      types_or: [c++, c]
+      types_or: [c++, c, json]
 
     # CMake linting and formatting
   - repo: https://github.com/BlankSpruce/gersemi
@@ -25,3 +25,5 @@ repos:
     - id: gersemi
       name: CMake linting
       exclude: ^.*/tests/.*/data/ # Exclude test data directories
+
+exclude: 'infra/'
