@@ -12,15 +12,26 @@
         "CMAKE_CXX_STANDARD": "23",
         "CMAKE_CXX_EXTENSIONS": true,
         "CMAKE_CXX_STANDARD_REQUIRED": true,
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "CMAKE_INSTALL_MESSAGE": "LAZY",
         "CMAKE_SKIP_TEST_ALL_DEPENDENCY": false,
-        "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "./infra/cmake/use-fetch-content.cmake"
+        "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "infra/cmake/use-fetch-content.cmake"
       }
     },
     {
       "name": "_debug-base",
       "hidden": true,
+      "warnings": {
+        "dev": true,
+        "deprecated": true,
+        "uninitialized": true,
+        "unusedCli": true,
+        "systemVars": false
+      },
+      "errors": {
+        "dev": false,
+        "deprecated": false
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "BEMAN_BUILDSYS_SANITIZER": "MaxSan"
@@ -63,7 +74,12 @@
         "_debug-base"
       ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "infra/cmake/llvm-toolchain.cmake"
+        "BEMAN_USE_STD_MODULE": false,
+        "CMAKE_TOOLCHAIN_FILE": "infra/cmake/llvm-libc++-toolchain.cmake"
+      },
+      "environment": {
+        "CXX": "clang++",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++"
       }
     },
     {
@@ -74,7 +90,12 @@
         "_release-base"
       ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "infra/cmake/llvm-toolchain.cmake"
+        "BEMAN_USE_STD_MODULE": false,
+        "CMAKE_TOOLCHAIN_FILE": "infra/cmake/llvm-libc++-toolchain.cmake"
+      },
+      "environment": {
+        "CXX": "clang++",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++"
       }
     },
     {
@@ -85,6 +106,7 @@
         "_debug-base"
       ],
       "cacheVariables": {
+        "BEMAN_USE_MODULES": false,
         "CMAKE_TOOLCHAIN_FILE": "infra/cmake/appleclang-toolchain.cmake"
       }
     },
@@ -96,7 +118,24 @@
         "_release-base"
       ],
       "cacheVariables": {
+        "BEMAN_USE_MODULES": false,
         "CMAKE_TOOLCHAIN_FILE": "infra/cmake/appleclang-toolchain.cmake"
+      }
+    },
+    {
+      "name": "msvc-debug",
+      "displayName": "MSVC Debug Build",
+      "inherits": [
+        "_root-config",
+        "_debug-base"
+      ],
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "infra/cmake/msvc-toolchain.cmake"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     },
     {
@@ -108,6 +147,11 @@
       ],
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "infra/cmake/msvc-toolchain.cmake"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     }
   ],
@@ -155,6 +199,13 @@
     {
       "name": "appleclang-release",
       "configurePreset": "appleclang-release",
+      "inherits": [
+        "_root-build"
+      ]
+    },
+    {
+      "name": "msvc-debug",
+      "configurePreset": "msvc-debug",
       "inherits": [
         "_root-build"
       ]
@@ -208,6 +259,11 @@
       "name": "appleclang-release",
       "inherits": "_test_base",
       "configurePreset": "appleclang-release"
+    },
+    {
+      "name": "msvc-debug",
+      "inherits": "_test_base",
+      "configurePreset": "msvc-debug"
     },
     {
       "name": "msvc-release",
@@ -315,6 +371,23 @@
         {
           "type": "test",
           "name": "appleclang-release"
+        }
+      ]
+    },
+    {
+      "name": "msvc-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "msvc-debug"
+        },
+        {
+          "type": "build",
+          "name": "msvc-debug"
+        },
+        {
+          "type": "test",
+          "name": "msvc-debug"
         }
       ]
     },

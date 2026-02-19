@@ -1,5 +1,20 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+cmake_minimum_required(VERSION 3.30...4.3)
+
+# include(../cmake/prelude.cmake)
+
+project(beman_execution.example LANGUAGES CXX)
+
+# TODO(CK): cmake -S . -G Ninja -B build -D CMAKE_BUILD_TYPE=RelWithDebInfo --fresh
+if(PROJECT_IS_TOP_LEVEL)
+    # include(../cmake/cxx-modules-rules.cmake)
+
+    find_package(beman.task 0.1.0 EXACT REQUIRED)
+
+    enable_testing()
+endif()
+
 set(TODO tls-scheduler into_optional issue-start-reschedules loop)
 
 set(ALL_EXAMPLES
@@ -36,6 +51,7 @@ set(ALL_EXAMPLES
     result_example
     # FIXME: stop
 )
+
 set(xALL_EXAMPLES issue-symmetric-transfer)
 set(xALL_EXAMPLES customize)
 

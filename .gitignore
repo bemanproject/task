@@ -1,5 +1,5 @@
 /.cache
 /compile_commands.json
-/build
+build/
 /docs/generated
 /docs/wg21

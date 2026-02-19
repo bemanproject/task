@@ -7,9 +7,8 @@ project(
     # targets (e.g., library, executable, etc.).
     DESCRIPTION "A Beman library task (coroutine task)"
     LANGUAGES CXX
+    VERSION 0.1.0
 )
-
-enable_testing()
 
 # [CMAKE.SKIP_TESTS]
 option(
@@ -26,10 +25,6 @@ option(
 )
 
 include(FetchContent)
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
-
-set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME}Targets)
 
 FetchContent_Declare(
     execution
@@ -41,6 +36,17 @@ FetchContent_MakeAvailable(execution)
 
 add_subdirectory(src/beman/task)
 
+#===============================================================================
+# NOTE: this must be done before tests! CK
+include(./cmake/beman-install-library.cmake)
+beman_install_library(${CMAKE_PROJECT_NAME} TARGETS ${CMAKE_PROJECT_NAME}
+    # TODO: DEPENDENCIES [===[beman.inplace_vector 1.0.0]===] [===[beman.scope 0.0.1 EXACT]===] fmt
+    DEPENDENCIES beman.execution
+)
+#===============================================================================
+
+enable_testing()
+
 if(BEMAN_TASK_BUILD_TESTS)
     add_subdirectory(tests/beman/task)
 endif()
@@ -48,20 +54,3 @@ endif()
 if(BEMAN_TASK_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
-
-# This will be used to replace @PACKAGE_cmakeModulesDir@
-set(cmakeModulesDir cmake/beman)
-configure_package_config_file(
-    cmake/Config.cmake.in
-    BemanTaskConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/beman/task/
-    PATH_VARS cmakeModulesDir
-    NO_SET_AND_CHECK_MACRO
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO
-)
-
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/BemanTaskConfig.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/beman/task/
-    COMPONENT beman_task_development
-)
