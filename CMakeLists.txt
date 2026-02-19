@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.30...4.3)
 
 project(
     beman.task # CMake Project Name, which is also the name of the top-level
@@ -17,7 +17,6 @@ option(
     "Enable building tests and test infrastructure. Default: ON. Values: { ON, OFF }."
     ${PROJECT_IS_TOP_LEVEL}
 )
-#set(BEMAN_TASK_BUILD_TESTS FALSE)
 
 # [CMAKE.SKIP_EXAMPLES]
 option(
@@ -36,7 +35,7 @@ FetchContent_Declare(
     execution
     # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG a098f90
+    GIT_TAG 07d53da
 )
 FetchContent_MakeAvailable(execution)
 

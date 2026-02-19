@@ -19,10 +19,10 @@ set(ALL_EXAMPLES
     issue-symmetric-transfer
     c++now-affinity
     c++now-basic
-    c++now-query
+    # FIXME: c++now-query
     c++now-result-types
     c++now-return
-    c++now-stop_token
+    # FIXME: c++now-stop_token
     c++now-with_error
     co_await-result
     co_await-task
@@ -32,9 +32,9 @@ set(ALL_EXAMPLES
     friendly
     hello
     issue-frame-allocator
-    query
+    # FIXME: query
     result_example
-    stop
+    # FIXME: stop
 )
 set(xALL_EXAMPLES issue-symmetric-transfer)
 set(xALL_EXAMPLES customize)

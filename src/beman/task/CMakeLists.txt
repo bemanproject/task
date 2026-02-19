@@ -23,7 +23,7 @@ target_sources(
 )
 
 set_target_properties(beman.task PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
-target_link_libraries(beman.task PUBLIC beman::execution)
+target_link_libraries(beman.task PUBLIC beman::execution_headers)
 
 install(
     TARGETS beman.task

@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 list(
-    APPEND
-    task_tests
+    APPEND task_tests
     msvc-asan-issue
     allocator_of
     allocator_support
