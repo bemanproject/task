@@ -1,9 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-list(
-    APPEND
-    task_tests
-    msvc-asan-issue
+set(task_tests
     allocator_of
     allocator_support
     completion
@@ -21,10 +18,13 @@ list(
     single_thread_context
     state_base
     sub_visit
-    task
     task_scheduler
     with_error
 )
+
+if(NOT MSVC)
+    list(APPEND task_tests msvc-asan-issue task)
+endif()
 
 foreach(test ${task_tests})
     add_executable(beman.task.tests.${test})

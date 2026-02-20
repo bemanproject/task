@@ -12,7 +12,7 @@
 
 namespace beman::task::detail {
 /*!
- * \brief Scheduler completing immmediately when started on the same thread
+ * \brief Scheduler completing immediately when started on the same thread
  * \headerfile beman/task/task.hpp <beman/task/task.hpp>
  *
  * The class `inline_scheduler` is used to prevent any actual schedulering.

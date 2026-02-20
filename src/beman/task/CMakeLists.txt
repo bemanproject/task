@@ -5,6 +5,7 @@ add_library(beman::task ALIAS beman.task)
 
 target_sources(beman.task PRIVATE task.cpp)
 
+# TODO(CK): file(GLOB ...) must not used in production code!
 file(
     GLOB DETAIL_HEADERS
     "${PROJECT_SOURCE_DIR}/include/beman/task/detail/*.hpp"
@@ -23,12 +24,4 @@ target_sources(
 )
 
 set_target_properties(beman.task PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
-target_link_libraries(beman.task PUBLIC beman::execution)
-
-install(
-    TARGETS beman.task
-    EXPORT beman.task
-    DESTINATION $<$<CONFIG:Debug>:debug/>${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION $<$<CONFIG:Debug>:debug/>${CMAKE_INSTALL_BINDIR}
-    FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+target_link_libraries(beman.task PUBLIC beman::execution_headers)

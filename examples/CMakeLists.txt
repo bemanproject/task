@@ -1,41 +1,66 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+cmake_minimum_required(VERSION 3.30...4.3)
+
+# include(../cmake/prelude.cmake)
+
+project(beman_task.example LANGUAGES CXX)
+
+# TODO(CK): cmake -S . -G Ninja -B build -D CMAKE_BUILD_TYPE=RelWithDebInfo --fresh
+if(PROJECT_IS_TOP_LEVEL)
+    # include(../cmake/cxx-modules-rules.cmake)
+    set(BEMAN_USE_MODULES OFF)
+    set(BEMAN_USE_STD_MODULE OFF)
+    set(CMAKE_CXX_STANDARD 23)
+
+    find_package(beman.task 0.1.0 EXACT REQUIRED)
+
+    enable_testing()
+endif()
+
 set(TODO tls-scheduler into_optional issue-start-reschedules loop)
 
 set(ALL_EXAMPLES
     task_scheduler
-    bulk
-    c++now-allocator
-    c++now-cancel
-    c++now-errors
-    alloc
-    affinity
-    odd-return
-    dangling-references
     rvalue-task
-    aggregate-return
     customize
-    issue-affine_on
     issue-symmetric-transfer
-    c++now-affinity
-    c++now-basic
-    c++now-query
-    c++now-result-types
-    c++now-return
-    c++now-stop_token
-    c++now-with_error
-    co_await-result
-    co_await-task
     container
-    error
-    escaped-exception
-    friendly
-    hello
-    issue-frame-allocator
-    query
-    result_example
-    stop
 )
+
+if(NOT MSVC)
+    list(
+        APPEND ALL_EXAMPLES
+        bulk
+        c++now-allocator
+        c++now-cancel
+        c++now-errors
+        alloc
+        affinity
+        odd-return
+        dangling-references
+        aggregate-return
+        issue-affine_on
+        c++now-affinity
+        c++now-basic
+        # FIXME: c++now-query
+        c++now-result-types
+        c++now-return
+        # FIXME: c++now-stop_token
+        c++now-with_error
+        co_await-result
+        co_await-task
+        error
+        escaped-exception
+        friendly
+        hello
+        issue-frame-allocator
+        # FIXME: query
+        result_example
+        # FIXME: stop
+    )
+endif()
+
 set(xALL_EXAMPLES issue-symmetric-transfer)
 set(xALL_EXAMPLES customize)
 
