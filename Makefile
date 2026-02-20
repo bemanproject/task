@@ -17,7 +17,11 @@ PRESET = gcc-release
 UNAME = $(shell uname -s)
 ifeq ($(UNAME),Darwin)
     # PRESET = appleclang-release
-    PRESET = gcc-release
+    ifeq ($(shell uname -m),arm64)
+        PRESET = appleclang-release
+    else
+        PRESET = gcc-release
+    endif
 endif
 BUILD = $(BUILDDIR)/$(PRESET)
 
