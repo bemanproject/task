@@ -22,38 +22,44 @@ set(TODO tls-scheduler into_optional issue-start-reschedules loop)
 
 set(ALL_EXAMPLES
     task_scheduler
-    bulk
-    c++now-allocator
-    c++now-cancel
-    c++now-errors
-    alloc
-    affinity
-    odd-return
-    dangling-references
     rvalue-task
-    aggregate-return
     customize
-    issue-affine_on
     issue-symmetric-transfer
-    c++now-affinity
-    c++now-basic
-    # FIXME: c++now-query
-    c++now-result-types
-    c++now-return
-    # FIXME: c++now-stop_token
-    c++now-with_error
-    co_await-result
-    co_await-task
     container
-    error
-    escaped-exception
-    friendly
-    hello
-    issue-frame-allocator
-    # FIXME: query
-    result_example
-    # FIXME: stop
 )
+
+if(NOT MSVC)
+    list(
+        APPEND ALL_EXAMPLES
+        bulk
+        c++now-allocator
+        c++now-cancel
+        c++now-errors
+        alloc
+        affinity
+        odd-return
+        dangling-references
+        aggregate-return
+        issue-affine_on
+        c++now-affinity
+        c++now-basic
+        # FIXME: c++now-query
+        c++now-result-types
+        c++now-return
+        # FIXME: c++now-stop_token
+        c++now-with_error
+        co_await-result
+        co_await-task
+        error
+        escaped-exception
+        friendly
+        hello
+        issue-frame-allocator
+        # FIXME: query
+        result_example
+        # FIXME: stop
+    )
+endif()
 
 set(xALL_EXAMPLES issue-symmetric-transfer)
 set(xALL_EXAMPLES customize)
