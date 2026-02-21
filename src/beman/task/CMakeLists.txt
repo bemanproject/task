@@ -5,8 +5,10 @@ add_library(beman::task ALIAS beman.task)
 
 target_sources(beman.task PRIVATE task.cpp)
 
+add_library(beman.task_headers INTERFACE)
+add_library(beman::task_headers ALIAS beman.task_headers)
 target_sources(
-    beman.task
+    beman.task_headers
     PUBLIC
         FILE_SET HEADERS
             BASE_DIRS ${PROJECT_SOURCE_DIR}/include
@@ -43,5 +45,10 @@ target_sources(
                 ${PROJECT_SOURCE_DIR}/include/beman/task/detail/with_error.hpp
 )
 
-set_target_properties(beman.task PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
-target_link_libraries(beman.task PUBLIC beman::execution_headers)
+set_target_properties(
+    beman.task_headers
+    PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON
+)
+target_link_libraries(beman.task_headers INTERFACE beman::execution_headers)
+
+target_link_libraries(beman.task PUBLIC beman::task_headers)

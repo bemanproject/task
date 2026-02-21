@@ -12,12 +12,12 @@ repos:
       - id: check-added-large-files
 
   # Config file: .codespellrc
-  # - repo: https://github.com/codespell-project/codespell
-  #   rev: v2.4.1
-  #   hooks:
-  #     - id: codespell
-  #       files: ^.*\.(cmake|cpp|hpp|txt|md|json|in|yaml|yml|py|toml)$
-  #       args: ["--write", "--ignore-words", ".codespellignore" ]
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        files: ^.*\.(cmake|cpp|hpp|txt|md|json|in|yaml|yml|py|toml)$
+        args: ["--write", "--ignore-words", ".codespellignore" ]
 
   # Clang-format for C++
   # This brings in a portable version of clang-format.

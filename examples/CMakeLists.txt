@@ -13,7 +13,7 @@ if(PROJECT_IS_TOP_LEVEL)
     set(BEMAN_USE_STD_MODULE OFF)
     set(CMAKE_CXX_STANDARD 23)
 
-    find_package(beman.task 0.1.0 EXACT REQUIRED)
+    find_package(beman.task 0.2.0 EXACT REQUIRED)
 
     enable_testing()
 endif()
@@ -64,12 +64,12 @@ endif()
 set(xALL_EXAMPLES issue-symmetric-transfer)
 set(xALL_EXAMPLES customize)
 
-message("Examples to be built: ${ALL_EXAMPLES}")
+message(STATUS "Examples to be built: ${ALL_EXAMPLES}")
 
 foreach(example ${ALL_EXAMPLES})
     add_executable(beman.task.examples.${example})
     target_sources(beman.task.examples.${example} PRIVATE ${example}.cpp)
-    target_link_libraries(beman.task.examples.${example} beman::task)
+    target_link_libraries(beman.task.examples.${example} beman::task_headers)
     add_test(
         NAME beman.task.examples.${example}
         COMMAND $<TARGET_FILE:beman.task.examples.${example}>
