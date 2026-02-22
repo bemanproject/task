@@ -169,6 +169,9 @@ Below are three variations of the wording changes, only one can be picked:
 <li>Flexible position of the allocator arg and use the receiver's allocator for the environment.</li>
 </ol>
 
+At the LEWG meeting on 2026-02-03 the first approach (putting the `allocator_arg` first, Wording Change A)
+was preferred ([notes](https://wiki.isocpp.org/2026-02-03_LEWG_Telecon)). It was identified that the original wording change did not support member functions returning a `task` (the wording was fixed accordingly).
+
 ## Wording Change A: `allocator_arg` must be first argument
 
 ::: ednote
