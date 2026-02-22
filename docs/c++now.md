@@ -22,7 +22,7 @@ The presentation starts off with motivating why coroutines are a
 reasonable approach to implementing asynchronous algorithms and
 show some basic usage. That will include some motivation of why an
 environment is important as a replacement for thread local variables
-and why excuting from common scheduler is normally desirable.
+and why executing from common scheduler is normally desirable.
 
 The most contentious aspect is probably scheduler affinity and some
 time is spent on showing how it is implement, motivating why it is
@@ -38,7 +38,7 @@ it is desired using an allocator.
 Any use allocation would likely be part of an environment exposed to
 child operations. It should also be possible to customize the available
 environment with user-specified properties. It is showing how to get
-access to enviroment properties and how they can be customized.
+access to environment properties and how they can be customized.
 
 Error handling and cancellation are important aspects which are directly
 supported by the sender/receiver framework. There are a few ways how a

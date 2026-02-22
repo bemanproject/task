@@ -47,7 +47,7 @@ meet its objective at run-time.
 There are a few NB comments raised about the way `affine_on` works:
 </p>
 <ul>
-   <li>[US 232-366](https://github.com/cplusplus/nbballot/issues/941): specify customisation of `affine_on` when the scheduler doesn't change.</li>
+   <li>[US 232-366](https://github.com/cplusplus/nbballot/issues/941): specify customization of `affine_on` when the scheduler doesn't change.</li>
    <li>[US 233-365](https://github.com/cplusplus/nbballot/issues/940): clarify `affine_on` vs. `continues_on`.</li>
    <li>[US 234-364](https://github.com/cplusplus/nbballot/issues/939): remove scheduler parameter from `affine_on`.</li>
    <li>[US 235-363](https://github.com/cplusplus/nbballot/issues/938): `affine_on` should not forward the stop token to the scheduling operation.</li>
@@ -92,8 +92,8 @@ a better design than was previously specified:
   </li>
   <li>
     When a sender knows that it will complete on the scheduler it
-    was start on, it should be possible to customise the `affine_on`
-    algorithm to avoid rescheduling. This customisation can be
+    was start on, it should be possible to customize the `affine_on`
+    algorithm to avoid rescheduling. This customization can be
     achieved by `connect`ing to the result of an `affine_on` member
     function called on the child sender, if such a member function
     is present, when `connect`ing an `affine_on` sender.
@@ -102,13 +102,13 @@ a better design than was previously specified:
 
 <p>
 None of these changes really contradict any earlier design: the
-shape and behaviour of the `affine_on` algorithm wasn't fully fleshed
-out. Tightening the behaviour scheduler affinity and the `affine_on`
+shape and behavior of the `affine_on` algorithm wasn't fully fleshed
+out. Tightening the behavior scheduler affinity and the `affine_on`
 algorithm has some implications on some other components:
 </p>
 <ol>
   <li>
-    If `affine_on` requires an infallible scheduler modelled at least
+    If `affine_on` requires an infallible scheduler modeled at least
     `inline_scheduler`, `task_scheduler`, and `run_loop::scheduler`
     should be infallible (i.e., they always complete successfully
     with `set_value()`). `parallel_scheduler` can probably not be
@@ -118,7 +118,7 @@ algorithm has some implications on some other components:
     The scheduling semantics when changing a `task`'s scheduler
     using `co_await change_coroutine_scheduler(@_sch_@)`
     become somewhat unclear and this functionality should be removed.
-    Similar semantics are better modelled using
+    Similar semantics are better modeled using
     `co_await on(@_sch_@, @_nested-task_@)`.
   </li>
   <li>
@@ -138,7 +138,7 @@ work to be executed and the scheduler on which to continue as
 arguments. When SG1 requested that a similar but different algorithms
 is to be used to implement scheduler affinity, `continues_on` was
 just replaced by `affine_on` with the same shape but the potential
-to get customised differently.
+to get customized differently.
 </p>
 <p>
 The scheduler used for affinity is the scheduler communicated via
@@ -346,13 +346,13 @@ would need an explicit mechanisms to indicate that its `affine_on`
 use should opt out of the constraint, e.g., by adding a suitable
 `static` member to the environment template argument.
 
-## `affine_on` Customisation
+## `affine_on` Customization
 
 Senders which don't cause the execution agent to be changed like
-`just` or the various queries should be able to customise `affine_on`
+`just` or the various queries should be able to customize `affine_on`
 to avoid unnecessary scheduling. Sadly, a proposal
 ([P3206](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3206r0.pdf))
-to standardise properties which could be used to determine how a
+to standardize properties which could be used to determine how a
 sender completes didn't make much progress, yet. An implementation
 can make use of similar techniques using an implementation-specific
 protocol. If a future standard defines a standard approach to
@@ -483,7 +483,7 @@ is quite different from effectively just using `continues_on`:
 6. Upon completion of the scheduling operation, the appropriate
     completion function with the respective arguments is invoked.
 
-This behaviour is similar to `continues_on` but is subtly different
+This behavior is similar to `continues_on` but is subtly different
 with respect to when the scheduling operation state needs to be
 created and that any stop token from the receiver doesn't get
 forwarded. In addition `affine_on` is more constrained with respect

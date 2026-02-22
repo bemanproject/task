@@ -90,7 +90,7 @@ or a few variations of that.
 
 A fair part of the paper argues why `future.then()` is _not_ a good
 approach to model coroutines and their results. Using `future`
-requires allocation, synchronisation, reference counting, and
+requires allocation, synchronization, reference counting, and
 scheduling which can all be avoided when using coroutines in a
 structured way.
 
@@ -102,7 +102,7 @@ are details on how the coroutine is implemented.
 
 - The task doesn't really have anything to do with concurrency.
 - Decomposing a task cheaply is fundamental. The
-  [HALO Optimisations](https://wg21.link/P0981R0) help.
+  [HALO Optimizations](https://wg21.link/P0981R0) help.
 - The `task` isn't move assignable because there are better approaches
   than using containers to hold them. It is move constructible as there
   are no issues with overwriting a potentially live task.
@@ -110,7 +110,7 @@ are details on how the coroutine is implemented.
   impose any overhead on everybody.
 - There can be more than one `task` type for different needs.
 - Holding a mutex lock while `co_await`ing which may resume on a different
-  thread is hazardous. Static analysers should be able to detect these cases.
+  thread is hazardous. Static analyzers should be able to detect these cases.
 - Votes confirmed the no move assignment and forwarding to LEWG assuming
   the name is not `task`.
 - Votes against deal with associated executors and a request to have
@@ -153,8 +153,8 @@ is a bit richer than that from
 - Using `t.is_ready()` it can be queried if `t` has completed.
 - Using `co_await t` awaits completion of `t`, yielding the result. The result
   may be throwing an exception if the coroutine completed by throwing.
-- Using `co_await t.when_ready()` allows synchronising with the completion of
-  `t` without actually getting the result. This form of synchronisation won't
+- Using `co_await t.when_ready()` allows synchronizing with the completion of
+  `t` without actually getting the result. This form of synchronization won't
   throw any exception.
 - `cpproro::shared_task<T>` also supports equality comparisons.
 
@@ -351,7 +351,7 @@ no particular order):
     propagate contexts implicitly; see the [discussion on environments](#environment-support)
     below).
 5. When using coroutines there will probably be an allocation at
-    least for the coroutine frame (the [HALO optimisations](https://wg21.link/P0981R0)
+    least for the coroutine frame (the [HALO optimizations](https://wg21.link/P0981R0)
     can't always work). To support the use in environments
     where memory allocations using `new`/`delete` aren't supported
     the coroutine task should support allocations using allocators.
@@ -429,7 +429,7 @@ Coroutines can use `co_return` to produce a value. The value returned can
 reasonably provide the argument for the `set_value_t` completion
 of the coroutines. As the type of a coroutine is defined even before
 the coroutine body is given, there is no way to deduce the result
-type. The result type is probably the primary customisation and
+type. The result type is probably the primary customization and
 should be the first template parameter which gets defaulted to
 `void` for coroutines not producing any value. For example:
 
@@ -448,13 +448,13 @@ result type below](#result-type-for-co_await) for more details).
 The outer coroutine completes with `set_value_t()`.
 
 Beyond the result type there are a number of features for a coroutine
-task which benefit from customisation or for which it may be desirable
+task which benefit from customization or for which it may be desirable
 to disable them because they introduce a cost. As many template
 parameters become unwieldy, it makes sense to combine these into a
 [defaulted] context parameter. The aspects which benefit from
-customisation are at least:
+customization are at least:
 
-- [Customising the environment](#environment-support) for child
+- [Customizing the environment](#environment-support) for child
     operations. The context itself can actually become part of
     the environment.
 - Disable [scheduler affinity](#scheduler-affinity) and/or configure
@@ -464,7 +464,7 @@ customisation are at least:
 - Define [additional error types](#error-reporting).
 
 The default context should be used such that any empty type provides
-the default behaviour instead of requiring a lot of boilerplate just
+the default behavior instead of requiring a lot of boilerplate just
 to configure a particular aspect. For example, it should be possible
 to selectively enable [allocator support](#allocator-support) using
 something like this:
@@ -586,7 +586,7 @@ be transformed to an awaitable. The existing approach is to use
 `execution::as_waitable(sndr)` [[exex.as.awaitable]](https://eel.is/c++draft/exec.as.awaitable)
 in the promise type's `await_transform` and `task` uses that approach.
 The awaitable returned from `as_awaitable(sndr)` has the following
-behaviour (`rcvr` is the receiver the sender `sndr` is connected to):
+behavior (`rcvr` is the receiver the sender `sndr` is connected to):
 
 1. When `sndr` completes with `set_stopped(std::move(rcvr))` the function `unhandled_stopped()`
     on the promise type is called and the awaiting coroutine is never
@@ -611,7 +611,7 @@ complete without a `set_value_t` completion is to complete with
 error)`, i.e., the expression either results in the coroutine to
 be never resumed or an exception being thrown.
 
-Here is an example which summarises the different supported result types:
+Here is an example which summarizes the different supported result types:
 
 ```c++
 task<> fun() {
@@ -732,8 +732,8 @@ The basic idea for scheduler affinity consists of a few parts:
     context parameter `C` of the coroutine type `task<T, C>` using
     `typename C::scheduler_type` and defaults to `task_scheduler`
     if this type isn't defined. `task_scheduler` uses type-erasure
-    to deal with arbitrary schedulers (and small object optimisations
-    to avoid allocations). The used scheduler type can be parameterised
+    to deal with arbitrary schedulers (and small object optimizations
+    to avoid allocations). The used scheduler type can be parameterized
     to allow use of `task` contexts where the scheduler type is
     known, e.g., to avoid the costs of type erasure.
 
@@ -823,8 +823,8 @@ avoid the rescheduling. Something like that is implemented for
 [`unifex`](https://github.com/facebookexperimental/libunifex):
 senders define a property `blocking` which can have the value
 `blocking_kind::always_inline`.  The proposal [A sender query for
-completion behaviour](https://wg21.link/P3206) proposes a
-`get_completion_behaviour(sndr, env)` customisation point to address
+completion behavior](https://wg21.link/P3206) proposes a
+`get_completion_behaviour(sndr, env)` customization point to address
 this need. The result can indicate that the `sndr` returns synchronously
 (using `completion_behaviour::synchronous` or
 `completion_behaviour::inline_completion`). If `sndr` returns synchronously
@@ -860,7 +860,7 @@ when too many operations complete inline.
 ## Allocator Support
 
 When using coroutines at least the coroutine frame may end up being
-allocated on the heap: the [HALO](https://wg21.link/P0981) optimisations
+allocated on the heap: the [HALO](https://wg21.link/P0981) optimizations
 aren't always possible, e.g., when a coroutine becomes a child of
 another sender. To control how this allocation is done and to support
 environments where allocations aren't possible `task` should have
@@ -914,7 +914,7 @@ it is possible to relax that constraint).
 The allocator used for the coroutine frame should also be used for
 any other allocators needed for the coroutine itself, e.g., when
 type erasing something needed for its operation (although in most
-cases a small object optimisation would be preferable and sufficient).
+cases a small object optimization would be preferable and sufficient).
 Also, the allocator should be made available to child operations
 via the respective receiver's environment using the `get_allocator`
 query. The arguments passed to the coroutine are also available to
@@ -1017,7 +1017,7 @@ int main() {
 ## Support For Requesting Cancellation/Stopped
 
 When a coroutine task executes the actual work it may listen to
-a stop token to recognise that it got canceled. Once it recognises
+a stop token to recognize that it got canceled. Once it recognizes
 that its work should be stopped it should also complete with
 `set_stopped(rcvr)`. There is no special syntax needed as that is the
 result of using `just_stopped()`:
@@ -1078,7 +1078,7 @@ cannot be deduced from the coroutine body. Instead, they can be
 declared using the context type `C`:
 
 - If present, `typename C::error_signatures` is used to declare the
-    error types. This type needs to be a specialisation of
+    error types. This type needs to be a specialization of
     `completion_signatures` listing the valid `set_error_t`
     completions.
 - If this nested type is not present,
@@ -1108,7 +1108,7 @@ template <class E> struct with_error{ E error; };
 
 The name can be different although it shouldn't collide with already
 use names (like `error_code` or `upon_error`). Also, in some cases
-there isn't really a need to wrap the error into a recognisable
+there isn't really a need to wrap the error into a recognizable
 class template. Using a marker type probably helps with readability
 and avoiding ambiguities in other cases.
 
@@ -1226,7 +1226,7 @@ With senders it is also not possible to use symmetric transfer to
 combat the problem: to achieve the full generality and composing
 senders, there are still multiple function calls used, e.g., when
 producing the completion signal. Using `get_completion_behaviour`
-from the proposal [A sender query for completion behaviour](https://wg21.link/P3206)
+from the proposal [A sender query for completion behavior](https://wg21.link/P3206)
 could allow detecting senders which complete synchronously. In these
 cases the stack overflow could be avoided relying on symmetric transfer.
 
@@ -1249,7 +1249,7 @@ when using an inline scheduler, i.e., a scheduler with an operation
 state whose `start()` immediately completes: the scheduled work gets
 executed as soon as `set_value(std::move(rcvr))` is called.
 
-Another potential for stack overflows is when optimising the behaviour
+Another potential for stack overflows is when optimizing the behavior
 for work which is known to not move to another scheduler: in that case
 there isn't really any need to use `continue_on` to get back to the
 scheduler where the operation was started! The execution remained
@@ -1372,7 +1372,7 @@ The first one
 isn't based on sender/receiver. Usage experience from all three
 have influenced the design of `task`.
 
-# Acknowledgements
+# Acknowledgments
 
 We would like to thank Ian Petersen, Alexey Spiridonov, and Lee
 Howes for comments on drafts of this proposal and general guidance.
@@ -1445,7 +1445,7 @@ namespace std::execution {
 Add new subsections for the different classes at the end of [exec]{.sref}:
 
 ::: draftnote
-Evertyhing below is text meant to go to the end of the [exec]{.sref}
+Everything below is text meant to go to the end of the [exec]{.sref}
 section without any color highlight of what it being added.
 :::
 
@@ -1468,7 +1468,7 @@ section without any color highlight of what it being added.
     transform_sender(@_get-domain-early_@(sndr), @_make-sender_@(affine_on, sch, sndr))
 ```
 
-except that `sndr` is evalutated only once.
+except that `sndr` is evaluated only once.
 
 [4]{.pnum} The exposition-only class template `@_impls-for_@` is specialized
    for `affine_on_t` as follows:
@@ -1945,7 +1945,7 @@ namespace std::execution {
     be the `task` object created by `prom.get_return_object()`. The
     description below refers to objects `@_STATE_@(prom)`,
     `@_RCVR_@(prom)`, and `@_SCHED_@(prom)` associated with `tsk`
-    during evalutation of `task::@_state_@<Rcvr>::start` for some
+    during evaluation of `task::@_state_@<Rcvr>::start` for some
     receiver `Rcvr` [task.state]{.sref}.
 
 [2]{.pnum} `@_error-variant_@` is a `variant<monostate,

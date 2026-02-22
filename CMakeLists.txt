@@ -7,7 +7,7 @@ project(
     # targets (e.g., library, executable, etc.).
     DESCRIPTION "A Beman library task (coroutine task)"
     LANGUAGES CXX
-    VERSION 0.1.0
+    VERSION 0.2.0
 )
 
 # [CMAKE.SKIP_TESTS]
@@ -47,7 +47,7 @@ add_subdirectory(src/beman/task)
 #===============================================================================
 # NOTE: this must be done before tests! CK
 include(./cmake/beman-install-library.cmake)
-beman_install_library(${CMAKE_PROJECT_NAME} TARGETS ${CMAKE_PROJECT_NAME}
+beman_install_library(${CMAKE_PROJECT_NAME} TARGETS ${CMAKE_PROJECT_NAME} beman.task_headers
     # TODO: DEPENDENCIES [===[beman.inplace_vector 1.0.0]===] [===[beman.scope 0.0.1 EXACT]===] fmt
     DEPENDENCIES [===[beman.execution 0.2.0 EXACT]===]
 )
