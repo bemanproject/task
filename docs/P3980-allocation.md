@@ -1,7 +1,7 @@
 ---
 title: Task's Allocator Use
 document: D3980R0
-date: 2026-01-25
+date: 2026-02-22
 audience:
     - Library Evolution Working Group (LEWG)
     - Library Working Group (LWG)
@@ -52,9 +52,9 @@ The first issue
 ([US 254-385](https://github.com/cplusplus/nbballot/issues/960)) is
 about where an allocator argument for the coroutine frame may go
 on the coroutine function.  The options are a fixed location (which
-would first for consistency with existing use) and anywhere. The
-status quo is anywhere and the request is to require that it goes
-first. However, to support optionally passing an allocator having
+would fit first for consistency with existing use) and anywhere. The
+status quo is anywhere, and the request is to require that it goes
+first. However, to support optionally passing an allocator, having
 it go anywhere is easier to do.
 </p>
 <p>
@@ -70,7 +70,7 @@ and the third
 ([US 255-384](https://github.com/cplusplus/nbballot/issues/959)) issues.
 </p>
 <p>
-The forth issue ([US
+The fourth issue ([US
 261-391](https://github.com/cplusplus/nbballot/issues/966)) is
 primarily a wording issue. However, some of the problematic paragraphs
 will need some modifications to address the other issues, i.e., fixing
