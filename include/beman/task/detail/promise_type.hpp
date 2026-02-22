@@ -71,7 +71,7 @@ class promise_type
 
     template <::beman::execution::sender Sender>
     auto await_transform(Sender&& sender) noexcept {
-        if constexpr (requires {
+        if constexpr (false && requires {
                           ::std::forward<Sender>(sender).as_awaitable(*this);
                           // typename ::std::remove_cvref_t<Sender>::task_concept;
                       }) {

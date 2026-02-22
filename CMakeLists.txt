@@ -28,9 +28,9 @@ include(FetchContent)
 
 FetchContent_Declare(
     execution
-    # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
-    GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG 66295d5
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
+    # GIT_REPOSITORY https://github.com/bemanproject/execution
+    # GIT_TAG 66295d5
     SYSTEM
     FIND_PACKAGE_ARGS
         0.2.0

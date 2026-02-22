@@ -21,6 +21,8 @@
 #include <beman/task/detail/error_types_of.hpp>
 #include <beman/task/detail/promise_type.hpp>
 #include <beman/execution/detail/meta_combine.hpp>
+#include <beman/execution/detail/product_type.hpp>
+#include <beman/execution/detail/sender_has_affine_on.hpp>
 #include <concepts>
 #include <coroutine>
 #include <optional>
@@ -37,8 +39,19 @@ namespace beman::task::detail {
 
 struct default_environment {};
 
+struct task_tag
+{
+    template <typename Task, typename... Ev>
+    static auto xaffine_on(Task&& t, Ev&&...) {
+        std::cout << "task::affine_on\n"; //-dk:TODO remove
+        return std::forward<Task>(t);
+    }
+};
+
 template <typename Value = void, typename Env = default_environment>
-class task {
+class task
+  : public beman::execution::detail::product_type<task_tag>
+{
   private:
     template <typename Receiver>
     using state            = ::beman::task::detail::state<task, Value, Env, Receiver>;
@@ -71,7 +84,8 @@ class task {
         return state<Receiver>(std::forward<Receiver>(receiver), std::move(this->handle));
     }
     template <typename ParentPromise>
-    auto as_awaitable(ParentPromise&) && -> ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise> {
+    auto as_awaitable(ParentPromise&) -> ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise> {
+        std::cout << "task::as_awaitable\n"; //-dk:TODO remove
         assert(this->handle.get());
         return ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise>(::std::move(this->handle));
     }
@@ -81,6 +95,8 @@ class task {
 
     explicit task(::beman::task::detail::handle<promise_type> h) : handle(std::move(h)) {}
 };
+
+static_assert(beman::execution::detail::sender_has_affine_on<task<>, ::beman::execution::env<>>);
 } // namespace beman::task::detail
 
 // ----------------------------------------------------------------------------
