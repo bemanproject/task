@@ -47,8 +47,7 @@ add_subdirectory(src/beman/task)
 #===============================================================================
 # NOTE: this must be done before tests! CK
 include(./cmake/beman-install-library.cmake)
-beman_install_library(${CMAKE_PROJECT_NAME} TARGETS ${CMAKE_PROJECT_NAME} beman.task_headers
-    # TODO: DEPENDENCIES [===[beman.inplace_vector 1.0.0]===] [===[beman.scope 0.0.1 EXACT]===] fmt
+beman_install_library(${PROJECT_NAME} TARGETS ${PROJECT_NAME} beman.task_headers
     DEPENDENCIES [===[beman.execution 0.2.0 EXACT]===]
 )
 #===============================================================================
