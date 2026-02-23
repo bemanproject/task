@@ -1,7 +1,7 @@
 ---
 title: Scheduler Affinity
-document: P3941R1
-date: 2026-01-14
+document: P3941R2
+date: 2026-02-23
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -33,13 +33,17 @@ meet its objective at run-time.
 
 ## R2
 
+- added requirement on `get_scheduler`/`get_start_scheduler`
 - fixed typo in the wording for `affine_on::transform_sender`
+- fixed various typos in the text
 
 ## R1
 
 - added wording
 
-## R0 Initial Revision
+## R0
+
+- initial revision
 
 # Overview of Changes
 
@@ -61,7 +65,7 @@ a better design than was previously specified:
 <ol>
   <li>
     To implement scheduler affinity the algorithm needs to know the
-    scheduler on which it was started itself. The correct receiver
+    scheduler on which it was started itself. The correct scheduler
     may actually be hard to determine while building the work graph.
     However, this scheduler can be communicated using
     `get_scheduler(get_env(@_rcvr_@))` when an algorithm
@@ -70,6 +74,10 @@ a better design than was previously specified:
     [P3718R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html):
     with this guarantee in place, `affine_on` only needs one
     parameter, i.e., the sender for the work to be executed.
+    [P3718R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html)
+    is, however, discontinued (for unrelated reasons) and adding the guarantee
+    to get the current scheduler from a receiver query is proposed
+    here.
   </li>
   <li>
     The scheduler `@_sched_@` on which the work needs
@@ -85,14 +93,14 @@ a better design than was previously specified:
     the work is stopped, i.e., the scheduling operation shall be
     `connect`ed to a receiver whose environment's `get_stop_token`
     query yields an `unstoppable_token`. In addition, the
-    schedule operation shall not have a `set_stopped_t()` completion
+    scheduling operation shall not have a `set_stopped_t()` completion
     signature if the environment's `get_stop_token` query yields
     an `unstoppable_token`. This requirement should also be checked
     statically.
   </li>
   <li>
     When a sender knows that it will complete on the scheduler it
-    was start on, it should be possible to customize the `affine_on`
+    was started on, it should be possible to customize the `affine_on`
     algorithm to avoid rescheduling. This customization can be
     achieved by `connect`ing to the result of an `affine_on` member
     function called on the child sender, if such a member function
@@ -103,12 +111,12 @@ a better design than was previously specified:
 <p>
 None of these changes really contradict any earlier design: the
 shape and behavior of the `affine_on` algorithm wasn't fully fleshed
-out. Tightening the behavior scheduler affinity and the `affine_on`
+out. Tightening the behavior of scheduler affinity and the `affine_on`
 algorithm has some implications on some other components:
 </p>
 <ol>
   <li>
-    If `affine_on` requires an infallible scheduler modeled at least
+    If `affine_on` requires an infallible scheduler at least
     `inline_scheduler`, `task_scheduler`, and `run_loop::scheduler`
     should be infallible (i.e., they always complete successfully
     with `set_value()`). `parallel_scheduler` can probably not be
@@ -175,11 +183,47 @@ statically detect whether the query is valid and provides a scheduler
 it cannot be detected if the scheduler matches the execution agent on which
 `start` was called.
 [P3718r0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html)
-proposes to add this exact requirement to
-[[exec.get.scheduler]](https://wg21.link/exec.get.scheduler).
+proposed to add this exact requirement to
+[[exec.get.scheduler]](https://wg21.link/exec.get.scheduler) which is no moved
+to this proposal.
 </p>
 <p>
 This change addresses [US 234-364](https://github.com/cplusplus/nbballot/issues/939) ([LWG4331](https://cplusplus.github.io/LWG/issue4331)).
+</p>
+
+## Scheduler An Operation Was Started On
+
+<p>
+The `on` and `affine_on` algorithms both use the scheduler returned
+from the `get_scheduler` query on the receiver to determine where
+to resume execution after some other work completed. When using
+these algorithms it is not always possible to determine which
+scheduler an operation gets started on when creating a work graph.
+Thus, the algorithms determine the scheduler from context. To
+actually do that, it needs to be required that the scheduler is
+made accessible when using these algorithms.
+[P3718r0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html)
+proposed that `get_scheduler` should be required to yield the
+scheduler an operation was started on.
+
+</p>
+
+<p>
+It was pointed out that the meaning for the `get_scheduler` query isn't clear
+and it is used for two separate purposes:
+</p>
+<ol>
+<li>The `get_scheduler` query is used to get a scheduler to schedule new work on.</i>
+<li>The `get_scheduler` query is used to get the scheduler an operation was `start`ed on.</i>
+</ol>
+<p>
+This dual use doesn't necessary align. It would be reasonable to
+add a new query, e.g., `get_start_scheduler` which is used to
+determine the scheduler an operation was `start`ed on. The requirement
+for getting the scheduler an operation was started on would be on
+the `get_start_scheduler` query rather than on the `get_scheduler`
+query. At the same time the `get_start_scheduler` query could be
+defaulted to use the `get_scheduler` query.
 </p>
 
 ## Infallible Schedulers
@@ -506,9 +550,315 @@ algorithm a better name.
 # Wording Changes
 
 ::: ednote
+If `get_start_scheduler` is introduced add it to the synopis in
+[execution.syn] after `get_scheduler` as follows:
+:::
+
+```
+...
+namespace std::execution {
+  // [exec.queries], queries
+  struct get_domain_t { @_unspecified_@ };
+  struct get_scheduler_t { @_unspecified_@ };
+  @[struct]{.add}@ @[get_start_scheduler_t]{.add}@ @@[{ @_unspecified_@ };]{.add}@@
+  struct get_delegation_scheduler_t { @_unspecified_@ };
+  struct get_forward_progress_guarantee_t { @_unspecified_@ };
+  template<class CPO>
+    struct get_completion_scheduler_t { @_unspecified_@ };
+  struct get_await_completion_adaptor_t { @_unspecified_@ };
+
+  inline constexpr get_domain_t get_domain{};
+  inline constexpr get_scheduler_t get_scheduler{};
+  @[inline]{.add}@ @[constexpr]{.add}@ @[get_start_scheduler_t]{.add}@ @[get_start_scheduler{};]{.add}@
+  inline constexpr get_delegation_scheduler_t get_delegation_scheduler{};
+  enum class forward_progress_guarantee;
+  inline constexpr get_forward_progress_guarantee_t get_forward_progress_guarantee{};
+  template<class CPO>
+    constexpr get_completion_scheduler_t<CPO> get_completion_scheduler{};
+  inline constexpr get_await_completion_adaptor_t get_await_completion_adaptor{};
+  ...
+}
+```
+
+::: ednote
+If `get_start_scheduler` is introduced add a new section after
+[exec.get.scheduler] as follows:
+:::
+
+:::add
+
+### execution::get_start_scheduler [exec.get.start.scheduler]
+
+[1]{.pnum} `get_start_scheduler` asks a queryable object for the scheduler
+an operation got started on.
+
+[2]{.pnum} The name `get_start_scheduler` denotes a query object. For a
+subexpression `env`, `get_start_scheduler(env)` is expression-equivalent to
+<code><i>MANDATE-NOTHROW</i>(<i>AS-CONST</i>(env).query(get_start_scheduler))</code>
+if this expression is well-formed. Otherwise, `get_start_scheduler(env)`
+is expression-equivalent to `get_scheduler(env)`.
+
+<i>Mandates</i>: If the expression above is well-formed, its type satisfies `scheduler`.
+
+[3]{.pnum} `forwarding_query(execution::get_start_scheduler)` is a core
+constant expression and has value true.
+
+[?]{.pnum} Given subexpressions `sndr` and `rcvr` such that
+`sender_to<decltype((sndr)), decltype((rcvr))>` is `true` and the
+expression `get_start_scheduler(get_env(rcvr))` is well-formed, an operation
+state that is the result of calling `connect(sndr, rcvr)` shall, if
+it is started, be started on an execution agent associated with the
+scheduler `get_start_scheduler(get_env(rcvr))`.
+
+:::
+
+::: ednote
+If `get_start_scheduler` is introduced change how `on` gets its
+scheduler in [exec.on], i.e., change the use from `get_scheduler`
+to use `get_start_scheduler`:
+:::
+
+<p>
+...
+</p>
+
+<p>
+The expression `on.transform_sender(out_sndr, env)` has effects equivalent to:
+</p>
+
+```
+auto&& [_, data, child] = out_sndr;
+if constexpr (scheduler<decltype(data)>) {
+  auto orig_sch =
+    @_query-with-default_@(get_@[start_]{.add}@scheduler, env, @_not-a-scheduler_@());
+
+  if constexpr (same_as<decltype(orig_sch), @_not-a-scheduler_@>) {
+    return @_not-a-sender_@{};
+  } else {
+    return continues_on(
+      starts_on(std::forward_like<OutSndr>(data), std::forward_like<OutSndr>(child)),
+      std::move(orig_sch));
+  }
+} else {
+  auto& [sch, closure] = data;
+  auto orig_sch = @_query-with-default_@(
+    get_completion_scheduler<set_value_t>,
+    get_env(child),
+    @_query-with-default_@(get_@[start_]{.add}@scheduler, env, @_not-a-scheduler_@()));
+
+  if constexpr (same_as<decltype(orig_sch), @_not-a-scheduler_@>) {
+    return @_not-a-sender_@{};
+  } else {
+    return write_env(
+      continues_on(
+        std::forward_like<OutSndr>(closure)(
+          continues_on(
+            write_env(std::forward_like<OutSndr>(child), @_SCHED-ENV_@(orig_sch)),
+            sch)),
+        orig_sch),
+      @_SCHED-ENV_@(sch));
+  }
+}
+```
+<p>
+[9]{.pnum}
+Let `out_sndr` be a subexpression denoting a sender returned from
+`on(sch, sndr)` or one equal to such, and let `OutSndr` be the type
+`decltype((out_sndr))`. Let `out_rcvr` be a subexpression denoting a
+receiver that has an environment of type `Env` such that
+`sender_in<OutSndr, Env>` is `true`. Let `op` be an lvalue referring
+to the operation state that results from connecting `out_sndr` with
+`out_rcvr`. Calling `start(op)` shall
+<ul>
+<li> [9.1]{.pnum} remember the current
+scheduler, `get_@[start_]{.add}@scheduler(get_env(rcvr))`;</li>
+<li> [9.2]{.pnum} start `sndr` on an execution agent belonging to `sch`'s associated
+execution resource;</li>
+<li> [9.3]{.pnum}
+upon `sndr`'s completion, transfer execution back to the execution resource associated with the scheduler remembered in step 1; and</li>
+<li> [9.4]{.pnum}
+forward `sndr`'s async result to `out_rcvr`.</li>
+</ul>
+If any scheduling operation fails, an error completion on `out_rcvr` shall be executed on an unspecified execution agent.
+</p>
+<p>
+[10]{.pnum}
+Let out_sndr be a subexpression denoting a sender returned from
+`on(sndr, sch, closure)` or one equal to such, and let `OutSndr` be
+the type `decltype((out_sndr))`. Let `out_rcvr` be a subexpression
+denoting a receiver that has an environment of type `Env` such that
+`sender_in<OutSndr, Env>` is `true`. Let `op` be an lvalue referring to
+the operation state that results from connecting `out_sndr` with
+`out_rcvr`. Calling `start(op)` shall
+</p>
+<ul>
+<li>[10.1]{.pnum} remember
+the current scheduler, which is the first of the following expressions
+that is well-formed:
+<ul>
+<li>[10.1.1]{.pnum}
+`get_completion_scheduler<set_value_t>(get_env(sndr))`
+</li>
+<li>[10.1.2]{.pnum}
+`get_@[start_]{.add}@scheduler(get_env(rcvr));`
+</li>
+</ul>
+</li>
+<li>[10.2]{.pnum}
+start `sndr` on the current execution agent;
+</li>
+<li>[10.3]{.pnum}
+upon `sndr`'s completion, transfer execution to an agent owned by sch's associated execution resource;
+</li>
+<li>[10.4]{.pnum}
+forward `sndr`'s async result as if by connecting and starting a sender `closure(S)`, where `S` is a sender that completes synchronously with `sndr`'s async `result`; and
+</li>
+<li>[10.5]{.pnum}
+upon completion of the operation started in the previous step, transfer execution back to the execution resource associated with the scheduler remembered in step 1 and forward the operation's async result to `out_rcvr`.
+</li>
+</ul>
+
+<p>
+If any scheduling operation fails, an error completion on `out_rcvr` shall be executed on an unspecified execution agent.
+</p>
+
+::: ednote
+If `get_start_scheduler` is not introduced change [exec.get.scheduler] as follows:
+:::
+
+[1]{.pnum} `get_scheduler` asks a queryable object for its associated scheduler.
+
+[2]{.pnum} The name `get_scheduler` denotes a query object. For a
+subexpression `env`, `get_scheduler(env)` is expression-equivalent to
+<code><i>MANDATE-NOTHROW</i>(<i>AS-CONST</i>(env).query(get_scheduler))</code>.
+
+<i>Mandates</i>: If the expression above is well-formed, its type satisfies `scheduler`.
+
+[3]{.pnum} `forwarding_query(execution::get_scheduler)` is a core
+constant expression and has value true.
+
+:::add
+
+[?]{.pnum} Given subexpressions `sndr` and `rcvr` such that
+`sender_to<decltype((sndr)), decltype((rcvr))>` is `true` and the
+expression `get_scheduler(get_env(rcvr))` is well-formed, an operation
+state that is the result of calling `connect(sndr, rcvr)` shall, if
+it is started, be started on an execution agent associated with the
+scheduler `get_scheduler(get_env(rcvr))`.
+
+:::
+
+::: ednote
 Change [exec.affine.on] to use only one parameter, require an
 infallible scheduler from the receiver, and add a default implementation
-which allows customization of `affine_on` for child senders:
+which allows customization of `affine_on` for child senders. If
+`get_start_scheduler` is introduced the algorithms should use
+`get_start_scheduler` to get the start scheduler:
+:::
+
+[1]{.pnum}
+`affine_on` adapts a sender into one that completes on a [specified
+scheduler]{.rm}[receiver's scheduler]{.add}. If the algorithm
+determines that the adapted sender already completes on the correct
+scheduler it can avoid any scheduling operation.
+
+[2]{.pnum}
+The name `affine_on` denotes a pipeable sender adaptor object. For
+[a ]{.add} subexpression[s sch and]{.rm} `sndr`, if [`decltype((sch))`
+does not satisfy scheduler, or]{.rm} `decltype((sndr))` does not
+satisfy sender, <code>affine_on(sndr[, sch]{.rm})</code> is ill-formed.
+
+[3]{.pnum}
+Otherwise, the expression <code>affine_on(sndr[, sch]{.rm})</code>
+is expression-equivalent to:
+<code>transform_sender(_get-domain-early_(sndr), _make-sender_(affine_on,
+[sch]{.rm}[env&lt;&gt;()]{.add}, sndr))</code> except that `sndr`
+is evaluated only once.
+
+[4]{.pnum}
+The exposition-only class template <code>_impls-for_</code>
+([exec.snd.expos]) is specialized for `affine_on_t` as follows:
+
+```c++
+namespace std::execution {
+  template<>
+  struct impls-for<affine_on_t> : default-impls {
+    static constexpr auto get-attrs =
+      [](const auto&@[ data]{.rm}]@, const auto& child) noexcept -> decltype(auto) {
+        return @[_JOIN-ENV_(_SCHED-ATTRS_(data),_FWD-ENV_(]{.rm}@get_env(child)@[))]{.rm}@;
+      };
+  };
+}
+```
+
+:::{.add}
+[?]{.pnum}
+Let `sndr` and `ev` be subexpressions such that `Sndr` is
+`decltype((sndr))`. If <code><i>sender-for</i>&lt;Sndr,
+affine_on_t&gt;</code> is `false`, then the expression
+`affine_on.transform_sender(sndr, ev)` is ill-formed; otherwise,
+it is equal to:
+
+```
+auto&[_, _, child] = sndr;
+using child_tag_t = tag_of_t<remove_cvref_t<decltype(child)>>;
+if constexpr (requires(const child_tag_t& t){ t.affine_on(child, ev); })
+    return t.affine_on(child, ev);
+else
+    return write_env(
+      schedule_from(get_start_scheduler(get_env(ev)), write_env(std::move(child), ev)),
+      JOIN-ENV(env{prop{get_stop_token, never_stop_token()}}, ev)
+    );
+```
+
+[Note 1: This causes the `affine_on(sndr)` sender to become
+`schedule_from(sch, sndr)` when it is connected with a receiver
+`rcvr` whose execution domain does not customize `affine_on`,
+for which `get_start_scheduler(get_env(rcvr))` is `sch`, and `affine_on`
+isn't specialized for the child sender.
+end note]
+
+[?]{.pnum}
+_Recommended Practice_: Implementations should provide `affine_on`
+member functions for senders which are known to resume on the
+scheduler where they were started. Example senders for which that
+is the case are `just`, `just_error`, `just_stopped`, `read_env`,
+and `write_env`.
+
+:::
+
+[5]{.pnum}
+Let <code>_out_sndr_</code> be a subexpression denoting a sender
+returned from <code>affine_on(sndr[, sch]{.rm})</code> or one equal
+to such, and let <code>_OutSndr_</code> be the type
+<code>decltype((_out_sndr_))</code>. Let <code>_out_rcvr_</code>
+be a subexpression denoting a receiver that has an environment of
+type `Env` such that <code>sender_in&lt;_OutSndr_, Env&gt;</code>
+is `true`. [Let <code>_sch_</code> be the result of the expression
+<code>get_start_scheduler(get_env(_out_rcvr_))</code>. If the completion
+signatures of <code>schedule(_sch_)</code> contain a different
+completion signature than `set_value_t()` when using an environment
+where `get_stop_token()` returns an `unstoppable_token`, the
+expression <code>connect(<i>out_sndr</i>, <i>out_rcvr</i>)</code> is
+ill-formed.]{.add} Let `op` be an lvalue referring to the operation
+state that results from connecting <code>_out_sndr_</code> to
+<code>_out_rcvr_</code>.  Calling <code>start(_op_)</code> will
+start `sndr` on the current execution agent and execute completion
+operations on <code>_out_rcvr_</code> on an execution agent of the
+execution resource associated with [`sch`]{.rm}[<code>_sch_</code>]{.add}.
+If the current execution resource is the same as the execution
+resource associated with [`sch`]{.rm}[<code>_sch_</code>]{.add},
+the completion operation on <code>_out_rcvr_</code> may be called
+before <code>start(_op_)</code> completes. [If scheduling onto `sch`
+fails, an error completion on <code>_out_rcvr_</code> shall be
+executed on an unspecified execution agent.]{.rm}
+
+::: ednote
+Change [exec.affine.on] to use only one parameter, require an
+infallible scheduler from the receiver, and add a default implementation
+which allows customization of `affine_on` for child senders. If
+`get_start_scheduler` is not introduced the algorithms should use
+`get_scheduler` to get the start scheduler:
 :::
 
 [1]{.pnum}
