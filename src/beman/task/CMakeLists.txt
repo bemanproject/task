@@ -47,7 +47,7 @@ target_sources(
 
 set_target_properties(
     beman.task_headers
-    PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON
+    PROPERTIES VERIFY_INTERFACE_HEADER_SETS ${PROJECT_IS_TOP_LEVEL}
 )
 target_link_libraries(beman.task_headers INTERFACE beman::execution_headers)
 
