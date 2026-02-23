@@ -62,7 +62,7 @@ if(NOT MSVC)
 endif()
 
 set(xALL_EXAMPLES issue-symmetric-transfer)
-set(xALL_EXAMPLES customize)
+set(ALL_EXAMPLES result_example)
 
 message(STATUS "Examples to be built: ${ALL_EXAMPLES}")
 

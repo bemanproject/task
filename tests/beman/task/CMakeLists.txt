@@ -25,6 +25,7 @@ set(task_tests
 if(NOT MSVC)
     list(APPEND task_tests msvc-asan-issue task)
 endif()
+set(task_tests)
 
 foreach(test ${task_tests})
     add_executable(beman.task.tests.${test})

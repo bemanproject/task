@@ -80,8 +80,17 @@ class promise_type
                                             ::beman::execution::read_env_t>) {
             return ::beman::execution::as_awaitable(::std::forward<Sender>(sender), *this);
         } else {
+            std::cout << "promise_type::await_transform: otherwise\n"; //-dk:TODO remove
+            //static_assert(::std::same_as<Sender, decltype(::beman::execution::affine_on(::std::forward<Sender>(sender)))>);
+#if 0
             return ::beman::execution::as_awaitable(::beman::execution::affine_on(::std::forward<Sender>(sender)),
                                                     *this);
+#else
+            auto sndr(::beman::execution::affine_on(::std::forward<Sender>(sender)));
+            std::cout << "got affine_on sender\n"; //-dk:TODO remove
+            return ::beman::execution::as_awaitable(::beman::execution::detail::forward_like<Sender>(sndr),
+                                                    *this);
+#endif
         }
     }
     auto await_transform(::beman::task::detail::change_coroutine_scheduler<scheduler_type> c) {
