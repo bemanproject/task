@@ -28,7 +28,7 @@ include(FetchContent)
 
 FetchContent_Declare(
     execution
-    # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
+    # FETCHCONTENT_SOURCE_DIR_EXECUTION ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
     GIT_TAG 66295d5
     SYSTEM
@@ -47,8 +47,7 @@ add_subdirectory(src/beman/task)
 #===============================================================================
 # NOTE: this must be done before tests! CK
 include(./cmake/beman-install-library.cmake)
-beman_install_library(${CMAKE_PROJECT_NAME} TARGETS ${CMAKE_PROJECT_NAME} beman.task_headers
-    # TODO: DEPENDENCIES [===[beman.inplace_vector 1.0.0]===] [===[beman.scope 0.0.1 EXACT]===] fmt
+beman_install_library(${PROJECT_NAME} TARGETS ${PROJECT_NAME} beman.task_headers
     DEPENDENCIES [===[beman.execution 0.2.0 EXACT]===]
 )
 #===============================================================================
