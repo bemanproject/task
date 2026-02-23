@@ -550,7 +550,7 @@ algorithm a better name.
 # Wording Changes
 
 ::: ednote
-If `get_start_scheduler` is introduced add it to the synopis in
+If `get_start_scheduler` is introduced add it to the synopsis in
 [execution.syn] after `get_scheduler` as follows:
 :::
 
