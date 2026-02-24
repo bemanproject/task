@@ -156,7 +156,7 @@ a coroutine function may want to support:
   <li>Mandate that the allocator is the first argument (`comes_first`): the use is identical.</li>
   <li>
     Support optionally passing an `allocator_arg`/allocator pair
-    (`optional`): the use can be identical but it can also be simplifed
+    (`optional`): the use can be identical but it can also be simplified
     taking advantage of the flexible location.
   </li>
 </ol>
@@ -361,7 +361,7 @@ be the result of `get_env(rcvr)`. The implication is that the `task`'s
     Otherwise `allocator_type(get_allocator(ev))` has to be well-formed.
   </li>
   <li>
-    There is no need to store an <code><i>alloc</i></code> in the 
+    There is no need to store an <code><i>alloc</i></code> in the
     `promise_type`: it can be obtained when requested from `ev` which,
     in turn, can be obtained from `rcvr`. Thus, the ctor for `promise_type`
     isn't needed.
