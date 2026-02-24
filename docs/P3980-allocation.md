@@ -156,7 +156,7 @@ a coroutine function may want to support:
   <li>Mandate that the allocator is the first argument (`comes_first`): the use is identical.</li>
   <li>
     Support optionally passing an `allocator_arg`/allocator pair
-    (`optional`): the use can be identical but it can also be simplied
+    (`optional`): the use can be identical but it can also be simplifed
     taking advantage of the flexible location.
   </li>
 </ol>
@@ -263,7 +263,7 @@ with an allocator equal to `palloc`.
 
 ::: ednote
 
-Change [task.promise] pargraph 17 and 18 to use the correct type:
+Change [task.promise] paragraph 17 and 18 to use the correct type:
 
 :::
 
@@ -302,7 +302,7 @@ with an allocator equal to `palloc`.
 
 ::: ednote
 
-Change [task.promise] pargraph 17 and 18 to use the correct type and don't convert to `allocator_type`:
+Change [task.promise] paragraph 17 and 18 to use the correct type and don't convert to `allocator_type`:
 
 :::
 
@@ -454,7 +454,7 @@ with the corresponding next element of `args`. Otherwise,
 ::: ednote
 
 Change `get_env` to get the allocator from the receiver when needed
-in [[task.promise] p16](https://wg21.link/task.pomise#16):
+in [[task.promise] p16](https://wg21.link/task.promise#16):
 
 :::
 

@@ -30,7 +30,7 @@ FetchContent_Declare(
     execution
     # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG 66295d5
+    GIT_TAG 3650634
     SYSTEM
     FIND_PACKAGE_ARGS
         0.2.0
