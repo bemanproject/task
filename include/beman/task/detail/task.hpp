@@ -52,9 +52,9 @@ class task {
         ::beman::execution::completion_signatures<beman::task::detail::completion_t<Value>,
                                                   ::beman::execution::set_stopped_t()>,
         ::beman::task::detail::error_types_of_t<Env> >;
-    template <typename Ev>
-    auto get_completion_signatures(const Ev&) const& noexcept {
-        return xcompletion_signatures{};
+    template <typename...>
+    static consteval auto get_completion_signatures() noexcept -> xcompletion_signatures {
+        return {};
     }
 
     using promise_type = ::beman::task::detail::promise_type<task, Value, Env>;

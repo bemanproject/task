@@ -7,9 +7,19 @@
 #include <iostream>
 #include <memory>
 #include <new>
+#include <cstdlib>
 #include <utility>
 
 namespace ex = beman::execution;
+
+void* operator new(std::size_t n) {
+    auto p = std::malloc(n);
+    std::cout << "global new(" << n << ")->" << p << "\n";
+    return p;
+}
+void operator delete(void* ptr) noexcept {
+    std::cout << "global operator delete()" << ptr << "\n";
+}
 
 template <typename Task>
 struct defer_frame
@@ -22,6 +32,14 @@ struct defer_frame
             return std::invoke(task, std::allocator_arg, alloc, std::move(a)...);
         });
     }
+    template <typename Alloc, typename... Arg>
+    auto operator()(::std::allocator_arg_t, Alloc alloc, Arg&&... arg) const {
+        return ex::let_value(ex::just(alloc),
+            [&task=this->task, ...a=std::forward<Arg>(arg)](auto alloc) {
+            return std::invoke(task, std::allocator_arg, alloc, std::move(a)...);
+        });
+    }
+    auto operator()(::std::allocator_arg_t) const = delete;
 };
 
 struct env {
@@ -38,12 +56,13 @@ struct resource
     : std::pmr::memory_resource
 {
     void* do_allocate(std::size_t n, std::size_t) override {
-        std::cout << "    resource::allocate(" << n << ")\n";
-        return operator new(n);
+        auto p{std::malloc(n)};
+        std::cout << "    resource::allocate(" << n << ")->" << p << "\n";
+        return p;
     }
     void do_deallocate(void* p, std::size_t n, std::size_t) override {
-        std::cout << "    resource::deallocate(" << n << ")\n";
-        operator delete(p, n);
+        std::cout << "    resource::deallocate(" << p << ", " << n << ")\n";
+        std::free(p);
     }
     bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override{
         return this == &other;
