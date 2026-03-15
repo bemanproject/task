@@ -49,7 +49,7 @@ struct thread_pool {
             std::unique_lock cerberus(mutex);
             condition.wait(cerberus, [this] { return stopped || stack; });
             return this->stack ? std::optional<node*>(std::exchange(this->stack, this->stack->next))
-                                           : std::optional<node*>();
+                               : std::optional<node*>();
         }()) {
             (*n)->run();
         }
