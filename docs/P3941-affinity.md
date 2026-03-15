@@ -1,7 +1,7 @@
 ---
 title: Scheduler Affinity
-document: P3941R2
-date: 2026-02-23
+document: D3941R3
+date: 2026-03-14
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -30,6 +30,10 @@ meet its objective at run-time.
 </p>
 
 # Change History
+
+## R3
+
+- rebase changes on the customization changes [P3826r3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r3.html)
 
 ## R2
 
@@ -550,6 +554,13 @@ algorithm a better name.
 # Wording Changes
 
 ::: ednote
+This wording is relative to [N5032](https://wg21.link/N5032) with
+the changes from
+[P3826r3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r3.html)
+applied.
+:::
+
+::: ednote
 If `get_start_scheduler` is introduced add it to the synopsis in
 [execution.syn] after `get_scheduler` as follows:
 :::
@@ -565,6 +576,8 @@ namespace std::execution {
   struct get_forward_progress_guarantee_t { @_unspecified_@ };
   template<class CPO>
     struct get_completion_scheduler_t { @_unspecified_@ };
+  template<class CPO = void>
+    struct get_completion_domain_t { @_unspecified_@ };
   struct get_await_completion_adaptor_t { @_unspecified_@ };
 
   inline constexpr get_domain_t get_domain{};
@@ -575,6 +588,8 @@ namespace std::execution {
   inline constexpr get_forward_progress_guarantee_t get_forward_progress_guarantee{};
   template<class CPO>
     constexpr get_completion_scheduler_t<CPO> get_completion_scheduler{};
+  template<class CPO = void>
+    constexpr get_completion_domain_t<CPO> get_completion_domain{};
   inline constexpr get_await_completion_adaptor_t get_await_completion_adaptor{};
   ...
 }
@@ -609,13 +624,30 @@ expression `get_start_scheduler(get_env(rcvr))` is well-formed, an operation
 state that is the result of calling `connect(sndr, rcvr)` shall, if
 it is started, be started on an execution agent associated with the
 scheduler `get_start_scheduler(get_env(rcvr))`.
-
 :::
 
 ::: ednote
-If `get_start_scheduler` is introduced change how `on` gets its
-scheduler in [exec.on], i.e., change the use from `get_scheduler`
-to use `get_start_scheduler`:
+
+If `get_start_scheduler` is introduced change
+[[exec.snd.expos](https://wg21.link/exec.snd.expos)] paragraph 8 to have <code><i>SCHED-ENV</i></code>
+use `get_start_scheduler` instead of `get_scheduler`:
+
+:::
+
+[8]{.pnum} <code><i>SCHED-ENV</i>(sch)</code> is an expression `o2` whose type
+satisfies <code><i>queryable</i></code> such that `o2.query(@[get_scheduler]{.rm}@@[get_start_scheduler]{.add}@)`
+is a prvalue with the same type and value as `sch`, and such that
+`o2.query(get_domain)` is expression-equivalent to `sch.query(get_domain)`.
+
+
+::: ednote
+The specification of `on` [[exec.on](https://wg21.link/exec.on)] shouldn't use `write_env` as it does,
+i.e., this change removes these (not removing them was an oversight
+in
+[P3826](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r3.html)).
+In addition, if `get_start_scheduler` is introduced change how `on`
+gets its scheduler in [[exec.on](https://wg21.link/exec.on)], i.e., change the use from
+`get_scheduler` to use `get_start_scheduler`:
 :::
 
 <p>
@@ -623,41 +655,31 @@ to use `get_start_scheduler`:
 </p>
 
 <p>
-The expression `on.transform_sender(out_sndr, env)` has effects equivalent to:
+[8]{.pnum} Otherwise, the expression `on.transform_sender(set_value, out_sndr, env)` has effects equivalent to:
 </p>
 
 ```
 auto&& [_, data, child] = out_sndr;
 if constexpr (scheduler<decltype(data)>) {
   auto orig_sch =
-    @_query-with-default_@(get_@[start_]{.add}@scheduler, env, @_not-a-scheduler_@());
+    call-with-default(@[get_scheduler]{.rm}@@[get_start_scheduler]{.add}@, @_not-a-scheduler_@(), env);
 
-  if constexpr (same_as<decltype(orig_sch), @_not-a-scheduler_@>) {
-    return @_not-a-sender_@{};
-  } else {
-    return continues_on(
-      starts_on(std::forward_like<OutSndr>(data), std::forward_like<OutSndr>(child)),
-      std::move(orig_sch));
-  }
+  return continues_on(
+    starts_on(std::forward_like<OutSndr>(data), std::forward_like<OutSndr>(child)),
+    std::move(orig_sch));
 } else {
   auto& [sch, closure] = data;
-  auto orig_sch = @_query-with-default_@(
-    get_completion_scheduler<set_value_t>,
-    get_env(child),
-    @_query-with-default_@(get_@[start_]{.add}@scheduler, env, @_not-a-scheduler_@()));
+  auto orig_sch = @_call-with-default_@(
+    get_completion_scheduler<set_value_t>, @_not-a-scheduler_@(), get_env(child), env);
 
-  if constexpr (same_as<decltype(orig_sch), @_not-a-scheduler_@>) {
-    return @_not-a-sender_@{};
-  } else {
-    return write_env(
-      continues_on(
-        std::forward_like<OutSndr>(closure)(
-          continues_on(
-            write_env(std::forward_like<OutSndr>(child), @_SCHED-ENV_@(orig_sch)),
-            sch)),
-        orig_sch),
-      @_SCHED-ENV_@(sch));
-  }
+  return continues_on(
+    @[write_env(]{.rm}@
+      std::forward_like<OutSndr>(closure)(
+        continues_on(
+          @[write_env(]{.rm}@std::forward_like<OutSndr>(child)@[,]{.rm}@ @[_SCHED-ENV_(orig_sch))]{.rm}@,
+          sch)),
+      @[_SCHED-ENV_(sch)),]{.rm}@
+    orig_sch);
 }
 ```
 <p>
@@ -770,26 +792,8 @@ satisfy sender, <code>affine_on(sndr[, sch]{.rm})</code> is ill-formed.
 
 [3]{.pnum}
 Otherwise, the expression <code>affine_on(sndr[, sch]{.rm})</code>
-is expression-equivalent to:
-<code>transform_sender(_get-domain-early_(sndr), _make-sender_(affine_on,
-[sch]{.rm}[env&lt;&gt;()]{.add}, sndr))</code> except that `sndr`
-is evaluated only once.
-
-[4]{.pnum}
-The exposition-only class template <code>_impls-for_</code>
-([exec.snd.expos]) is specialized for `affine_on_t` as follows:
-
-```c++
-namespace std::execution {
-  template<>
-  struct impls-for<affine_on_t> : default-impls {
-    static constexpr auto get-attrs =
-      [](const auto&@[ data]{.rm}]@, const auto& child) noexcept -> decltype(auto) {
-        return @[_JOIN-ENV_(_SCHED-ATTRS_(data),_FWD-ENV_(]{.rm}@get_env(child)@[))]{.rm}@;
-      };
-  };
-}
-```
+is expression-equivalent to
+`@_make-sender_@(affine_on, @[sch]{.rm}@@[env&lt;&gt;()]{.add}@, sndr)`.
 
 :::{.add}
 [?]{.pnum}
@@ -806,13 +810,13 @@ if constexpr (requires(const child_tag_t& t){ t.affine_on(child, ev); })
     return t.affine_on(child, ev);
 else
     return write_env(
-      schedule_from(get_start_scheduler(get_env(ev)), write_env(std::move(child), ev)),
+      continues_on(write_env(std::move(child), ev), get_start_scheduler(get_env(ev))),
       JOIN-ENV(env{prop{get_stop_token, never_stop_token()}}, ev)
     );
 ```
 
 [Note 1: This causes the `affine_on(sndr)` sender to become
-`schedule_from(sch, sndr)` when it is connected with a receiver
+`continues_on(sdnr, sch)` when it is connected with a receiver
 `rcvr` whose execution domain does not customize `affine_on`,
 for which `get_start_scheduler(get_env(rcvr))` is `sch`, and `affine_on`
 isn't specialized for the child sender.
@@ -875,26 +879,8 @@ satisfy sender, <code>affine_on(sndr[, sch]{.rm})</code> is ill-formed.
 
 [3]{.pnum}
 Otherwise, the expression <code>affine_on(sndr[, sch]{.rm})</code>
-is expression-equivalent to:
-<code>transform_sender(_get-domain-early_(sndr), _make-sender_(affine_on,
-[sch]{.rm}[env&lt;&gt;()]{.add}, sndr))</code> except that `sndr`
-is evaluated only once.
-
-[4]{.pnum}
-The exposition-only class template <code>_impls-for_</code>
-([exec.snd.expos]) is specialized for `affine_on_t` as follows:
-
-```c++
-namespace std::execution {
-  template<>
-  struct impls-for<affine_on_t> : default-impls {
-    static constexpr auto get-attrs =
-      [](const auto&@[ data]{.rm}]@, const auto& child) noexcept -> decltype(auto) {
-        return @[_JOIN-ENV_(_SCHED-ATTRS_(data),_FWD-ENV_(]{.rm}@get_env(child)@[))]{.rm}@;
-      };
-  };
-}
-```
+is expression-equivalent to
+`@_make-sender_@(affine_on, @[sch]{.rm}@@[env&lt;&gt;()]{.add}@, sndr)`.
 
 :::{.add}
 [?]{.pnum}
@@ -911,13 +897,13 @@ if constexpr (requires(const child_tag_t& t){ t.affine_on(child, ev); })
     return t.affine_on(child, ev);
 else
     return write_env(
-      schedule_from(get_scheduler(get_env(ev)), write_env(std::move(child), ev)),
+      continues_on(write_env(std::move(child), ev), get_scheduler(get_env(ev))),
       JOIN-ENV(env{prop{get_stop_token, never_stop_token()}}, ev)
     );
 ```
 
 [Note 1: This causes the `affine_on(sndr)` sender to become
-`schedule_from(sch, sndr)` when it is connected with a receiver
+`continues_on(sndr, sch)` when it is connected with a receiver
 `rcvr` whose execution domain does not customize `affine_on`,
 for which `get_scheduler(get_env(rcvr))` is `sch`, and `affine_on`
 isn't specialized for the child sender.
@@ -1128,7 +1114,7 @@ In [exec.run.loop.types] change the paragraph defining the completion signatures
 class run-loop-sender;
 ```
 
-[5]{.pnum}
+[6]{.pnum}
 <code><i>run-loop-sender</i></code> is an exposition-only type that satisfies `sender`.
 [Let `E` be the type of an environment. If `unstoppable_token<decltype(get_stop_token(declval<E>()))>` is `true`,
 then ]{.add} <code>completion_signatures_of_t&lt;<i>run-loop-sender</i>[, E]{.add}&gt;</code> is
@@ -1149,7 +1135,7 @@ Otherwise it is
 ```
 :::
 
-[6]{.pnum} An instance of <code><i>run-loop-sender</i></code> remains
+[7]{.pnum} An instance of <code><i>run-loop-sender</i></code> remains
 valid until the end of the lifetime of its associated `run_loop`
 instance.
 
