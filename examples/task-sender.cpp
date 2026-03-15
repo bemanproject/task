@@ -21,8 +21,30 @@ void operator delete(void* ptr) noexcept {
     std::cout << "global operator delete()" << ptr << "\n";
 }
 
-template <typename Task>
+template <typename Mem, typename Self = void>
 struct defer_frame
+{
+    Mem mem;
+    Self self;
+    template <typename... Arg>
+    auto operator()(Arg&&... arg) const {
+        return ex::let_value(ex::read_env(ex::get_allocator),
+            [mem=this->mem, self=this->self, ...a=std::forward<Arg>(arg)](auto alloc) {
+            return std::invoke(mem, self, std::allocator_arg, alloc, std::move(a)...);
+        });
+    }
+    template <typename Alloc, typename... Arg>
+    auto operator()(::std::allocator_arg_t, Alloc alloc, Arg&&... arg) const {
+        return ex::let_value(ex::just(alloc),
+            [&mem=this->mem, self=this->self, ...a=std::forward<Arg>(arg)](auto alloc) {
+            return std::invoke(mem, self, std::allocator_arg, alloc, std::move(a)...);
+        });
+    }
+    auto operator()(::std::allocator_arg_t) const = delete;
+};
+
+template <typename Task>
+struct defer_frame<Task, void>
 {
     Task task;
     template <typename... Arg>
@@ -51,6 +73,24 @@ auto lambda{[](int i, auto&&...)->ex::task<void, env> {
     alloc.deallocate(alloc.allocate(1), 1);
     std::cout << "lambda(" << i << ")\n"; co_return;
 }};
+
+class example {
+    ex::task<void, env> member_(std::allocator_arg_t, std::pmr::polymorphic_allocator<std::byte>, int);
+    ex::task<void, env> const_member_(std::allocator_arg_t, std::pmr::polymorphic_allocator<std::byte>, int) const;
+
+public:
+    auto member(int i) { return defer_frame(&example::member_, this); }
+    auto const_member(int i) { return defer_frame(&example::const_member_, this); }
+};
+
+inline ex::task<void, env> example::member_(std::allocator_arg_t, std::pmr::polymorphic_allocator<std::byte>, int i) {
+    std::cout << "example::member(" << i << ")\n";
+    co_return;
+}
+inline ex::task<void, env> example::const_member_(std::allocator_arg_t, std::pmr::polymorphic_allocator<std::byte>, int i) const {
+    std::cout << "example::const member(" << i << ")\n";
+    co_return;
+}
 
 struct resource
     : std::pmr::memory_resource
