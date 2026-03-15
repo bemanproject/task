@@ -662,7 +662,7 @@ gets its scheduler in [[exec.on](https://wg21.link/exec.on)], i.e., change the u
 auto&& [_, data, child] = out_sndr;
 if constexpr (scheduler<decltype(data)>) {
   auto orig_sch =
-    call-with-default(@[get_scheduler]{.rm}@@[get_start_scheduler]{.add}@, @_not-a-scheduler_@(), env);
+    @_call-with-default_@(@[get_scheduler]{.rm}@@[get_start_scheduler]{.add}@, @_not-a-scheduler_@(), env);
 
   return continues_on(
     starts_on(std::forward_like<OutSndr>(data), std::forward_like<OutSndr>(child)),
@@ -816,7 +816,7 @@ else
 ```
 
 [Note 1: This causes the `affine_on(sndr)` sender to become
-`continues_on(sdnr, sch)` when it is connected with a receiver
+`continues_on(sndr, sch)` when it is connected with a receiver
 `rcvr` whose execution domain does not customize `affine_on`,
 for which `get_start_scheduler(get_env(rcvr))` is `sch`, and `affine_on`
 isn't specialized for the child sender.
