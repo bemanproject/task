@@ -1016,7 +1016,7 @@ template<sender Sender>
   auto await_transform(Sender&& sndr) noexcept;
 ```
 [9]{.pnum}
-_Returns_: If `same_as<inline_scheduler, scheduler_type>` is `true` returns `as_awaitable(​std​::​​forward<Sender>(sndr), *this);` otherwise returns `as_awaitable(affine_on(​std​::​​forward<Sender>(sndr)@[, SCHED(*this)]{.rm}@), *this)`.
+_Returns_: If `same_as<inline_scheduler, scheduler_type>` is `true` returns `as_awaitable(​std​::​​forward<Sender>(sndr), *this);` otherwise returns `as_awaitable(@[transform_sender(]{.add}@affine_on(​std​::​​forward<Sender>(sndr)@[, SCHED(*this)]{.rm}@)@[, get_env(*this))]{.add}@, *this)`.
 
 ::: rm
 ```
@@ -1052,8 +1052,8 @@ explicit task_scheduler(Sch&& sch, Allocator alloc = {});
 ::: add
 [?]{.pnum}
 _Mandates_: Let `e` be an environment and let `E` be `decltype(e)`.
-If `unstoppable_token<decltype(get_stop_token(e))>` is `true`, then
-the type `completion_signatures_of_t<decltype(schedule(sch)), E>`
+If `unstoppable_token<stop_token_of_t<E>>` is `true`, then
+the type `completion_signatures_of_t<schedule_result_t<Sch>, E>`
 only includes `set_value_t()`, otherwise it may additionally include
 `set_stopped_t()`.
 :::
@@ -1091,7 +1091,7 @@ namespace std::execution {
 <code><i>ts-sender</i></code> is an exposition-only class that
 models `sender` ([exec.snd]) and for which
 <code>completion_signatures_of_t&lt;<i>ts-sender</i>[, E]{.add}&gt;</code>
-denotes[:]{.rm}[ `completion_signatures<set_value_t()>` if `unstoppable_token<decltype(get_stop_token(declval<E>()))>` is `true`, and
+denotes[:]{.rm}[ `completion_signatures<set_value_t()>` if `unstoppable_token<stop_token_of_t<E>>` is `true`, and
 otherwise `completion_signatures<set_value_t(), set_stopped_t()>`.]{.add}
 
 ::: rm
@@ -1116,7 +1116,7 @@ class run-loop-sender;
 
 [6]{.pnum}
 <code><i>run-loop-sender</i></code> is an exposition-only type that satisfies `sender`.
-[Let `E` be the type of an environment. If `unstoppable_token<decltype(get_stop_token(declval<E>()))>` is `true`,
+[Let `E` be the type of an environment. If `unstoppable_token<stop_token_of_t<E>>` is `true`,
 then ]{.add} <code>completion_signatures_of_t&lt;<i>run-loop-sender</i>[, E]{.add}&gt;</code> is
 
 ::: rm
