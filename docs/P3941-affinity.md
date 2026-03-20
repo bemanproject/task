@@ -34,6 +34,8 @@ meet its objective at run-time.
 ## R3
 
 - rebase changes on the customization changes [P3826r3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r3.html)
+- use `transform_sender` in `as_awaitable` to locate possible customisation of nested
+    senders in [[exec.as.awaitable](https://wg21.link/exec.as.awaitable#7)]
 
 ## R2
 
@@ -771,6 +773,71 @@ scheduler `get_scheduler(get_env(rcvr))`.
 :::
 
 ::: ednote
+
+Change [[exec.as.awaitable](https://wg21.link/exec.as.awaitable#7)]
+paragraph 7 such that it tries to locate a customisation for
+`as_awaitable` on the transformed nested sender.
+
+:::
+
+[7]{.pnum} `as_awaitable` is a customization point object. For
+subexpressions `expr` and `p` where `p` is an lvalue, `Expr` names
+the type `decltype((expr))` and `Promise` names the type
+`decay_t<decltype((p))>, as_awaitable(expr, p)` is expression-equivalent
+to, except that the evaluations of `expr` and `p` are indeterminately
+sequenced:
+
+<ul>
+<li>
+<p>[7.1]{.pnum}
+`expr.as_awaitable(p)` if that expression is well-formed.
+</p>
+<p>
+Mandates: `@_is-awaitable_@<A, Promise>` is `true`, where `A` is
+the type of the expression above.
+</p>
+</li>
+<li>
+
+[7.?]{.pnum}
+
+[`@_adapt-for-await-completion_@(transform_sender(expr, get_env(p))).as_awaitable(p)`
+if this expression is well-formed, `sender_in<Expr, env_of_t<Promise>>` is `true`,
+and `@_single-sender-value-type_@<Expr, env_of_t<Promise>>` is well-formed.]{.add}
+
+</li>
+<li>
+[7.2]{.pnum} Otherwise, `(void(p), expr)` if
+`decltype(@_GET-AWAITER_@(expr))` satisfies `@_is-awaiter_@<Promise>`.
+</li>
+<li>
+<p>
+[7.3]{.pnum} [Otherwise, `@_sender-awaitable_@{@_adapted-expr_@, p}` if]{.rm}
+</p>
+<p>[`@_has-queryable-await-completion-adaptor_@<Expr>`]{.rm}</p>
+<p>[and]{.rm}</p>
+<p>[`@_awaitable-sender_@<decltype((@_adapted-expr_@)), Promise>`]{.rm}</p>
+<p>
+[are both satisfied, where `@_adapted-expr_@` is
+`get_await_completion_adaptor(get_env(expr))(expr)`, except that
+`expr` is evaluated only once.]{.rm}
+</p>
+</li>
+<li>
+[7.4]{.pnum} Otherwise, [`@_sender-awaitable_@{expr, p}` if
+`@_awaitable-sender_@<Expr, Promise>` is `true`.]{.rm}
+[`@_sender-awaitable_@{@_adapt-for-await-completion_@(transform_sender(expr, get_env(p))), P}` if `sender_in<Expr, env_of_t<Promise>>` is `true` and `@_single-sender-value-type_@<Expr, env_of_t<Promise>>` is well-formed]{.add}
+
+</li>
+<li>[7.5]{.pnum} Otherwise, `(void(p), expr)`.
+</li>
+</ul>
+
+[8]{.pnum} [The expression `@_adapt-for-await-completion_@(s)` is
+`get_await_completion_adaptor(get_env(s))(s)` if that is well-formed,
+and `s` otherwise.]{.add}
+
+::: ednote
 Change [exec.affine.on] to use only one parameter, require an
 infallible scheduler from the receiver, and add a default implementation
 which allows customization of `affine_on` for child senders. If
@@ -810,7 +877,7 @@ if constexpr (requires(const child_tag_t& t){ t.affine_on(child, ev); })
     return t.affine_on(child, ev);
 else
     return write_env(
-      continues_on(write_env(std::move(child), ev), get_start_scheduler(get_env(ev))),
+      continues_on(write_env(std::move(child), ev), get_start_scheduler(ev)),
       JOIN-ENV(env{prop{get_stop_token, never_stop_token()}}, ev)
     );
 ```
@@ -897,7 +964,7 @@ if constexpr (requires(const child_tag_t& t){ t.affine_on(child, ev); })
     return t.affine_on(child, ev);
 else
     return write_env(
-      continues_on(write_env(std::move(child), ev), get_scheduler(get_env(ev))),
+      continues_on(write_env(std::move(child), ev), get_scheduler(ev)),
       JOIN-ENV(env{prop{get_stop_token, never_stop_token()}}, ev)
     );
 ```
@@ -1016,7 +1083,7 @@ template<sender Sender>
   auto await_transform(Sender&& sndr) noexcept;
 ```
 [9]{.pnum}
-_Returns_: If `same_as<inline_scheduler, scheduler_type>` is `true` returns `as_awaitable(​std​::​​forward<Sender>(sndr), *this);` otherwise returns `as_awaitable(@[transform_sender(]{.add}@affine_on(​std​::​​forward<Sender>(sndr)@[, SCHED(*this)]{.rm}@)@[, get_env())]{.add}@, *this)`.
+_Returns_: If `same_as<inline_scheduler, scheduler_type>` is `true` returns `as_awaitable(​std​::​​forward<Sender>(sndr), *this);` otherwise returns `as_awaitable(affine_on(​std​::​​forward<Sender>(sndr)@[, SCHED(*this)]{.rm}@), *this)`.
 
 ::: rm
 ```
