@@ -1,7 +1,7 @@
 ---
 title: Scheduler Affinity
-document: D3941R3
-date: 2026-03-14
+document: P3941R3
+date: 2026-03-19
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
