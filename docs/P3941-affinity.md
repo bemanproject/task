@@ -1016,7 +1016,7 @@ template<sender Sender>
   auto await_transform(Sender&& sndr) noexcept;
 ```
 [9]{.pnum}
-_Returns_: If `same_as<inline_scheduler, scheduler_type>` is `true` returns `as_awaitable(​std​::​​forward<Sender>(sndr), *this);` otherwise returns `as_awaitable(@[transform_sender(]{.add}@affine_on(​std​::​​forward<Sender>(sndr)@[, SCHED(*this)]{.rm}@)@[, get_env(*this))]{.add}@, *this)`.
+_Returns_: If `same_as<inline_scheduler, scheduler_type>` is `true` returns `as_awaitable(​std​::​​forward<Sender>(sndr), *this);` otherwise returns `as_awaitable(@[transform_sender(]{.add}@affine_on(​std​::​​forward<Sender>(sndr)@[, SCHED(*this)]{.rm}@)@[, get_env())]{.add}@, *this)`.
 
 ::: rm
 ```
@@ -1051,7 +1051,7 @@ explicit task_scheduler(Sch&& sch, Allocator alloc = {});
 
 ::: add
 [?]{.pnum}
-_Mandates_: Let `e` be an environment and let `E` be `decltype(e)`.
+_Mandates_: Let `E` be the type of a queryable.
 If `unstoppable_token<stop_token_of_t<E>>` is `true`, then
 the type `completion_signatures_of_t<schedule_result_t<Sch>, E>`
 only includes `set_value_t()`, otherwise it may additionally include
