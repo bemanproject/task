@@ -15,8 +15,8 @@ ex::task<void, Env> test() {
 }
 
 int main() {
-    struct affine_env {};
-    struct inline_env {
+    [[maybe_unused]] struct affine_env {};
+    [[maybe_unused]] struct inline_env {
         using scheduler_type = ex::inline_scheduler;
     };
 #ifndef _MSC_VER
