@@ -1,7 +1,7 @@
 ---
 title: Scheduler Affinity
 document: P3941R3
-date: 2026-03-19
+date: 2026-03-21
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -876,11 +876,19 @@ using child_tag_t = tag_of_t<remove_cvref_t<decltype(child)>>;
 if constexpr (requires(const child_tag_t& t){ t.affine_on(child, ev); })
     return t.affine_on(child, ev);
 else
-    return write_env(
-      continues_on(write_env(std::move(child), ev), get_start_scheduler(ev)),
-      JOIN-ENV(env{prop{get_stop_token, never_stop_token()}}, ev)
-    );
+    return continues_on(child, @_UNSTOPPABLE-SCHEDULER_@(get_start_scheduler(ev)));
 ```
+
+[?]{.pnum} For a subexpression `sch` whose type satisfies `scheduler`,
+let `@_UNSTOPPABLE-SCHEDULER_@(sch)` be an expression `e` whose type
+satisfies `scheduler` such that:
+<ul>
+<li>[?.1]{.pnum} `schedule(e)` is expression-equivalent to `unstoppable(schedule(sch))`.</li>
+<li>[?.2]{.pnum} For any query object `q` and pack of subexpressions `args...`, `e.query(q.args...)`
+is expression-equivalent to `sch.query(q, args...)`.</li>
+<li>[?.3]{.pnum} Let `f` be the subexpression `@_UNSTOPPABLE-SCHEDULER_@(other)`. `e == f`
+is expression-equivalent to `sch == other`.</li>
+</ul>
 
 [Note 1: This causes the `affine_on(sndr)` sender to become
 `continues_on(sndr, sch)` when it is connected with a receiver
@@ -963,11 +971,19 @@ using child_tag_t = tag_of_t<remove_cvref_t<decltype(child)>>;
 if constexpr (requires(const child_tag_t& t){ t.affine_on(child, ev); })
     return t.affine_on(child, ev);
 else
-    return write_env(
-      continues_on(write_env(std::move(child), ev), get_scheduler(ev)),
-      JOIN-ENV(env{prop{get_stop_token, never_stop_token()}}, ev)
-    );
+    return continues_on(child, @_UNSTOPPABLE-SCHEDULER_@(get_scheduler(ev)));
 ```
+
+[?]{.pnum} For a subexpression `sch` whose type satisfies `scheduler`,
+let `@_UNSTOPPABLE-SCHEDULER_@(sch)` be an expression `e` whose type
+satisfies `scheduler` such that:
+<ul>
+<li>[?.1]{.pnum} `schedule(e)` is expression-equivalent to `unstoppable(schedule(sch))`.</li>
+<li>[?.2]{.pnum} For any query object `q` and pack of subexpressions `args...`, `e.query(q.args...)`
+is expression-equivalent to `sch.query(q, args...)`.</li>
+<li>[?.3]{.pnum} Let `f` be the subexpression `@_UNSTOPPABLE-SCHEDULER_@(other)`. `e == f`
+is expression-equivalent to `sch == other`.</li>
+</ul>
 
 [Note 1: This causes the `affine_on(sndr)` sender to become
 `continues_on(sndr, sch)` when it is connected with a receiver
