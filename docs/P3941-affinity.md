@@ -34,7 +34,7 @@ meet its objective at run-time.
 ## R3
 
 - rebase changes on the customization changes [P3826r3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r3.html)
-- use `transform_sender` in `as_awaitable` to locate possible customisation of nested
+- use `transform_sender` in `as_awaitable` to locate possible customization of nested
     senders in [[exec.as.awaitable](https://wg21.link/exec.as.awaitable#7)]
 
 ## R2
@@ -775,7 +775,7 @@ scheduler `get_scheduler(get_env(rcvr))`.
 ::: ednote
 
 Change [[exec.as.awaitable](https://wg21.link/exec.as.awaitable#7)]
-paragraph 7 such that it tries to locate a customisation for
+paragraph 7 such that it tries to locate a customization for
 `as_awaitable` on the transformed nested sender.
 
 :::
@@ -884,18 +884,11 @@ let `@_UNSTOPPABLE-SCHEDULER_@(sch)` be an expression `e` whose type
 satisfies `scheduler` such that:
 <ul>
 <li>[?.1]{.pnum} `schedule(e)` is expression-equivalent to `unstoppable(schedule(sch))`.</li>
-<li>[?.2]{.pnum} For any query object `q` and pack of subexpressions `args...`, `e.query(q.args...)`
+<li>[?.2]{.pnum} For any query object `q` and pack of subexpressions `args...`, `e.query(q, args...)`
 is expression-equivalent to `sch.query(q, args...)`.</li>
 <li>[?.3]{.pnum} Let `f` be the subexpression `@_UNSTOPPABLE-SCHEDULER_@(other)`. `e == f`
 is expression-equivalent to `sch == other`.</li>
 </ul>
-
-[Note 1: This causes the `affine_on(sndr)` sender to become
-`continues_on(sndr, sch)` when it is connected with a receiver
-`rcvr` whose execution domain does not customize `affine_on`,
-for which `get_start_scheduler(get_env(rcvr))` is `sch`, and `affine_on`
-isn't specialized for the child sender.
-end note]
 
 [?]{.pnum}
 _Recommended Practice_: Implementations should provide `affine_on`
@@ -979,18 +972,11 @@ let `@_UNSTOPPABLE-SCHEDULER_@(sch)` be an expression `e` whose type
 satisfies `scheduler` such that:
 <ul>
 <li>[?.1]{.pnum} `schedule(e)` is expression-equivalent to `unstoppable(schedule(sch))`.</li>
-<li>[?.2]{.pnum} For any query object `q` and pack of subexpressions `args...`, `e.query(q.args...)`
+<li>[?.2]{.pnum} For any query object `q` and pack of subexpressions `args...`, `e.query(q, args...)`
 is expression-equivalent to `sch.query(q, args...)`.</li>
 <li>[?.3]{.pnum} Let `f` be the subexpression `@_UNSTOPPABLE-SCHEDULER_@(other)`. `e == f`
 is expression-equivalent to `sch == other`.</li>
 </ul>
-
-[Note 1: This causes the `affine_on(sndr)` sender to become
-`continues_on(sndr, sch)` when it is connected with a receiver
-`rcvr` whose execution domain does not customize `affine_on`,
-for which `get_scheduler(get_env(rcvr))` is `sch`, and `affine_on`
-isn't specialized for the child sender.
-end note]
 
 [?]{.pnum}
 _Recommended Practice_: Implementations should provide `affine_on`
