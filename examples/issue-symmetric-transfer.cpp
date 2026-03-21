@@ -14,12 +14,12 @@ ex::task<void, Env> test() {
     }
 }
 
-int main() {
-    struct affine_env {};
-    struct inline_env {
-        using scheduler_type = ex::inline_scheduler;
-    };
+struct affine_env {};
+struct inline_env {
+    using scheduler_type = ex::inline_scheduler;
+};
 
+int main() {
     [[maybe_unused]] affine_env ae{};
     [[maybe_unused]] inline_env ie{};
 #ifndef _MSC_VER
