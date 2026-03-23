@@ -16,42 +16,39 @@ namespace ex = beman::execution;
 // --- defer_frame turns yields a sender calling a coroutine upon start()   ---
 
 template <typename Mem, typename Self = void>
-struct defer_frame
-{
-    Mem mem;
+struct defer_frame {
+    Mem  mem;
     Self self;
     template <typename... Arg>
     auto operator()(Arg&&... arg) const {
         return ex::let_value(ex::read_env(ex::get_allocator),
-            [mem=this->mem, self=this->self, ...a=std::forward<Arg>(arg)](auto alloc) {
-            return std::invoke(mem, self, std::allocator_arg, alloc, std::move(a)...);
-        });
+                             [mem = this->mem, self = this->self, ... a = std::forward<Arg>(arg)](auto alloc) {
+                                 return std::invoke(mem, self, std::allocator_arg, alloc, std::move(a)...);
+                             });
     }
     template <typename Alloc, typename... Arg>
     auto operator()(::std::allocator_arg_t, Alloc alloc, Arg&&... arg) const {
         return ex::let_value(ex::just(alloc),
-            [&mem=this->mem, self=this->self, ...a=std::forward<Arg>(arg)](auto alloc) {
-            return std::invoke(mem, self, std::allocator_arg, alloc, std::move(a)...);
-        });
+                             [&mem = this->mem, self = this->self, ... a = std::forward<Arg>(arg)](auto alloc) {
+                                 return std::invoke(mem, self, std::allocator_arg, alloc, std::move(a)...);
+                             });
     }
     auto operator()(::std::allocator_arg_t) const = delete;
 };
 
 template <typename Task>
-struct defer_frame<Task, void>
-{
+struct defer_frame<Task, void> {
     Task task;
     template <typename... Arg>
     auto operator()(Arg&&... arg) const {
         return ex::let_value(ex::read_env(ex::get_allocator),
-            [task=this->task, ...a=std::forward<Arg>(arg)](auto alloc) {
-            return std::invoke(task, std::allocator_arg, alloc, std::move(a)...);
-        });
+                             [task = this->task, ... a = std::forward<Arg>(arg)](auto alloc) {
+                                 return std::invoke(task, std::allocator_arg, alloc, std::move(a)...);
+                             });
     }
     template <typename Alloc, typename... Arg>
     auto operator()(::std::allocator_arg_t, Alloc alloc, Arg&&... arg) const {
-        return ex::let_value(ex::just(alloc),
-            [&task=this->task, ...a=std::forward<Arg>(arg)](auto alloc) {
+        return ex::let_value(ex::just(alloc), [&task = this->task, ... a = std::forward<Arg>(arg)](auto alloc) {
             return std::invoke(task, std::allocator_arg, alloc, std::move(a)...);
         });
     }
@@ -65,13 +62,9 @@ void* operator new(std::size_t n) {
     std::cout << "    global new(" << n << ")->" << p << "\n";
     return p;
 }
-void operator delete(void* ptr) noexcept {
-    std::cout << "    global operator delete()" << ptr << "\n";
-}
+void operator delete(void* ptr) noexcept { std::cout << "    global operator delete()" << ptr << "\n"; }
 
-struct resource
-    : std::pmr::memory_resource
-{
+struct resource : std::pmr::memory_resource {
     void* do_allocate(std::size_t n, std::size_t) override {
         auto p{std::malloc(n)};
         std::cout << "    resource::allocate(" << n << ")->" << p << "\n";
@@ -81,10 +74,7 @@ struct resource
         std::cout << "    resource::deallocate(" << p << ", " << n << ")\n";
         std::free(p);
     }
-    bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override{
-        return this == &other;
-    }
-   
+    bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override { return this == &other; }
 };
 
 // ----------------------------------------------------------------------------
@@ -96,12 +86,8 @@ struct alloc_env {
 template <typename T = void>
 using a_task = ex::task<T, alloc_env>;
 
-a_task<int> hidden_async_fun(std::allocator_arg_t, ::allocator_type, int value) {
-    co_return value;
-}
-auto async_fun(int value) {
-    return defer_frame(&hidden_async_fun)(value);
-}
+a_task<int> hidden_async_fun(std::allocator_arg_t, ::allocator_type, int value) { co_return value; }
+auto        async_fun(int value) { return defer_frame(&hidden_async_fun)(value); }
 
 int main() {
     std::cout << std::unitbuf;
@@ -109,32 +95,23 @@ int main() {
     allocator_type alloc(&res);
 
     std::cout << "not setting up an allocator:\n";
-    ex::sync_wait(
-        []()->a_task<>{
-            auto result{co_await async_fun(17)};
-            std::cout << "    result=" << result << "\n";
-        }()
-    );
+    ex::sync_wait([]() -> a_task<> {
+        auto result{co_await async_fun(17)};
+        std::cout << "    result=" << result << "\n";
+    }());
 
     std::cout << "setting up an allocator:\n";
-    ex::sync_wait(
-        ex::write_env(
-            []()->a_task<>{
-                auto result{co_await async_fun(17)};
-                std::cout << "    result=" << result << "\n";
-            }(),
-            ex::env{ex::prop{ex::get_allocator, alloc}}
-        )
-    );
+    ex::sync_wait(ex::write_env(
+        []() -> a_task<> {
+            auto result{co_await async_fun(17)};
+            std::cout << "    result=" << result << "\n";
+        }(),
+        ex::env{ex::prop{ex::get_allocator, alloc}}));
 
     std::cout << "setting up an allocator and using defer_frame:\n";
-    ex::sync_wait(
-        ex::write_env(
-            defer_frame([](auto, auto)->a_task<>{
-                auto result{co_await async_fun(17)};
-                std::cout << "    result=" << result << "\n";
-            })(),
-            ex::env{ex::prop{ex::get_allocator, alloc}}
-        )
-    );
+    ex::sync_wait(ex::write_env(defer_frame([](auto, auto) -> a_task<> {
+                                    auto result{co_await async_fun(17)};
+                                    std::cout << "    result=" << result << "\n";
+                                })(),
+                                ex::env{ex::prop{ex::get_allocator, alloc}}));
 }
