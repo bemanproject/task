@@ -19,7 +19,7 @@ class state_base : public ::beman::task::detail::result_type<::beman::task::deta
                                                              Value,
                                                              ::beman::task::detail::error_types_of_t<Environment>> {
   public:
-    using allocator_type = ::beman::task::detail::allocator_of_t<Environment>;
+    using allocator_type   = ::beman::task::detail::allocator_of_t<Environment>;
     using stop_source_type = ::beman::task::detail::stop_source_of_t<Environment>;
     using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
     using scheduler_type   = ::beman::task::detail::scheduler_of_t<Environment>;

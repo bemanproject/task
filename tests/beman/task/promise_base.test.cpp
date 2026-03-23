@@ -64,7 +64,7 @@ struct state : bt::state_base<T, env<E...>> {
         this->completed = true;
         return std::noop_coroutine();
     }
-    allocator_type do_get_allocator() override { return allocator_type{}; }
+    allocator_type  do_get_allocator() override { return allocator_type{}; }
     stop_token_type do_get_stop_token() override {
         this->token = true;
         return this->source.get_token();

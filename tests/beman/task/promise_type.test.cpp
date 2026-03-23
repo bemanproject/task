@@ -130,7 +130,7 @@ struct test_error : std::exception {
 struct test_task : beman::task::detail::state_base<int, environment> {
 
     using promise_type = beman::task::detail::promise_type<test_task, int, environment>;
-    using allocator_type   = ::beman::task::detail::allocator_of_t<environment>;
+    using allocator_type = ::beman::task::detail::allocator_of_t<environment>;
 
     beman::task::detail::handle<promise_type> handle;
     explicit test_task(beman::task::detail::handle<promise_type> h) : handle(std::move(h)) {}
@@ -155,7 +155,7 @@ struct test_task : beman::task::detail::state_base<int, environment> {
         this->latch.count_down();
         return std::noop_coroutine();
     }
-    allocator_type do_get_allocator() override { return allocator_type{}; }
+    allocator_type  do_get_allocator() override { return allocator_type{}; }
     stop_token_type do_get_stop_token() override { return this->source.get_token(); }
     environment&    do_get_environment() override { return this->env; }
     auto            do_get_scheduler() -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
