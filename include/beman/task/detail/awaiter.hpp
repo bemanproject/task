@@ -55,7 +55,7 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
     constexpr auto await_ready() const noexcept -> bool { return false; }
     struct env_receiver {
         ParentPromise* parent;
-        auto           get_env() const noexcept { return ::beman::execution::get_env(*parent); }
+        auto           get_env() const noexcept { return parent->get_env(); }
     };
     auto await_suspend(::std::coroutine_handle<ParentPromise> parent) noexcept {
         this->state_rep.emplace(env_receiver{&parent.promise()});

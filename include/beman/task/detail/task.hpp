@@ -48,12 +48,16 @@ class task {
   public:
     using task_concept           = int;
     using sender_concept         = ::beman::execution::sender_t;
-    using xcompletion_signatures = ::beman::execution::detail::meta::combine<
+    using completion_signatures = ::beman::execution::detail::meta::combine<
         ::beman::execution::completion_signatures<beman::task::detail::completion_t<Value>,
                                                   ::beman::execution::set_stopped_t()>,
         ::beman::task::detail::error_types_of_t<Env> >;
+    template <typename Ev>
+    auto get_completion_signatures(const Ev&) const& noexcept -> completion_signatures {
+        return {};
+    }
     template <typename...>
-    static consteval auto get_completion_signatures() noexcept -> xcompletion_signatures {
+    static consteval auto get_completion_signatures() noexcept -> completion_signatures {
         return {};
     }
 
