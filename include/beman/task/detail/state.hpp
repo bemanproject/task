@@ -48,8 +48,8 @@ struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::s
         return std::noop_coroutine();
     }
     auto do_get_allocator() -> allocator_type override {
-        if constexpr (requires { ::beman::execution::get_allocator(::beman::execution::get_env(this->receiver)); })
-            return ::beman::execution::get_allocator(::beman::execution::get_env(this->receiver));
+        if constexpr (requires { allocator_type(::beman::execution::get_allocator(::beman::execution::get_env(this->receiver))); })
+            return allocator_type(::beman::execution::get_allocator(::beman::execution::get_env(this->receiver)));
         else
             return allocator_type{};
     }
