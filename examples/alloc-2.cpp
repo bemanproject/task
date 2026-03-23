@@ -15,11 +15,10 @@ namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
-struct tls_allocator
-    : std::pmr::polymorphic_allocator<std::byte> {
+struct tls_allocator : std::pmr::polymorphic_allocator<std::byte> {
     thread_local static std::pmr::memory_resource* alloc;
 
-    tls_allocator(): std::pmr::polymorphic_allocator<std::byte>(alloc) {}
+    tls_allocator() : std::pmr::polymorphic_allocator<std::byte>(alloc) {}
 
     static void set(std::pmr::memory_resource* a) { alloc = a; }
 };
@@ -66,7 +65,7 @@ using a_task = ex::task<T, alloc_env>;
 a_task<int> async_fun(int value) { co_return value; }
 
 int main(int ac, char*[]) {
-    resource       res{};
+    resource res{};
 
     std::cout << "not setting up an allocator:\n";
     ex::sync_wait([ac]() -> a_task<> {
