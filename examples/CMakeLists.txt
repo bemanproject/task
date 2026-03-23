@@ -33,6 +33,7 @@ if(NOT MSVC)
         APPEND ALL_EXAMPLES
         task-sender
         alloc-1
+        alloc-2
         bulk
         c++now-allocator
         c++now-cancel
