@@ -46,9 +46,9 @@ class task {
     using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
 
   public:
-    using task_concept           = int;
-    using sender_concept         = ::beman::execution::sender_t;
-    using completion_signatures  = ::beman::execution::detail::meta::combine<
+    using task_concept          = int;
+    using sender_concept        = ::beman::execution::sender_t;
+    using completion_signatures = ::beman::execution::detail::meta::combine<
         ::beman::execution::completion_signatures<beman::task::detail::completion_t<Value>,
                                                   ::beman::execution::set_stopped_t()>,
         ::beman::task::detail::error_types_of_t<Env> >;
