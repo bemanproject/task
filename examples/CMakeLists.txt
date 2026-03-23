@@ -21,7 +21,6 @@ endif()
 set(TODO tls-scheduler into_optional issue-start-reschedules loop)
 
 set(ALL_EXAMPLES
-    task-sender
     task_scheduler
     rvalue-task
     customize
