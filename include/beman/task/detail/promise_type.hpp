@@ -50,9 +50,6 @@ class promise_type
     using stop_source_type = ::beman::task::detail::stop_source_of_t<Environment>;
     using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
 
-    template <typename... A>
-    promise_type(const A&... a) : allocator(::beman::task::detail::find_allocator<allocator_type>(a...)) {}
-
     constexpr auto initial_suspend() noexcept -> ::std::suspend_always { return {}; }
     constexpr auto final_suspend() noexcept -> ::beman::task::detail::final_awaiter { return {}; }
 
@@ -106,7 +103,7 @@ class promise_type
     }
 
     auto get_scheduler() const noexcept -> scheduler_type { return this->get_state()->get_scheduler(); }
-    auto get_allocator() const noexcept -> allocator_type { return this->allocator; }
+    auto get_allocator() const noexcept -> allocator_type { return this->get_state()->get_allocator(); }
     auto get_stop_token() const noexcept -> stop_token_type { return this->get_state()->get_stop_token(); }
     auto get_environment() const noexcept -> const Environment& {
         assert(this);
@@ -117,7 +114,6 @@ class promise_type
   private:
     using env_t = ::beman::task::detail::promise_env<promise_type>;
 
-    allocator_type                  allocator{};
     ::std::optional<scheduler_type> scheduler{};
 };
 } // namespace beman::task::detail

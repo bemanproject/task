@@ -48,6 +48,7 @@ struct awaiter_op_t<Awaiter, ParentPromise, false> {
 template <typename Value, typename Env, typename OwnPromise, typename ParentPromise>
 class awaiter : public ::beman::task::detail::state_base<Value, Env> {
   public:
+    using allocator_type  = typename ::beman::task::detail::state_base<Value, Env>::allocator_type;
     using stop_token_type = typename ::beman::task::detail::state_base<Value, Env>::stop_token_type;
     using scheduler_type  = typename ::beman::task::detail::state_base<Value, Env>::scheduler_type;
 
@@ -86,6 +87,14 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
     }
     auto actual_complete() -> std::coroutine_handle<> {
         return this->no_completion_set() ? this->parent.promise().unhandled_stopped() : ::std::move(this->parent);
+    }
+    auto do_get_allocator() -> allocator_type override {
+        if constexpr (requires {
+                          ::beman::execution::get_allocator(::beman::execution::get_env(this->parent.promise()));
+                      })
+            return ::beman::execution::get_allocator(::beman::execution::get_env(this->parent.promise()));
+        else
+            return allocator_type{};
     }
     auto do_get_scheduler() -> scheduler_type override { return *this->scheduler; }
     auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
