@@ -89,7 +89,9 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
         return this->no_completion_set() ? this->parent.promise().unhandled_stopped() : ::std::move(this->parent);
     }
     auto do_get_allocator() -> allocator_type override {
-        if constexpr (requires { ::beman::execution::get_allocator(::beman::execution::get_env(this->parent.promise())); })
+        if constexpr (requires {
+                          ::beman::execution::get_allocator(::beman::execution::get_env(this->parent.promise()));
+                      })
             return ::beman::execution::get_allocator(::beman::execution::get_env(this->parent.promise()));
         else
             return allocator_type{};
