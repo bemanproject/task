@@ -1,4 +1,4 @@
-// examples/hello.cpp                                                 -*-C++-*-
+// examples/alloc-1.cpp                                               -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/task.hpp>
@@ -62,7 +62,10 @@ void* operator new(std::size_t n) {
     std::cout << "    global new(" << n << ")->" << p << "\n";
     return p;
 }
-void operator delete(void* ptr) noexcept { std::cout << "    global operator delete()" << ptr << "\n"; }
+void operator delete(void* ptr) noexcept { std::cout << "    global operator delete(" << ptr << ")\n"; }
+void operator delete(void* ptr, std::size_t size) noexcept {
+    std::cout << "    global operator delete(" << ptr << ", " << size << ")\n";
+}
 
 struct resource : std::pmr::memory_resource {
     void* do_allocate(std::size_t n, std::size_t) override {
