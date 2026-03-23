@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/detail/promise_base.hpp>
+#include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/state_base.hpp>
 #include <beman/task/detail/inline_scheduler.hpp>
 #include <beman/execution/execution.hpp>
@@ -48,6 +49,7 @@ struct env {
 template <typename T, typename... E>
 struct state : bt::state_base<T, env<E...>> {
     using Environment      = env<E...>;
+    using allocator_type   = ::beman::task::detail::allocator_of_t<Environment>;
     using stop_source_type = ::beman::task::detail::stop_source_of_t<Environment>;
     using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
     using scheduler_type   = ::beman::task::detail::scheduler_of_t<Environment>;
@@ -62,6 +64,7 @@ struct state : bt::state_base<T, env<E...>> {
         this->completed = true;
         return std::noop_coroutine();
     }
+    allocator_type do_get_allocator() override { return allocator_type{}; }
     stop_token_type do_get_stop_token() override {
         this->token = true;
         return this->source.get_token();

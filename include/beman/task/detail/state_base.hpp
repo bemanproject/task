@@ -6,6 +6,7 @@
 
 #include <beman/task/detail/stop_source.hpp>
 #include <beman/task/detail/scheduler_of.hpp>
+#include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/error_types_of.hpp>
 #include <beman/task/detail/result_type.hpp>
 #include <coroutine>
@@ -18,11 +19,13 @@ class state_base : public ::beman::task::detail::result_type<::beman::task::deta
                                                              Value,
                                                              ::beman::task::detail::error_types_of_t<Environment>> {
   public:
+    using allocator_type = ::beman::task::detail::allocator_of_t<Environment>;
     using stop_source_type = ::beman::task::detail::stop_source_of_t<Environment>;
     using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
     using scheduler_type   = ::beman::task::detail::scheduler_of_t<Environment>;
 
     auto complete() -> std::coroutine_handle<> { return this->do_complete(); }
+    auto get_allocator() -> allocator_type { return this->do_get_allocator(); }
     auto get_stop_token() -> stop_token_type { return this->do_get_stop_token(); }
     auto get_environment() -> Environment& {
         assert(this);
@@ -43,6 +46,7 @@ class state_base : public ::beman::task::detail::result_type<::beman::task::deta
 
     // NOLINTBEGIN(portability-template-virtual-member-function)
     virtual auto do_complete() -> std::coroutine_handle<>                 = 0;
+    virtual auto do_get_allocator() -> allocator_type                     = 0;
     virtual auto do_get_stop_token() -> stop_token_type                   = 0;
     virtual auto do_get_environment() -> Environment&                     = 0;
     virtual auto do_get_scheduler() -> scheduler_type                     = 0;

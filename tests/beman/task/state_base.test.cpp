@@ -3,6 +3,7 @@
 
 #include <beman/task/detail/state_base.hpp>
 #include <beman/task/detail/inline_scheduler.hpp>
+#include <beman/task/detail/allocator_of.hpp>
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
@@ -16,6 +17,7 @@ namespace {
 struct environment {};
 
 struct state : beman::task::detail::state_base<int, environment> {
+    using allocator_type   = ::beman::task::detail::allocator_of_t<environment>;
     stop_source_type source;
     environment      env;
     bool             completed{};
@@ -26,6 +28,7 @@ struct state : beman::task::detail::state_base<int, environment> {
         this->completed = true;
         return std::noop_coroutine();
     }
+    allocator_type do_get_allocator() override { return allocator_type{}; }
     stop_token_type do_get_stop_token() override {
         this->token = true;
         return this->source.get_token();
