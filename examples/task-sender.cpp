@@ -79,8 +79,8 @@ class example {
     ex::task<void, env> const_member_(std::allocator_arg_t, std::pmr::polymorphic_allocator<std::byte>, int) const;
 
 public:
-    auto member(int i) { return defer_frame(&example::member_, this); }
-    auto const_member(int i) { return defer_frame(&example::const_member_, this); }
+    auto member(int i) { return defer_frame(&example::member_, this)(i); }
+    auto const_member(int i) { return defer_frame(&example::const_member_, this)(i); }
 };
 
 inline ex::task<void, env> example::member_(std::allocator_arg_t, std::pmr::polymorphic_allocator<std::byte>, int i) {
