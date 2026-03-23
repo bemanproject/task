@@ -31,6 +31,8 @@ set(ALL_EXAMPLES
 if(NOT MSVC)
     list(
         APPEND ALL_EXAMPLES
+        task-sender
+        alloc-1
         bulk
         c++now-allocator
         c++now-cancel

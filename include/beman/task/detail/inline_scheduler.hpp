@@ -42,6 +42,10 @@ struct inline_scheduler {
     struct sender {
         using sender_concept        = ::beman::execution::sender_t;
         using completion_signatures = ::beman::execution::completion_signatures<::beman::execution::set_value_t()>;
+        template <typename...>
+        static consteval auto get_completion_signatures() noexcept -> completion_signatures {
+            return {};
+        }
 
         env get_env() const noexcept { return {}; }
         template <::beman::execution::receiver Receiver>

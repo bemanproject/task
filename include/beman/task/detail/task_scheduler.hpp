@@ -126,6 +126,10 @@ class task_scheduler {
       public:
         using sender_concept        = ::beman::execution::sender_t;
         using completion_signatures = ::beman::execution::completion_signatures<::beman::execution::set_value_t()>;
+        template <typename...>
+        static consteval auto get_completion_signatures() noexcept -> completion_signatures {
+            return {};
+        }
 
         template <::beman::execution::scheduler S>
         explicit sender(S&& s) : inner_sender(static_cast<concrete<S>*>(nullptr), std::forward<S>(s)) {}
