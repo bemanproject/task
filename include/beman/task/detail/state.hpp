@@ -20,6 +20,7 @@ struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::s
     using operation_state_concept = ::beman::execution::operation_state_t;
     using promise_type            = ::beman::task::detail::promise_type<Task, T, C>;
     using scheduler_type          = typename ::beman::task::detail::state_base<T, C>::scheduler_type;
+    using allocator_type          = typename ::beman::task::detail::state_base<T, C>::allocator_type;
     using stop_source_type        = ::beman::task::detail::stop_source_of_t<C>;
     using stop_token_type         = decltype(std::declval<stop_source_type>().get_token());
     using stop_token_t =
@@ -45,6 +46,12 @@ struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::s
         this->handle.reset();
         this->result_complete(::std::move(this->receiver));
         return std::noop_coroutine();
+    }
+    auto do_get_allocator() -> allocator_type override {
+        if constexpr (requires { ::beman::execution::get_allocator(::beman::execution::get_env(this->receiver)); })
+            return ::beman::execution::get_allocator(::beman::execution::get_env(this->receiver));
+        else
+            return allocator_type{};
     }
     auto do_get_scheduler() -> scheduler_type override { return this->scheduler; }
     auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
