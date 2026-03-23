@@ -129,7 +129,7 @@ struct test_error : std::exception {
 
 struct test_task : beman::task::detail::state_base<int, environment> {
 
-    using promise_type = beman::task::detail::promise_type<test_task, int, environment>;
+    using promise_type   = ::beman::task::detail::promise_type<test_task, int, environment>;
     using allocator_type = ::beman::task::detail::allocator_of_t<environment>;
 
     beman::task::detail::handle<promise_type> handle;
