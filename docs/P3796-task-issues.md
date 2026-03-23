@@ -44,7 +44,7 @@ to be forwarded to plenary for inclusion into C++26 some issues
 were brought up. The concerns range from accidental omissions (e.g.,
 `unhandled_stopped` lacking `noexcept`) via wording issues and
 performance concerns to some design questions. In particular the
-behaviour of the algorithm `affine_on` used to implement scheduler
+behavior of the algorithm `affine_on` used to implement scheduler
 affinity for `task` received some questions which may lead to some
 design changes and/or clarifications. This document discusses the
 various issues raised and proposes ways to address some of them.
@@ -86,7 +86,7 @@ on the currently installed scheduler. Originally, the `task` proposal
 used `continue_on` in the specification but during the SG1 discussion
 it was suggested that a differently named algorithm is used. The
 original idea was that `affine_on(@_sndr_@, @_sch_@)` behaves like
-`continues_on(@_sndr_@, @_sch_@)` but it is customised to avoid
+`continues_on(@_sndr_@, @_sch_@)` but it is customized to avoid
 actual scheduling when it knows that `@_sndr_@` completes on
 `@_sch_@`. When further exploring the direction of using a different
 algorithm than `continues_on` some additional potential for changed
@@ -105,7 +105,7 @@ tools which would allow omission of scheduling, e.g., for `just`
 which completes immediately with a result. While users can't
 necessarily tap into the customisations, yet, implementation could
 use tools like those proposed by [P3206](https://wg21.link/p3206)
-"A sender query for completion behaviour" using a suitable hidden
+"A sender query for completion behavior" using a suitable hidden
 name while the proposal isn't adopted.
 
 ### `affine_on` Default Implementation Lacks a Specification
@@ -134,19 +134,19 @@ the current paragraph 5):
 > except that `sch` is only evaluated once.
 :::
 
-The intention for `affine_on` was to all optimisation/customisation
+The intention for `affine_on` was to all optimization/customization
 in a way reducing the necessary scheduling: if the implementation
 can determine if a sender completed already on the correct execution
 agent it should be allowed to avoid scheduling. That may be achieved
 by using `get_completion_scheduler<set_value_t>` of the sender,
 using (for now implementation specific) queries like those proposed
 by
-[P3206 "A sender query for completion behaviour"](https://wg21.link/P3206),
+[P3206 "A sender query for completion behavior"](https://wg21.link/P3206),
 or some other means. Unfortunately, the specification proposed above
 seems to disallow implementation specific techniques to avoid
 scheduling. Future revisions of the standard could require some of
 the techniques to avoid scheduling assuming the necessary infrastructure
-gets standardised.
+gets standardized.
 
 ### `affine_on` Semantics Are Not Clear
 
@@ -191,7 +191,7 @@ semantics already requires that the resulting sender completes on
 the specified schedulers execution agent. It does not specify that
 it must evaluate a `schedule()` (although that is what the default
 implementation does), and so in theory it already permits an
-implementation/customisation to skip the schedule (e.g. if the child
+implementation/customization to skip the schedule (e.g. if the child
 senders completion scheduler was equal to the target scheduler).
 
 The key semantic that we want here is to specify one of two possible
@@ -222,7 +222,7 @@ The description in the paper at the Hagenberg meeting assumed that
 `task` uses `continues_on` directly to achieve scheduler affinity.
 During the SG1 discussion it was requested that the approach to
 scheduler affinity doesn't use `continues_on` directly but rather
-uses a different algorithm which can be customised separately. This
+uses a different algorithm which can be customized separately. This
 is the algorithm now named `affine_on`. The intention was that
 `affine_on` can avoid scheduling in more cases than `continues_on`.
 
@@ -243,7 +243,7 @@ complete on the execution agent `start(op)` was invoked on. It is upon
 the user to invoke `start(op)` on the correct execution agent.
 
 Another difference to `continues_on` is that `affine_on` can be
-separately customised.
+separately customized.
 
 ### `affine_on`'s Shape May Not Be Correct
 
@@ -316,7 +316,7 @@ correctness, even during exception unwind or due to cancellation.
 For example, destructors may require running on a UI thread in order
 to release UI resources. Or the associated scheduler may be a strand
 (which runs all tasks scheduled to it sequentially) in order to
-synchronise access to shared resources used by destructors.
+synchronize access to shared resources used by destructors.
 
 Thus, if a stop-request has been sent to the coroutine, that
 stop-request should be propagated to child operations so that the
@@ -362,27 +362,27 @@ std::execution::task<void, std::execution::env<>> caller() {
 }
 ```
 
-However, this approach has the downside that this scheduler behaviour
+However, this approach has the downside that this scheduler behavior
 now also applies to all other uses of the scheduler - not just the
 uses required to ensure the coroutines invariant of always resuming
 on the associated context.
 
 Other ways this could be tackled include:
 
-- Making it the default behaviour of `affine_on` to suppress stop
+- Making it the default behavior of `affine_on` to suppress stop
     requests for the scheduling operations. That would mean that
     `affine_on` won't delegate to [`continues_on`]().
-- Somehow making the behaviour a policy decision specified via the
+- Somehow making the behavior a policy decision specified via the
     `Environment` template parameter of the `task`.
-- Somehow using domain-based customisation to allow the coroutine
-    to customise the behaviour of `affine_on`.
+- Somehow using domain-based customization to allow the coroutine
+    to customize the behavior of `affine_on`.
 - Making the `task::promise_type::await_transform` apply this adapter
     to the scheduler passed to `affine_on`. i.e. it calls
     `affine_on(std::forward<Sndr>(sndr), infallible_scheduler{SCHED(*sched)})`.
     Taking this route would mean that the shape of `affine_on` should
     not be changed.
 
-### `affine_on` Customisation For Other Senders
+### `affine_on` Customization For Other Senders
 
 Assuming the the `affine_on` algorithm semantics are changed to
 just require that it completes either inline or on the context of
@@ -402,7 +402,7 @@ For example:
         inline unless the join-sender is wrapped in `affine_on`, in
         which case the resulting `affine_on(scope.join())` sender would
         have the semantics that `scope.join()` has today.
-    - Alternatively, we could just customise `affine_on(scope.join())`
+    - Alternatively, we could just customize `affine_on(scope.join())`
         to be equivalent to `scope.join()`.
 - Other similar senders like those returned from
     `bounded_queue::async_push` and `bounded_queue::async_pop` which
@@ -411,13 +411,13 @@ For example:
 
 The intended use of `affine_on` is to avoid scheduling where the
 algorithm already resumes on a suitable execution agent. However,
-as the proposal was late it didn't require potential optimisations.
+as the proposal was late it didn't require potential optimizations.
 The intend was to leave the specification of the default implementation
 vague enough to let implementations avoid scheduling where they
 know it isn't needed. Making these a requirement is intended for
 future revisions of the standard.
 
-It is also a bit unclear how algorithm customisation is actually
+It is also a bit unclear how algorithm customization is actually
 implemented in practice. Algorithms can advertise a domain via the
 `get_domain` query which can then be used to transform algorithms:
 `transform_sender(dom, sender, env...)`
@@ -441,8 +441,8 @@ Let `affine_on_domain.transform_sender(affsndr, env...)` (where
 - not defined.
 
 A similar approach would be used for other algorithms which can be
-customised. Currently, no algorithm defines the exact ways it can
-be customised in an open form and the intended design for customisations
+customized. Currently, no algorithm defines the exact ways it can
+be customized in an open form and the intended design for customisations
 may be different. The above outlines one possible way.
 
 ## Task Operation
@@ -466,7 +466,7 @@ operation and then resuming the coroutine from the initial suspend
 point inside the `set_value` completion handler of the schedule
 operation. The effect of this would be that every call to a coroutine
 would have to round-trip through the scheduler, which, depending
-on the behaviour of the schedule operation, might relegate it to the
+on the behavior of the schedule operation, might relegate it to the
 back of the schedulers queue, greatly increasing latency of the
 call.
 
@@ -575,15 +575,15 @@ directly through an awaiter interface or using the default
 implementations of `as_awaitable` and `affine_on`. To address the
 different scheduling problems (schedule on `start`, schedule on
 completion, and symmetric transfer) it may be reasonable to mandate
-that `task` customises `affine_on` and that the result of this
-customisation also customises `as_awaitable`.
+that `task` customizes `affine_on` and that the result of this
+customization also customizes `as_awaitable`.
 
 ## Allocation
 
-### Unusual Allocator Customisation
+### Unusual Allocator Customization
 
-The allocator customisation mechanism is inconsistent with the
-design of `generator` allocator customisation: with `generator`,
+The allocator customization mechanism is inconsistent with the
+design of `generator` allocator customization: with `generator`,
 when you don't specify an allocator in the template arg, then you
 can use any `allocator_arg` type. With `task` if no allocator is
 specified in the `Environment` the allocator type defaults to
@@ -711,13 +711,13 @@ On the flip side, the receiver's environment can contain the
 configuration from the user of a work-graph which is likely better
 informed about the best allocator to use.  The allocator from the
 receiver's environment could be forwarded if the `task`'s allocator
-can be initialised with it, e.g., because the `task` use
+can be initialized with it, e.g., because the `task` use
 `std::pmr::polymorphic_allocator<>`.  It isn't clear what should
 happen if the receiver's environment has an allocator which can't
 be converted to the allocator based `task`'s environment: at least
 ignoring a mismatching allocator or producing a compile time error
 are options. It is likely possible to come up with a way to configure
-the desired behaviour using the environment.
+the desired behavior using the environment.
 
 ## Stop Token Management
 
@@ -733,7 +733,7 @@ environment. Necessarily storing a stop source and a stop
 token would increase the size of the promise type by multiple
 pointers.  On top of that, to forward the state of an upstream stop
 token via a new stop source requires registration/deregistration
-of a stop callback which requires dealing with synchronisation.
+of a stop callback which requires dealing with synchronization.
 
 The expected implementation is, indeed, to get the stop token from
 the operation state: when the operation state is created, it is
@@ -743,14 +743,14 @@ operations via the respective receiver's environment. If the type
 is compatible there is no need to store anything beyond the receiver
 from which a stop token can be obtained using the `get_stop_token`
 query when needed. Otherwise, the operation state can store an
-optional stop source which gets initialised and connected to the
+optional stop source which gets initialized and connected to the
 upstream stop token via a stop callback when the first stop token
 is requested.
 
 The exposition-only members are not meant to imply that a corresponding
 object is actually stored or where they are. Instead, they are
 merely meant to talk about the corresponding entities where the
-behaviour of the environment is described. If the current wording
+behavior of the environment is described. If the current wording
 is considered to imply that these entities actually exist or it can
 be misunderstood to imply that, the wording may need some massaging
 possibly using specification macros to refer to the respective
@@ -792,7 +792,7 @@ may imply that a `task` is eagerly started:
 
 In particular the second bullet can be interpreted to mean that the
 task gets resumed immediately. That wouldn't actually work because
-`SCHED(*this)` only gets initialised when the `task` gets `connect`ed
+`SCHED(*this)` only gets initialized when the `task` gets `connect`ed
 to a suitable receiver. The intention of the current specification
 is to establish the invariant that the coroutine is running on the
 correct scheduler when the coroutine is resumed (see discussion of
@@ -808,7 +808,7 @@ resumed immediately, possibly changing the text like this:
 The proposed fix for the issue is to specify that `initial_suspend()`
 always returns `suspend_always{}` and require that `start(...)`
 calls `handle.resume()` to resume the coroutine on the appropriate
-scheduler after `SCHED(*this)` has been initialised. The corresponding
+scheduler after `SCHED(*this)` has been initialized. The corresponding
 change could be
 
 Change [[task.promise] p6](https://eel.is/c++draft/exec#task.promise-6):
@@ -850,7 +850,7 @@ In these cases the order of destruction of objects may be unexpected:
 objects held by the coroutine frame may be destroyed only long after
 the respective completion function was called.
 
-This behaviour is an oversight in the specification and not intentional
+This behavior is an oversight in the specification and not intentional
 at all. Instead, there should be a statement that the coroutine
 frame is destroyed before any of the completion functions is invoked.
 The implication is that the results can't be stored in the promise
@@ -884,12 +884,12 @@ the `task` sender gets `connect`ed to. The implication is that the
 type of the scheduler used by the coroutine needs to be known when
 the `task` is created. To still allow custom schedulers used when
 `connect`ing, the type-erase scheduler `task_scheduler` is used.
-However, that leads to surprises when algorithms are customised
+However, that leads to surprises when algorithms are customized
 for a scheduler as is, e.g., the case for `bulk` when used with a
 `parallel_scheduler`: if `bulk` is `co_await`ed within a coroutine
 using `task_scheduler` it will use the default implementation of
 `bulk` which sequentially executes the work, even if the `task_scheduler`
-was initialised with a `parallel_scheduler` (the exact invocation may
+was initialized with a `parallel_scheduler` (the exact invocation may
 actually be slightly different or need to use `bulk_chunked` or
 `bulk_unchunked` but that isn't the point being made):
 
@@ -913,36 +913,36 @@ ex::sync_wait(ex::write_env(
 
 The two invocations should probably both execute the work in parallel
 but the coroutine version doesn't: it uses the `task_scheduler`
-which doesn't have a specialised version of `bulk` to potentially
+which doesn't have a specialized version of `bulk` to potentially
 delegate in a type-erased form to the underlying scheduler. It is
 straight forward to move the `write_env` wrapper inside the coroutine
 which fixes the problem in this case but this need introduces the
 potential for a subtle performance bug. The problem is sadly not
 limited to a particular scheduler or a particular algorithm: any
-scheduler/algorithm combination which may get specialised can suffer
-from the specialised algorithm not being picked up.
+scheduler/algorithm combination which may get specialized can suffer
+from the specialized algorithm not being picked up.
 
 There are a few ways this problem can be addressed (this list of
 options is almost certainly incomplete):
 
 1. Accept the situation as is and advise users to be careful about
-customised algorithms like `bulk` when using `task_scheduler`.
+customized algorithms like `bulk` when using `task_scheduler`.
 2. Extend the interface of `task_scheduler` to deal with a set of
 algorithms for which it provides a type-erased interface. The
 interface would likely be more constrained and it would use virtual
 dispatch at run-time. However, the set of covered algorithms would
 necessarily be limited in some form.
 3. To avoid the trap, make the use of known algorithms incompatible
-with the use of `task_scheduler`, i.e., "customise" these algorithms
+with the use of `task_scheduler`, i.e., "customize" these algorithms
 for `task_scheduler` such that a compile-time error is produced.
 
 A user who knows that the main purpose of a coroutine is to executed
-an algorithm customised for a certain scheduler can use `task<T,
+an algorithm customized for a certain scheduler can use `task<T,
 E>` with an environment `E` specifying exactly that scheduler type.
 However, this use may be nested within some sender being `co_await`ed
-and users need to be aware that the customisation wouldn't be picked
+and users need to be aware that the customization wouldn't be picked
 up. Any approach I'm currently aware of will have the problem that
-customised versions of an algorithm are not used for algorithms we
+customized versions of an algorithm are not used for algorithms we
 are currently unaware of.
 
 ### `unhandled_stopped()` Isn't `noexcept`
@@ -987,9 +987,9 @@ to `connect` to `co_await`ed sender is described in terms of members
 of the `promise_type::@_state_@` in
 [[task.promise] p15](https://eel.is/c++draft/exec#task.promise-15).
 In particular the `@_state_@` contains a member `@_own-env_@` which
-gets initialised via the upstream receiver's environment (if the
+gets initialized via the upstream receiver's environment (if the
 corresponding expression is valid). As the environment `@_own-env_@`
-is initialised with a temporary, `@_own-env_@` will need to create
+is initialized with a temporary, `@_own-env_@` will need to create
 a copy of whatever it is holding.
 
 As the environment exposed to `co_await`ed senders via the
@@ -1041,11 +1041,11 @@ is constrained to require arguments to satisfy the
 [`sender`](https://eel.is/c++draft/exec.snd.concepts) concept.
 However, this precludes awaiting types that implement the
 [`as_awaitable()`](https://eel.is/c++draft/exec.as.awaitable)
-customisation point but that do not satisfy the
+customization point but that do not satisfy the
 [`sender`](https://eel.is/c++draft/exec.snd.concepts) concept from
 being able to be awaited within a `task` coroutine.
 
-This is inconsistent with the behaviour of the [`with_awaitable_senders`]()
+This is inconsistent with the behavior of the [`with_awaitable_senders`]()
 base class defined in
 [[exec.with.awaitable.senders]](https://eel.is/c++draft/exec.with.awaitable.senders),
 which only requires that the awaited value supports the
@@ -1154,13 +1154,13 @@ running on the same thread replaces used TLS data or the task gets
 resumed on a different thread of a thread pool. In that case it is
 necessary to capture the TLS variables prior to suspending and
 restoring them prior to resuming the coroutine.  There is currently
-no sepcial way to actually do that.
+no special way to actually do that.
 
 The sender/receiver approach to propagating context information
 isn't using TLS but rather the environments accessed via the receiver.
 However, existing software does use TLS and at least for a migration
 period corresponding support may be necessary. One way to implement
-this functionality is using a scheduler adapter with a customised
+this functionality is using a scheduler adapter with a customized
 `affine_on` algorithm:
 
 - When the `affine_on` algorithm is started, it captures the relevant
@@ -1218,7 +1218,7 @@ template <class V>
 void return_value(V&& value); // present only if is_void<T> is false
 ```
 
-As a result it isn't possible to use aggregate initialisation without
+As a result it isn't possible to use aggregate initialization without
 mentioning the type. For example, the following code isn't valid:
 
 ```
@@ -1402,7 +1402,7 @@ are:
     was discussed in the proposal ["Add a Coroutine Task
     Type"](https://wg21.link/p3552).  If a coroutine uses an actually
     scheduling scheduler there is no issue with stack overflow
-    unless an implementation "optimises" `affine_on` to complete
+    unless an implementation "optimizes" `affine_on` to complete
     synchronously in some cases and they don't guard against stack
     overflow, e.g., using a "trampoline scheduler". Also, the danger
     of stack overflow isn't actually specific to `task` but applies
@@ -1531,8 +1531,8 @@ there could be a nicer language level approach in the future.
 
 I think I understand the concerns raised. I don't think that any
 of them warrants removing the `task` from the standard document.
-The argument that we should only standardise perfect design would
-actually lead to hardly anything getting standardised because pretty
+The argument that we should only standardize perfect design would
+actually lead to hardly anything getting standardized because pretty
 much everything is imperfect on some level.
 
 # Conclusion
@@ -1544,7 +1544,7 @@ the change only affects the wording and doesn't affect the design.
 For the issues around `affine_on` there are some potential design
 changes. In particular with respect to the exact semantics of
 `affine_on` the design was possibly unclear. Likewise, explicitly
-specifying that `task` customises `affine_on` and provides an
+specifying that `task` customizes `affine_on` and provides an
 `as_awaitable` function is somewhat in design space. The intention
 was that doing so would be possible with the current specification
 and it just didn't spell out how `co_await` a `task` from a `task`
@@ -1552,7 +1552,7 @@ actually works.
 
 However, some fixes of the specification are needed.
 
-# Acknowledgement
+# Acknowledgment
 
 The issue descriptions are largely based on [this
 draft](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org)

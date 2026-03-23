@@ -7,7 +7,7 @@ project(
     # targets (e.g., library, executable, etc.).
     DESCRIPTION "A Beman library task (coroutine task)"
     LANGUAGES CXX
-    VERSION 0.1.0
+    VERSION 0.2.0
 )
 
 # [CMAKE.SKIP_TESTS]
@@ -28,9 +28,9 @@ include(FetchContent)
 
 FetchContent_Declare(
     execution
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
-    # GIT_REPOSITORY https://github.com/bemanproject/execution
-    # GIT_TAG 07d53da
+    # FETCHCONTENT_SOURCE_DIR_EXECUTION ${CMAKE_SOURCE_DIR}/../execution
+    GIT_REPOSITORY https://github.com/bemanproject/execution
+    GIT_TAG 3650634
     SYSTEM
     FIND_PACKAGE_ARGS
         0.2.0
@@ -46,9 +46,8 @@ add_subdirectory(src/beman/task)
 
 #===============================================================================
 # NOTE: this must be done before tests! CK
-include(./cmake/beman-install-library.cmake)
-beman_install_library(${CMAKE_PROJECT_NAME} TARGETS ${CMAKE_PROJECT_NAME}
-    # TODO: DEPENDENCIES [===[beman.inplace_vector 1.0.0]===] [===[beman.scope 0.0.1 EXACT]===] fmt
+include(infra/cmake/beman-install-library.cmake)
+beman_install_library(${PROJECT_NAME} TARGETS ${PROJECT_NAME} beman.task_headers
     DEPENDENCIES [===[beman.execution 0.2.0 EXACT]===]
 )
 #===============================================================================

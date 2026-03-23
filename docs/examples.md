@@ -25,7 +25,7 @@ coroutines which have most of their behavior in common:
 type-erased scheduler which gets initialized from the receiver's environment's `get_scheduler`), `work3` sets the coroutine's scheduler up to be `inline_scheduler`, effectively causing the coroutine to resume wherever
 the `co_await`'s expression resumed.
 
-The output of the program is someting like the below:
+The output of the program is something like the below:
 
 ```
 before id=0x1fd635f00
@@ -141,7 +141,7 @@ shows examples of how to handle errors within a coroutine:
 <summary>
 <a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-query.cpp'><code>c++now-query.cpp</code></a>
 <a href='https://godbolt.org/z/dPboEeqfv'><img src='https://raw.githubusercontent.com/bemanproject/task/refs/heads/main/docs/compiler-explorer.ico' width='15' height='15'/></a>:
-demo passing a custom envrionment into a <code>task</code>
+demo passing a custom environment into a <code>task</code>
 </summary>
 
 The example
@@ -221,7 +221,7 @@ The example
 <a href='https://github.com/bemanproject/task/blob/main/examples/c%2B%2Bnow-with_error.cpp'><code>c++now-with_error.cpp</code></a>
 shows how a coroutine can be exited reporting an error without throwing an exception. To do so, the coroutine
 uses `co_yield with_error(e)`. By default the `task` only declares `set_error_t(exception_ptr)`. To return
-other errors, an environment declarating a suitable `set_error_t(E)` completion using the `error_types` alias is used.
+other errors, an environment declaring a suitable `set_error_t(E)` completion using the `error_types` alias is used.
 </details>
 
 ## Tools Used By The Examples

@@ -29,7 +29,7 @@ endif()
 foreach(test ${task_tests})
     add_executable(beman.task.tests.${test})
     target_sources(beman.task.tests.${test} PRIVATE ${test}.test.cpp)
-    target_link_libraries(beman.task.tests.${test} PRIVATE beman::task)
+    target_link_libraries(beman.task.tests.${test} PRIVATE beman::task_headers)
     add_test(
         NAME beman.task.tests.${test}
         COMMAND $<TARGET_FILE:beman.task.tests.${test}>

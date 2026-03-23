@@ -62,6 +62,14 @@ Build-time dependencies:
 - `ninja`, `make`, or another CMake-supported build system
   - CMake defaults to "Unix Makefiles" on POSIX systems
 
+### Supported Platforms
+
+| Compiler | Version | C++ Standards | Standard Library |
+|----------|---------|---------------|------------------|
+| GCC      | 15-14   | C++26, C++23  | libstdc++        |
+| Clang    | 21-19   | C++26, C++23  | libc++           |
+| MSVC     | latest  | C++23         | MSVC STL         |
+
 ### How to build beman.task
 
 <!-- TODO: Apply all install related practices from exemplar into this repo. -->

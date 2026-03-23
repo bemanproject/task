@@ -15,7 +15,7 @@ the respective issue):
 - the current spec implies eager start
 - the intent is to establish task's invariant (scheduler affinity)
 - fix: `initial_suspend() -> suspend_always` and constraint start
-- commment: rephrase to clarify it is resumed later
+- comment: rephrase to clarify it is resumed later
 
 => say it always suspend (steal wording from suspend_always) but don't nail down suspend_always + change op_state.start(): calls handle.resume() on an execution agent associated with SCHED(prom)
 
@@ -34,7 +34,7 @@ the respective issue):
 => Change op_state.start() to handle.resume() on the correct execution agent.
 
 - this change isn't really task but could be a different paper
-- we are not saying anything about schedule - we just say where we aer executing
+- we are not saying anything about schedule - we just say where we are executing
 - maybe add a recommended practice about task constructed from task
 - co_await on a task should never call schedule
 
@@ -48,7 +48,7 @@ the respective issue):
 
 => define affine_on such that it start on the receiver's get_scheduler
 - LB: I'm imagining
-- it turns out that task doen't have any default parameters!
+- it turns out that task doesn't have any default parameters!
 - inline_scheduler should have a customization of affine_on and we drop the special case
 - affine_on on the task could be specialized via the task's domain: it just returns the task
 
@@ -58,7 +58,7 @@ the respective issue):
 [unrelated:
 - get_scheduler: where we got started
 - get_delegation_scheduler: where to start new work
-- get_completion_scheduler: where things complet
+- get_completion_scheduler: where things complete
 ]
 
 ## No symmetric transfer
@@ -195,7 +195,7 @@ the respective issue):
 
 - the exposition-only member for `stop_token` require default constructible
 - fix: don't have it: get it from env or stop source
-- comment: I think that is alrady allowed
+- comment: I think that is already allowed
 
 ## coro frame destroyed too late
 
@@ -251,7 +251,7 @@ the respective issue):
     - [x] [`task` awaiting another task should not reschedule on resumption](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-awaiting-another-task-should-not-reschedule-on-resumption)
     - [x] [`task` coroutine awaiting another task does not use symmetric-transfer](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-coroutine-awaiting-another-task-does-not-use-symmetric-transfer) - (Dietmar’s paper)
 - [x] [`task` allocation strategy](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#task-allocator-customisation-behaviour-is-inconsistent-with-generator)
-    - [x] [`task` allocator customisation is more permissive](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#handling-of-allocator_arg-is-more-permissive-than-for-stdgenerator)
+    - [x] [`task` allocator customization is more permissive](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#handling-of-allocator_arg-is-more-permissive-than-for-stdgenerator)
     - [x] [`task` environment’s `allocator_type` hides the parent environment’s `get_allocator`](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#minor-task-environments-allocator_type-overrides-the-parent-environments-get_allocator)
     - [x] [for `generator` an `allocator_arg, allocator` can always be used](https://github.com/lewissbaker/papers/blob/master/isocpp/task-issues.org#behaviour-when-the-tasks-environment-type-does-not-specify-an-allocator_type)
 
