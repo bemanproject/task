@@ -1,7 +1,7 @@
 ---
 title: Task's Allocator Use
-document: D3980R0
-date: 2026-02-22
+document: P3980R1
+date: 2026-03-24
 audience:
     - Library Evolution Working Group (LEWG)
     - Library Working Group (LWG)
@@ -211,7 +211,7 @@ Change [task.promise] paragraphs 17 and 18:
 void* operator new(size_t size);
 ```
 
-[??]{.pnum} _Effects_: equivalent to `operator new(size, allocator_arg, allocator_type());`
+[??]{.pnum} _Effects_: Equivalent to `return operator new(size, allocator_arg, allocator_type());`
 
 :::
 
@@ -304,7 +304,7 @@ template<receiver Rcvr>
 
 ::: add
 
-[?]{.pnum} _Mandates_: At least one of the espressions `allocator_type(get_allocator(get_env(rcvr)))` or `allocator_type()` is well-formed.
+[?]{.pnum} _Mandates_: At least one of the expressions `allocator_type(get_allocator(get_env(rcvr)))` and `allocator_type()` is well-formed.
 
 :::
 
