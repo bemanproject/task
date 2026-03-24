@@ -211,7 +211,7 @@ Change [task.promise] paragraphs 17 and 18:
 void* operator new(size_t size);
 ```
 
-[??]{.pnum} _Returns_: `operator new(size, allocator_arg, allocator<byte>());`
+[??]{.pnum} _Effects_: equivalent to `operator new(size, allocator_arg, allocator_type());`
 
 :::
 
@@ -249,89 +249,6 @@ _Mandates_:
 _Mandates_: `allocator_traits<PAlloc>​::​pointer` is a pointer type.
 
 :::
-
-[19]{.pnum} _Effects_: Initializes an allocator `palloc` of type
-`PAlloc` with `alloc`. Uses `palloc` to allocate storage for the
-smallest array of `U` sufficient to provide storage for a coroutine
-state of size `size`, and unspecified additional state necessary to
-ensure that `operator delete` can later deallocate this memory block
-with an allocator equal to `palloc`.
-
-[20]{.pnum} _Returns_: A pointer to the allocated storage.
-
-## Wording Change B: Fix type names, allow flexible position, use for env
-
-::: ednote
-
-Change [task.promise] paragraph 17 and 18 to use the correct type:
-
-:::
-
-```
-template<class... Args>
-  void* operator new(size_t size, Args&&... args);
-```
-
-[17]{.pnum} If there is no parameter with type `@[allocator_arg_t]{.rm}@@[const]{.add}@ @[allocator_arg_t&]{.add}@`
-then let `alloc` be `allocator_type()`. Otherwise, let `arg_next`
-be the parameter following the first `@[allocator_arg_t]{.rm}@@[const]{.add}@ @[allocator_arg_t&]{.add}@` parameter,
-and let `alloc` be `allocator_type(arg_next)`. Let `PAlloc`
-be `allocator_traits<allocator_type>::template
-rebind_alloc<U>`, where `U` is an unspecified type whose size and
-alignment are both `__STDCPP_DEFAULT_NEW_ALIGNMENT__`.
-
-[18]{.pnum}
-_Mandates_:
-
-<ul>
-<li>[18.1]{.pnum} The first parameter of type `@[allocator_arg_t]{.rm}@@[const]{.add}@ @[allocator_arg_t&]{.add}@` (if any) is not the last parameter.</li>
-<li>[18.2]{.pnum} `allocator_type(arg_next)` is a valid expression if there is a parameter of type `allocator_arg_t`.</li>
-<li>[18.3]{.pnum} `allocator_traits<PAlloc>​::​pointer` is a pointer type.</li>
-</ul>
-
-[19]{.pnum} _Effects_: Initializes an allocator `palloc` of type
-`PAlloc` with `alloc`. Uses `palloc` to allocate storage for the
-smallest array of `U` sufficient to provide storage for a coroutine
-state of size `size`, and unspecified additional state necessary to
-ensure that `operator delete` can later deallocate this memory block
-with an allocator equal to `palloc`.
-
-[20]{.pnum} _Returns_: A pointer to the allocated storage.
-
-## Wording Change C: Fix type names, allow flexible position, don't use for env
-
-::: ednote
-
-Change [task.promise] paragraph 17 and 18 to use the correct type and don't convert to `allocator_type`:
-
-:::
-
-```
-template<class... Args>
-  void* operator new(size_t size, Args&&... args);
-```
-
-[17]{.pnum} If there is no parameter with type `@[allocator_arg_t]{.rm}@@[const]{.add}@ @[allocator_arg_t&]{.add}@`
-then let `alloc` be `@[allocator_type()]{.rm}@@[allocator<byte>()]{.add}@`. Otherwise, let `@[arg_next]{.rm}@@[alloc]{.add}@`
-be the parameter following the first `@[allocator_arg_t]{.rm}@@[const]{.add}@ @[allocator_arg_t&]{.add}@`
-parameter[, and let `alloc` be `allocator_type(arg_next)`]{.rm}. Let `PAlloc`
-be `allocator_traits<@[allocator_type]{.rm}@@[remove_cvref_t<decltype(alloc)>]{.add}@>::template rebind_alloc<U>`, where `U` is an unspecified type whose size and
-alignment are both `__STDCPP_DEFAULT_NEW_ALIGNMENT__`.
-
-[18]{.pnum}
-_Mandates_:
-
-<ul>
-<li>[18.1]{.pnum} The first parameter of type `@[allocator_arg_t]{.rm}@@[const]{.add}@ @[allocator_arg_t&]{.add}@` (if any) is not the last parameter.</li>
-
-<li>
-::: rm
-[18.2]{.pnum} `allocator_type(arg_next)` is a valid expression if there is a parameter of type `allocator_arg_t`.
-:::
-</li>
-
-<li>[18.3]{.pnum} `allocator_traits<PAlloc>​::​pointer` is a pointer type.</li>
-</ul>
 
 [19]{.pnum} _Effects_: Initializes an allocator `palloc` of type
 `PAlloc` with `alloc`. Uses `palloc` to allocate storage for the
@@ -387,7 +304,7 @@ template<receiver Rcvr>
 
 ::: add
 
-[?]{.pnum} _Mandates_: `allocator_type(get_allocator(get_env(rcvr)))` is well-formed or `allocator_type()` is well-formed.
+[?]{.pnum} _Mandates_: At least one of the espressions `allocator_type(get_allocator(get_env(rcvr)))` or `allocator_type()` is well-formed.
 
 :::
 
