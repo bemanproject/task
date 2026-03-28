@@ -123,6 +123,10 @@ struct thread_context {
         struct sender {
             using sender_concept        = ex::sender_t;
             using completion_signatures = ex::completion_signatures<ex::set_value_t()>;
+            template <typename Env>
+            static consteval auto get_completion_signatures() -> completion_signatures {
+                return {};
+            }
 
             thread_context*          ctxt;
             thread_context::complete cmpl;
@@ -149,6 +153,7 @@ struct thread_context {
         this->condition.notify_one();
     }
 };
+static_assert(::beman::task::detail::infallible_scheduler<thread_context::scheduler, ex::env<>>);
 
 enum class stop_result : char { none, success, failure, stopped };
 template <typename Token>
