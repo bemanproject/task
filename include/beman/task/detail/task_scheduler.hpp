@@ -5,6 +5,7 @@
 #define INCLUDED_BEMAN_TASK_DETAIL_task_scheduler
 
 #include <beman/execution/execution.hpp>
+#include <beman/task/detail/infallible_scheduler.hpp>
 #include <beman/task/detail/poly.hpp>
 #include <new>
 #include <optional>
@@ -174,7 +175,8 @@ class task_scheduler {
 
     template <typename S, typename Allocator = ::std::allocator<void>>
         requires(not std::same_as<task_scheduler, std::remove_cvref_t<S>>) &&
-                ::beman::execution::scheduler<::std::remove_cvref_t<S>>
+                ::beman::execution::scheduler<::std::remove_cvref_t<S>> &&
+                ::beman::task::detail::infallible_scheduler<::std::remove_cvref_t<S>, ::beman::execution::env<>>
     explicit task_scheduler(S&& s, Allocator = {})
         : scheduler(static_cast<concrete<std::decay_t<S>>*>(nullptr), std::forward<S>(s)) {}
     task_scheduler(task_scheduler&&)      = default;

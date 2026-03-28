@@ -1,7 +1,7 @@
 ---
 title: Scheduler Affinity
-document: D3941R4
-date: 2026-03-25
+document: P3941R4
+date: 2026-03-26
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -604,7 +604,7 @@ Add an exposition only concept `@_infallible-scheduler_@` to
 ::: add
 [8]{.pnum} The exposition-only `@_infallible-scheduler_@` concept defines
 the requirements of a scheduler type whose `schedule` asynchronous operation
-can only complete with `set_value` unless stop is requested:
+can only complete with `set_value` unless stop can be requested:
 
 ```
 template <class Sch, class Env>
@@ -781,7 +781,7 @@ to the operation state that results from connecting `out_sndr` with
 `out_rcvr`. Calling `start(op)` shall
 <ul>
 <li> [9.1]{.pnum} remember the current
-scheduler@[,]{.rm}@@[ which is obtained by]{.add}@ `@[get_scheduler]{.rm}@@[get_start_scheduler]{.add}@(get_env(rcvr))`;</li>
+scheduler[,]{.rm}[ which is obtained by]{.add} `@[get_scheduler]{.rm}@@[get_start_scheduler]{.add}@(get_env(rcvr))`;</li>
 <li> [9.2]{.pnum} start `sndr` on an execution agent belonging to `sch`'s associated
 execution resource;</li>
 <li> [9.3]{.pnum}

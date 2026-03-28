@@ -5,6 +5,7 @@
 #define INCLUDED_BEMAN_TASK_DETAIL_INLINE_SCHEDULER
 
 #include <beman/execution/execution.hpp>
+#include <beman/task/detail/infallible_scheduler.hpp>
 #include <utility>
 #include <type_traits>
 
@@ -60,6 +61,7 @@ struct inline_scheduler {
     bool             operator==(const inline_scheduler&) const = default;
 };
 static_assert(::beman::execution::scheduler<inline_scheduler>);
+static_assert(::beman::execution::scheduler<::beman::task::detail::inline_scheduler>);
 } // namespace beman::task::detail
 
 // ----------------------------------------------------------------------------
