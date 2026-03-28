@@ -568,7 +568,7 @@ algorithm a better name.
 
 During the LEWG discussion on 2026-03-24 it was brought up that
 `get_start_scheduler` shouldn't fallback to `get_scheduler`. To
-make proper use of `get_start_scheduler` without that fallback, 
+make proper use of `get_start_scheduler` without that fallback,
 algorithms current using `get_scheduler` also need to use
 `get_start_scheduler` and advertise it appropriately:
 
@@ -579,7 +579,7 @@ algorithms current using `get_scheduler` also need to use
   `get_scheduler`. Since it names the type, the type is also
   renamed `start_scheduler_type`.
 - `sync_wait` advertises its scheduler using both `get_scheduler`
-  and `get_start_scheduler`. 
+  and `get_start_scheduler`.
 
 # Wording Changes
 
@@ -612,11 +612,11 @@ concept @_infallible-scheduler_@ =
     scheduler<Sch> &&
     (same_as<completion_signatures<set_value_t()>,
              completion_signatures_of_t<decltype(schedule(declval<Sch>())), Env>
-            > || 
+            > ||
      (!unstoppable_token<stop_token_of_t<Env>> && (
       same_as<completion_signatures<set_value_t(), set_stopped_t()>,
              completion_signatures_of_t<decltype(schedule(declval<Sch>())), Env>
-            > || 
+            > ||
      same_as<completion_signatures<set_stopped_t(), set_value_t()>,
              completion_signatures_of_t<decltype(schedule(declval<Sch>())), Env>
             >)
