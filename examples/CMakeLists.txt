@@ -34,7 +34,6 @@ if(NOT MSVC)
         task-sender
         alloc-1
         alloc-2
-        bulk
         c++now-allocator
         c++now-cancel
         c++now-errors
@@ -65,7 +64,7 @@ if(NOT MSVC)
 endif()
 
 set(xALL_EXAMPLES issue-symmetric-transfer)
-set(xALL_EXAMPLES customize)
+set(ALL_EXAMPLES customize)
 
 message(STATUS "Examples to be built: ${ALL_EXAMPLES}")
 

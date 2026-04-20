@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/detail/task_scheduler.hpp>
-#include <beman/task/detail/inline_scheduler.hpp>
 #include <beman/execution/execution.hpp>
 #include <beman/execution/stop_token.hpp>
 #include <atomic>

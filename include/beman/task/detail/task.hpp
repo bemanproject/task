@@ -13,7 +13,6 @@
 #include <beman/task/detail/completion.hpp>
 #include <beman/task/detail/scheduler_of.hpp>
 #include <beman/task/detail/stop_source.hpp>
-#include <beman/task/detail/inline_scheduler.hpp>
 #include <beman/task/detail/final_awaiter.hpp>
 #include <beman/task/detail/handle.hpp>
 #include <beman/task/detail/sub_visit.hpp>

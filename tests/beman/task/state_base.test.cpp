@@ -1,14 +1,15 @@
 // tests/beman/task/state_base.test.cpp                               -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <beman/execution/execution.hpp>
 #include <beman/task/detail/state_base.hpp>
-#include <beman/task/detail/inline_scheduler.hpp>
 #include <beman/task/detail/allocator_of.hpp>
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
 #include <cassert>
 
+namespace ex = beman::execution;
 namespace bt = beman::task::detail;
 
 // ----------------------------------------------------------------------------
@@ -37,8 +38,18 @@ struct state : beman::task::detail::state_base<int, environment> {
         this->got_environment = true;
         return this->env;
     }
-    auto do_get_scheduler() -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
-    auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
+    static_assert(::beman::execution::scheduler<ex::inline_scheduler>);
+    static_assert(::beman::execution::sender_in<decltype(beman::execution::schedule(std::declval<ex::inline_scheduler>())), beman::execution::env<>>);
+    static_assert(
+        std::same_as<
+            ::beman::execution::completion_signatures<ex::set_value_t()>,
+            ::beman::execution::completion_signatures_of_t<decltype(beman::execution::schedule(std::declval<ex::inline_scheduler>())), beman::execution::env<>>
+        >
+    );
+    static_assert(::beman::task::detail::completes_with<ex::inline_scheduler, ex::env<>, ex::set_value_t()>);
+    static_assert(::beman::task::detail::infallible_scheduler<ex::inline_scheduler, ex::env<>>);
+    auto do_get_scheduler() -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
+    auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
 };
 } // namespace
 

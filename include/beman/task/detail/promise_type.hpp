@@ -12,7 +12,6 @@
 #include <beman/task/detail/final_awaiter.hpp>
 #include <beman/task/detail/find_allocator.hpp>
 #include <beman/task/detail/handle.hpp>
-#include <beman/task/detail/inline_scheduler.hpp>
 #include <beman/task/detail/promise_base.hpp>
 #include <beman/task/detail/result_type.hpp>
 #include <beman/task/detail/scheduler_of.hpp>
