@@ -52,7 +52,7 @@ beman_install_library(${PROJECT_NAME} TARGETS ${PROJECT_NAME} beman.task_headers
 )
 #===============================================================================
 
-nable_testing()
+enable_testing()
 
 if(BEMAN_TASK_BUILD_TESTS)
     add_subdirectory(tests/beman/task)
