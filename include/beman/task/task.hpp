@@ -39,8 +39,8 @@ using scheduler_of_t = ::beman::task::detail::scheduler_of_t<Context>;
 template <typename Context>
 using stop_source_of_t = ::beman::task::detail::stop_source_of_t<Context>;
 
-using task_scheduler   = ::beman::task::detail::task_scheduler;
-using into_optional_t  = ::beman::task::detail::into_optional_t;
+using task_scheduler  = ::beman::task::detail::task_scheduler;
+using into_optional_t = ::beman::task::detail::into_optional_t;
 using ::beman::task::detail::into_optional;
 
 using ::beman::task::detail::change_coroutine_scheduler;
