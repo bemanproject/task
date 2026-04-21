@@ -14,11 +14,11 @@ template <typename Promise>
 struct promise_env {
     const Promise* promise;
 
-    auto query(const ::beman::execution::get_allocator_t&) const noexcept -> typename Promise::allocator_type {
-        return this->promise->get_allocator();
-    }
     auto query(const ::beman::execution::get_scheduler_t&) const noexcept -> typename Promise::scheduler_type {
         return this->promise->get_scheduler();
+    }
+    auto query(const ::beman::execution::get_allocator_t&) const noexcept -> typename Promise::allocator_type {
+        return this->promise->get_allocator();
     }
     auto query(const ::beman::execution::get_stop_token_t&) const noexcept -> typename Promise::stop_token_type {
         return this->promise->get_stop_token();

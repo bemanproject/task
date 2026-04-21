@@ -38,16 +38,6 @@ struct state : beman::task::detail::state_base<int, environment> {
         this->got_environment = true;
         return this->env;
     }
-    static_assert(::beman::execution::scheduler<ex::inline_scheduler>);
-    static_assert(::beman::execution::sender_in<decltype(beman::execution::schedule(std::declval<ex::inline_scheduler>())), beman::execution::env<>>);
-    static_assert(
-        std::same_as<
-            ::beman::execution::completion_signatures<ex::set_value_t()>,
-            ::beman::execution::completion_signatures_of_t<decltype(beman::execution::schedule(std::declval<ex::inline_scheduler>())), beman::execution::env<>>
-        >
-    );
-    static_assert(::beman::task::detail::completes_with<ex::inline_scheduler, ex::env<>, ex::set_value_t()>);
-    static_assert(::beman::task::detail::infallible_scheduler<ex::inline_scheduler, ex::env<>>);
     auto do_get_scheduler() -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
     auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
 };

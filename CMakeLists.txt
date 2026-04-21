@@ -29,9 +29,8 @@ include(FetchContent)
 FetchContent_Declare(
     execution
     # FETCHCONTENT_SOURCE_DIR_EXECUTION ${CMAKE_SOURCE_DIR}/../execution
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
-    #GIT_REPOSITORY https://github.com/bemanproject/execution
-    #GIT_TAG b782a12
+    GIT_REPOSITORY https://github.com/bemanproject/execution
+    GIT_TAG cad563e
     SYSTEM
     FIND_PACKAGE_ARGS
         0.2.0
@@ -53,7 +52,7 @@ beman_install_library(${PROJECT_NAME} TARGETS ${PROJECT_NAME} beman.task_headers
 )
 #===============================================================================
 
-enable_testing()
+nable_testing()
 
 if(BEMAN_TASK_BUILD_TESTS)
     add_subdirectory(tests/beman/task)
