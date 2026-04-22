@@ -8,7 +8,6 @@ set(task_tests
     final_awaiter
     find_allocator
     handle
-    inline_scheduler
     lazy
     poly
     promise_base

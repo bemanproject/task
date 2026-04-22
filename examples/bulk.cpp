@@ -7,8 +7,6 @@
 
 namespace ex = beman::execution;
 namespace beman::execution {
-inline constexpr struct par_t {
-} par{};
 using parallel_scheduler = inline_scheduler;
 } // namespace beman::execution
 

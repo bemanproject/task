@@ -25,7 +25,6 @@ target_sources(
                 ${PROJECT_SOURCE_DIR}/include/beman/task/detail/final_awaiter.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/task/detail/find_allocator.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/task/detail/handle.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/task/detail/inline_scheduler.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/task/detail/into_optional.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/task/detail/logger.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/task/detail/poly.hpp

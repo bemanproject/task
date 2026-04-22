@@ -4,7 +4,6 @@
 #include <beman/task/detail/promise_base.hpp>
 #include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/state_base.hpp>
-#include <beman/task/detail/inline_scheduler.hpp>
 #include <beman/execution/execution.hpp>
 #include <beman/execution/stop_token.hpp>
 #ifdef NDEBUG
@@ -73,8 +72,8 @@ struct state : bt::state_base<T, env<E...>> {
         this->got_environment = true;
         return this->ev;
     }
-    auto do_get_scheduler() -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
-    auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
+    auto do_get_scheduler() -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
+    auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
 };
 
 template <typename T>

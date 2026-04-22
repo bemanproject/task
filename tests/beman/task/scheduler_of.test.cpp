@@ -3,7 +3,6 @@
 
 #include <beman/task/detail/scheduler_of.hpp>
 #include <beman/task/detail/task_scheduler.hpp>
-#include <beman/task/detail/inline_scheduler.hpp>
 #include <concepts>
 #ifdef NDEBUG
 #undef NDEBUG
@@ -16,7 +15,7 @@ namespace {
 struct no_scheduler {};
 
 struct defines_scheduler {
-    using scheduler_type = beman::task::detail::inline_scheduler;
+    using scheduler_type = beman::execution::inline_scheduler;
 };
 
 struct non_scheduler {};
@@ -29,6 +28,6 @@ int main() {
     static_assert(
         std::same_as<beman::task::detail::task_scheduler, beman::task::detail::scheduler_of_t<no_scheduler>>);
     static_assert(
-        std::same_as<beman::task::detail::inline_scheduler, beman::task::detail::scheduler_of_t<defines_scheduler>>);
+        std::same_as<beman::execution::inline_scheduler, beman::task::detail::scheduler_of_t<defines_scheduler>>);
     // using type = beman::task::detail::scheduler_of_t<defines_non_scheduler>;
 }
