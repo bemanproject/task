@@ -23,8 +23,6 @@ repos:
     rev: v0.3.1
     hooks:
     - id: beman-tidy
-      args: [".", "--verbose"]
-
 
   # Clang-format for C++
   # This brings in a portable version of clang-format.
