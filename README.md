@@ -17,6 +17,8 @@ the behavior of the coroutine. By default it can be left alone.
 
 **Implements**: `std::execution::task` proposed in [Add a Coroutine Lazy Type (P3552)](https://wg21.link/P3552).
 
+**Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#under-development-and-not-yet-ready-for-production-use)
+
 ## License
 
 `beman.task` is licensed under the Apache License v2.0 with LLVM Exceptions.
