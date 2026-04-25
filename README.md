@@ -1,8 +1,8 @@
+# beman.task: Beman Library Implementation of `task` (P3552)
+
 <!--
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 -->
-
-# beman.task: Beman Library Implementation of `task` (P3552)
 
 ![Continuous Integration Tests](https://github.com/bemanproject/task/actions/workflows/ci_tests.yml/badge.svg)
 ![Target Standard](https://github.com/bemanproject/beman/blob/main/images/badges/cpp26.svg)
