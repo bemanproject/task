@@ -15,7 +15,7 @@ type which becomes a `set_value_t(T)` completion signatures. The
 second template argument (`Context`) provides a way to configure
 the behavior of the coroutine. By default it can be left alone.
 
-Implements: `std::execution::task` proposed in [Add a Coroutine Lazy Type (P3552)](https://wg21.link/P3552).
+**Implements**: `std::execution::task` proposed in [Add a Coroutine Lazy Type (P3552)](https://wg21.link/P3552).
 
 ## Usage
 
