@@ -5,8 +5,9 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 -->
 
 ![Continuous Integration Tests](https://github.com/bemanproject/task/actions/workflows/ci_tests.yml/badge.svg)
-![Target Standard](https://github.com/bemanproject/beman/blob/main/images/badges/cpp26.svg)
-[![Coverage](https://coveralls.io/repos/github/bemanproject/task/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/task?branch=main)
+![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp26.svg)
+![Coverage](https://coveralls.io/repos/github/bemanproject/task/badge.svg?branch=main)
+![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)
 
 `beman::execution::task<T, Context>` is a class template which
 is used as the the type of coroutine tasks. The corresponding objects
