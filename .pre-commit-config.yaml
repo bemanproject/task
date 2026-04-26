@@ -20,7 +20,7 @@ repos:
         args: ["--write", "--ignore-words", ".codespellignore" ]
 
   - repo: https://github.com/bemanproject/beman-tidy
-    rev: v0.3.1
+    rev: v0.4.0
     hooks:
     - id: beman-tidy
 
@@ -29,7 +29,7 @@ repos:
   # See also: https://github.com/ssciwr/clang-format-wheel
   # Config file: .clang-format
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v22.1.3
+    rev: v22.1.4
     hooks:
       - id: clang-format
         types_or: [c++, c, json, javascript]
