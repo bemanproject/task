@@ -70,7 +70,7 @@ class task {
     ~task()                          = default;
 
     template <typename Receiver>
-    auto connect(Receiver receiver) && -> state<Receiver> {
+    auto connect(Receiver&& receiver) && noexcept -> state<Receiver> {
         return state<Receiver>(std::forward<Receiver>(receiver), std::move(this->handle));
     }
     template <typename ParentPromise>
