@@ -50,7 +50,7 @@ class task {
     using completion_signatures = ::beman::execution::detail::meta::combine<
         ::beman::execution::completion_signatures<beman::task::detail::completion_t<Value>,
                                                   ::beman::execution::set_stopped_t()>,
-        ::beman::task::detail::error_types_of_t<Env> >;
+        ::beman::task::detail::error_types_of_t<Env>>;
     template <typename Ev>
     auto get_completion_signatures(const Ev&) const& noexcept -> completion_signatures {
         return {};
@@ -70,8 +70,10 @@ class task {
     ~task()                          = default;
 
     template <typename Receiver>
-    auto connect(Receiver receiver) && -> state<Receiver> {
-        return state<Receiver>(std::forward<Receiver>(receiver), std::move(this->handle));
+    auto connect(Receiver&& receiver) && noexcept(
+        noexcept(state<std::remove_cvref_t<Receiver>>(std::forward<Receiver>(receiver), std::move(this->handle))))
+        -> state<std::remove_cvref_t<Receiver>> {
+        return state<std::remove_cvref_t<Receiver>>(std::forward<Receiver>(receiver), std::move(this->handle));
     }
     template <typename ParentPromise>
     auto as_awaitable(ParentPromise&) && -> ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise> {
