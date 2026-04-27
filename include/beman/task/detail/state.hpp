@@ -31,7 +31,7 @@ struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::s
     };
     using stop_callback_t = ::beman::execution::stop_callback_for_t<stop_token_t, stop_link>;
     template <typename R, typename H>
-    state(R&& r, H h)
+    state(R&& r, H h) noexcept//-dk:TODO break down to various members
         : state_rep<C, Receiver>(std::forward<R>(r)),
           handle(std::move(h)),
           scheduler(this->template from_env<scheduler_type>(::beman::execution::get_env(this->receiver))) {}
