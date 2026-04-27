@@ -70,10 +70,9 @@ class task {
     ~task()                          = default;
 
     template <typename Receiver>
-    auto connect(Receiver&& receiver) &&
-        noexcept(noexcept(state<std::remove_cvref_t<Receiver>>(std::forward<Receiver>(receiver),
-                                                               std::move(this->handle))))
-            -> state<std::remove_cvref_t<Receiver>> {
+    auto connect(Receiver&& receiver) && noexcept(
+        noexcept(state<std::remove_cvref_t<Receiver>>(std::forward<Receiver>(receiver), std::move(this->handle))))
+        -> state<std::remove_cvref_t<Receiver>> {
         return state<std::remove_cvref_t<Receiver>>(std::forward<Receiver>(receiver), std::move(this->handle));
     }
     template <typename ParentPromise>
