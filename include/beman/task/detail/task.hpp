@@ -50,7 +50,7 @@ class task {
     using completion_signatures = ::beman::execution::detail::meta::combine<
         ::beman::execution::completion_signatures<beman::task::detail::completion_t<Value>,
                                                   ::beman::execution::set_stopped_t()>,
-        ::beman::task::detail::error_types_of_t<Env> >;
+        ::beman::task::detail::error_types_of_t<Env>>;
     template <typename Ev>
     auto get_completion_signatures(const Ev&) const& noexcept -> completion_signatures {
         return {};
