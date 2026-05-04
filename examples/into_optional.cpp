@@ -13,7 +13,7 @@ namespace ex = beman::execution;
 namespace {
 template <typename... S>
 struct multi_sender {
-    using sender_concept        = ex::sender_t;
+    using sender_concept        = ex::sender_tag;
     using completion_signatures = ex::completion_signatures<S...>;
 
     template <typename Receiver>

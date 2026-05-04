@@ -16,14 +16,14 @@ struct run_loop_env {
 
 template <ex::scheduler Scheduler>
 struct log_scheduler {
-    using scheduler_concept = ex::scheduler_t;
+    using scheduler_concept = ex::scheduler_tag;
 
     std::remove_cvref_t<Scheduler> scheduler;
 
     log_scheduler(auto&& sched) : scheduler(std::forward<decltype(sched)>(sched)) {}
 
     struct sender {
-        using sender_concept        = ex::sender_t;
+        using sender_concept        = ex::sender_tag;
         using completion_signatures = ex::completion_signatures<ex::set_value_t()>;
         using up_sender             = decltype(ex::schedule(std::declval<Scheduler>()));
 
@@ -31,7 +31,7 @@ struct log_scheduler {
 
         template <ex::receiver Receiver>
         struct state {
-            using operation_state_concept = ex::operation_state_t;
+            using operation_state_concept = ex::operation_state_tag;
             using up_state_t              = decltype(ex::connect(std::declval<up_sender>(), std::declval<Receiver>()));
 
             up_state_t _state;

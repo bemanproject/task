@@ -15,7 +15,7 @@
 namespace beman::task::detail {
 template <typename Awaiter>
 struct awaiter_scheduler_receiver {
-    using receiver_concept = ::beman::execution::receiver_t;
+    using receiver_concept = ::beman::execution::receiver_tag;
     Awaiter* aw;
     auto     set_value(auto&&...) noexcept { this->aw->actual_complete().resume(); }
     auto     set_error(auto&&) noexcept { this->aw->actual_complete().resume(); }

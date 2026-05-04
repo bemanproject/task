@@ -17,7 +17,7 @@ namespace {
 void unexpected_call_assert(const char* msg) { assert(nullptr == msg); }
 
 struct stopped_receiver {
-    using receiver_concept = ::beman::execution::receiver_t;
+    using receiver_concept = ::beman::execution::receiver_tag;
     bool& flag;
     void  set_value(auto&&...) && noexcept { unexpected_call_assert("set_value unexpectedly called"); }
     void  set_error(auto&&) && noexcept { unexpected_call_assert("set_error unexpectedly called"); }
@@ -26,7 +26,7 @@ struct stopped_receiver {
 static_assert(::beman::execution::receiver<stopped_receiver>);
 
 struct value_receiver {
-    using receiver_concept = ::beman::execution::receiver_t;
+    using receiver_concept = ::beman::execution::receiver_tag;
     int& value;
     void set_value(int v) && noexcept { value = v; }
     void set_value(auto&&...) && noexcept { unexpected_call_assert("unexpected set_value called"); }
@@ -36,7 +36,7 @@ struct value_receiver {
 static_assert(::beman::execution::receiver<value_receiver>);
 
 struct void_receiver {
-    using receiver_concept = ::beman::execution::receiver_t;
+    using receiver_concept = ::beman::execution::receiver_tag;
     bool& flag;
     void  set_value() && noexcept { flag = true; }
     void  set_value(auto&&...) && noexcept { unexpected_call_assert("unexpected set_value called"); }
@@ -46,7 +46,7 @@ struct void_receiver {
 static_assert(::beman::execution::receiver<value_receiver>);
 
 struct error_receiver {
-    using receiver_concept = ::beman::execution::receiver_t;
+    using receiver_concept = ::beman::execution::receiver_tag;
     int& error;
     void set_value(auto&&...) && noexcept { unexpected_call_assert("unexpected set_value called"); }
     void set_error(auto&&) && noexcept { unexpected_call_assert("unexpected set_error called"); }

@@ -21,7 +21,7 @@ namespace {
 void unexpected_call_assert(const char* message) { assert(nullptr == message); }
 
 struct void_receiver {
-    using receiver_concept = ::beman::execution::receiver_t;
+    using receiver_concept = ::beman::execution::receiver_tag;
 
     bool& flag;
     void  set_value() && noexcept { flag = true; }
@@ -31,7 +31,7 @@ struct void_receiver {
 static_assert(::beman::execution::receiver<void_receiver>);
 
 struct int_receiver {
-    using receiver_concept = ::beman::execution::receiver_t;
+    using receiver_concept = ::beman::execution::receiver_tag;
 
     int& value;
     void set_value(int v) && noexcept { this->value = v; }

@@ -26,7 +26,7 @@ struct tls_domain {
 
     template <::beman::execution::receiver Rcvr, typename Data>
     struct affine_receiver {
-        using receiver_concept = ::beman::execution::receiver_t;
+        using receiver_concept = ::beman::execution::receiver_tag;
         struct env_t {
             affine_state_base<Rcvr, Data>* st;
             template <typename Q, typename... A>
@@ -51,7 +51,7 @@ struct tls_domain {
 
     template <::beman::execution::sender Sndr, ::beman::execution::scheduler Sch, ::beman::execution::receiver Rcvr>
     struct affine_state : affine_state_base<Rcvr, typename Sch::type> {
-        using operation_state_concept = ::beman::execution::operation_state_t;
+        using operation_state_concept = ::beman::execution::operation_state_tag;
         using env_t                   = decltype(::beman::execution::get_env(std::declval<Rcvr>()));
         using base_t                  = affine_state_base<Rcvr, typename Sch::type>;
         using data_t                  = typename Sch::type;
@@ -75,7 +75,7 @@ struct tls_domain {
     };
     template <::beman::execution::sender Sndr, ::beman::execution::scheduler Sch>
     struct affine_sender {
-        using sender_concept = ::beman::execution::sender_t;
+        using sender_concept = ::beman::execution::sender_tag;
 
         std::remove_cvref_t<Sndr> sndr;
         std::remove_cvref_t<Sch>  sch;
@@ -105,7 +105,7 @@ struct tls_domain {
 
 template <typename Data, ::beman::execution::scheduler Scheduler>
 struct tls_scheduler {
-    using scheduler_concept = ::beman::execution::scheduler_t;
+    using scheduler_concept = ::beman::execution::scheduler_tag;
     using type              = Data;
     struct env {
         Scheduler sched;
@@ -116,7 +116,7 @@ struct tls_scheduler {
     };
     template <::beman::execution::receiver Receiver>
     struct state {
-        using operation_state_concept = ::beman::execution::operation_state_t;
+        using operation_state_concept = ::beman::execution::operation_state_tag;
         using upstream_state_t        = decltype(::beman::execution::connect(
             ::beman::execution::schedule(std::declval<Scheduler>()), std::declval<std::remove_cvref_t<Receiver>>()));
 
@@ -128,7 +128,7 @@ struct tls_scheduler {
         auto start() & noexcept -> void { ::beman::execution::start(this->upstream); }
     };
     struct tls_sender {
-        using sender_concept = ::beman::execution::sender_t;
+        using sender_concept = ::beman::execution::sender_tag;
         using sender_type    = decltype(::beman::execution::schedule(std::declval<Scheduler>()));
 
         Scheduler sched;
