@@ -16,7 +16,7 @@ inline constexpr struct into_optional_t : beman::execution::sender_adaptor_closu
     template <::beman::execution::sender Upstream>
     struct sender {
         using upstream_t     = std::remove_cvref_t<Upstream>;
-        using sender_concept = ::beman::execution::sender_t;
+        using sender_concept = ::beman::execution::sender_tag;
         upstream_t upstream;
 
         template <typename...>

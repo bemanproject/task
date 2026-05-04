@@ -17,7 +17,7 @@ namespace beman::task::detail {
 
 template <typename Task, typename T, typename C, typename Receiver>
 struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::state_rep<C, Receiver> {
-    using operation_state_concept = ::beman::execution::operation_state_t;
+    using operation_state_concept = ::beman::execution::operation_state_tag;
     using promise_type            = ::beman::task::detail::promise_type<Task, T, C>;
     using scheduler_type          = typename ::beman::task::detail::state_base<T, C>::scheduler_type;
     using allocator_type          = typename ::beman::task::detail::state_base<T, C>::allocator_type;

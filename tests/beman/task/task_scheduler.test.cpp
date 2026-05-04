@@ -77,7 +77,7 @@ struct thread_context {
     thread_context& operator=(const thread_context&) = delete;
 
     struct scheduler {
-        using scheduler_concept = ex::scheduler_t;
+        using scheduler_concept = ex::scheduler_tag;
         thread_context* context;
         complete        cmpl{complete::success};
         bool            operator==(const scheduler&) const = default;
@@ -92,7 +92,7 @@ struct thread_context {
                     ex::set_stopped(std::move(self->receiver));
                 }
             };
-            using operation_state_concept = ex::operation_state_t;
+            using operation_state_concept = ex::operation_state_tag;
             using token_t                 = decltype(ex::get_stop_token(ex::get_env(std::declval<Receiver>())));
             using callback_t              = ex::stop_callback_for_t<token_t, stopper>;
 
@@ -120,7 +120,7 @@ struct thread_context {
             }
         };
         struct sender {
-            using sender_concept        = ex::sender_t;
+            using sender_concept        = ex::sender_tag;
             using completion_signatures = ex::completion_signatures<ex::set_value_t()>;
             template <typename Env>
             static consteval auto get_completion_signatures() -> completion_signatures {
@@ -165,7 +165,7 @@ stop_env(Token&&) -> stop_env<std::remove_cvref_t<Token>>;
 
 template <typename Token>
 struct stop_receiver {
-    using receiver_concept = ex::receiver_t;
+    using receiver_concept = ex::receiver_tag;
     Token        token;
     stop_result& result;
     std::latch*  completed{};

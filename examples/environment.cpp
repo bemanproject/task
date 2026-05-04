@@ -37,7 +37,7 @@ class environment {
 thread_local std::string environment::name{"<none>"};
 
 struct env_scheduler {
-    using scheduler_concept = ex::scheduler_t;
+    using scheduler_concept = ex::scheduler_tag;
 
     std::string        name;
     ex::task_scheduler scheduler;
@@ -47,7 +47,7 @@ struct env_scheduler {
 
     template <ex::receiver Rcvr>
     struct receiver {
-        using receiver_concept = ex::receiver_t;
+        using receiver_concept = ex::receiver_tag;
 
         std::remove_cvref_t<Rcvr> rcvr;
         std::string               name;
@@ -79,7 +79,7 @@ struct env_scheduler {
     };
 
     struct sender {
-        using sender_concept = ex::sender_t;
+        using sender_concept = ex::sender_tag;
         using task_sender    = decltype(ex::schedule(std::declval<ex::task_scheduler>()));
         template <typename E>
         auto get_completion_signatures(const E& e) const noexcept {

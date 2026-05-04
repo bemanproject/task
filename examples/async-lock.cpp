@@ -46,12 +46,12 @@ struct queue {
 };
 
 struct request {
-    using sender_concept        = ex::sender_t;
+    using sender_concept        = ex::sender_tag;
     using completion_signatures = ex::completion_signatures<ex::set_value_t(int)>;
 
     template <typename Receiver>
     struct state : queue::notify {
-        using operation_state_concept = ex::operation_state_t;
+        using operation_state_concept = ex::operation_state_tag;
         Receiver receiver;
         int      value;
         queue&   que;

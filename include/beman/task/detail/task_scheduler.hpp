@@ -44,7 +44,7 @@ class task_scheduler {
     struct inner_state {
         struct receiver;
         struct receiver {
-            using receiver_concept = ::beman::execution::receiver_t;
+            using receiver_concept = ::beman::execution::receiver_tag;
             state_base* state;
             void        set_value() && noexcept { this->state->complete_value(); }
         };
@@ -70,7 +70,7 @@ class task_scheduler {
 
     template <::beman::execution::receiver Receiver>
     struct state : state_base {
-        using operation_state_concept = ::beman::execution::operation_state_t;
+        using operation_state_concept = ::beman::execution::operation_state_tag;
         std::remove_cvref_t<Receiver> receiver;
         inner_state                   s;
 
@@ -109,8 +109,8 @@ class task_scheduler {
         };
         template <::beman::execution::scheduler Scheduler>
         struct concrete : base {
-            using sender_t = decltype(::beman::execution::schedule(std::declval<Scheduler>()));
-            sender_t sender;
+            using sender_tag = decltype(::beman::execution::schedule(std::declval<Scheduler>()));
+            sender_tag sender;
 
             template <::beman::execution::scheduler S>
             concrete(S&& s) : sender(::beman::execution::schedule(std::forward<S>(s))) {}
@@ -125,7 +125,7 @@ class task_scheduler {
         poly<base, 4 * sizeof(void*)> inner_sender;
 
       public:
-        using sender_concept        = ::beman::execution::sender_t;
+        using sender_concept        = ::beman::execution::sender_tag;
         using completion_signatures = ::beman::execution::completion_signatures<::beman::execution::set_value_t()>;
         template <typename...>
         static consteval auto get_completion_signatures() noexcept -> completion_signatures {
@@ -171,7 +171,7 @@ class task_scheduler {
     poly<base, 4 * sizeof(void*)> scheduler;
 
   public:
-    using scheduler_concept = ::beman::execution::scheduler_t;
+    using scheduler_concept = ::beman::execution::scheduler_tag;
 
     template <typename S, typename Allocator = ::std::allocator<void>>
         requires(not std::same_as<task_scheduler, std::remove_cvref_t<S>>) &&

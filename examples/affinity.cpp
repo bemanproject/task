@@ -13,7 +13,7 @@ namespace ex = beman::execution;
 
 namespace {
 struct test_receiver {
-    using receiver_concept = ex::receiver_t;
+    using receiver_concept = ex::receiver_tag;
 
     auto set_value(auto&&...) && noexcept {}
     auto set_error(auto&&) && noexcept {}

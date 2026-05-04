@@ -10,7 +10,7 @@ namespace ex = beman::execution;
 
 namespace {
 struct receiver {
-    using receiver_concept = ex::receiver_t;
+    using receiver_concept = ex::receiver_tag;
     void set_value() && noexcept { std::cout << "set_value called\n"; }
     void set_error(std::exception_ptr) && noexcept { std::cout << "set_error called\n"; }
     void set_stopped() && noexcept { std::cout << "set_stopped called\n"; }

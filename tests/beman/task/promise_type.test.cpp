@@ -73,7 +73,7 @@ struct thread_pool {
     }
 
     struct scheduler {
-        using scheduler_concept = ex::scheduler_t;
+        using scheduler_concept = ex::scheduler_tag;
         struct env {
             thread_pool* pool;
 
@@ -84,7 +84,7 @@ struct thread_pool {
         };
         template <typename Receiver>
         struct state final : thread_pool::node {
-            using operation_state_concept = ex::operation_state_t;
+            using operation_state_concept = ex::operation_state_tag;
             std::remove_cvref_t<Receiver> receiver;
             thread_pool*                  pool;
 
@@ -100,7 +100,7 @@ struct thread_pool {
             void run() override { ex::set_value(std::move(this->receiver)); }
         };
         struct sender {
-            using sender_concept        = ex::sender_t;
+            using sender_concept        = ex::sender_tag;
             using completion_signatures = ex::completion_signatures<ex::set_value_t()>;
             thread_pool* pool;
             template <typename Receiver>
@@ -167,7 +167,7 @@ struct test_task : beman::task::detail::state_base<int, environment> {
 };
 
 struct exception_receiver {
-    using receiver_concept = beman::execution::receiver_t;
+    using receiver_concept = beman::execution::receiver_tag;
     bool& flag;
 
     auto set_value(int) && noexcept { unexpected_call_assert("unexcepted set_value"); }
