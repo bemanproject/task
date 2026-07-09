@@ -24,6 +24,10 @@ option(
     ${PROJECT_IS_TOP_LEVEL}
 )
 
+# Match CMake presets. MSVC CI enables modules via Ninja by default, which
+# triggers execution C7760 in product_type.cppm (pre-existing on main).
+set(BEMAN_USE_MODULES OFF CACHE BOOL "Build CXX modules" FORCE)
+
 include(FetchContent)
 
 FetchContent_Declare(
