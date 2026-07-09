@@ -43,6 +43,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(execution)
 
 add_subdirectory(src/beman/task)
+add_library(beman::task ALIAS beman.task)
 
 #===============================================================================
 # NOTE: this must be done before tests! CK
