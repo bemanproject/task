@@ -20,7 +20,7 @@ repos:
         args: ["--write", "--ignore-words", ".codespellignore" ]
 
   - repo: https://github.com/bemanproject/beman-tidy
-    rev: v0.4.0
+    rev: v0.5.2
     hooks:
     - id: beman-tidy
 
