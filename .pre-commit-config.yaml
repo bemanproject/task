@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
@@ -19,10 +20,12 @@ repos:
         files: ^.*\.(cmake|cpp|cppm|hpp|txt|md|mds|json|js|in|yaml|yml|py|toml)$
         args: ["--write", "--ignore-words", ".codespellignore" ]
 
+  # Beman Standard checking via beman-tidy
   - repo: https://github.com/bemanproject/beman-tidy
-    rev: v0.4.0
+    rev: v0.5.2
     hooks:
     - id: beman-tidy
+      args: [".", "--verbose"]
 
   # Clang-format for C++
   # This brings in a portable version of clang-format.
