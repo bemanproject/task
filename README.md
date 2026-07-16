@@ -55,19 +55,24 @@ There are plenty of things which need to be done. See the
 for some ideas how to contribute. The [resources page](https://github.com/bemanproject/task/blob/main/docs/resources.md)
 contains some links for general information about coroutines.
 
+## Dependencies
+
+### Build Environment
+
+This project requires at least the following to build:
+
+* A C++ compiler that conforms to the C++23 standard or greater
+* CMake 3.30 or later
+* (Test Only) GoogleTest
+* [`beman::execution`](https://github.com/bemanproject/execution) (auto-fetched via CMake FetchContent)
+
+You can disable building tests by setting CMake option `BEMAN_TASK_BUILD_TESTS` to
+`OFF` when configuring the project.
+
+You can disable building examples by setting CMake option `BEMAN_TASK_BUILD_EXAMPLES` to
+`OFF` when configuring the project.
+
 ## Building beman.task
-
-### Dependencies
-
-This project depends on
-[`beman::execution`](https://github.com/bemanproject/execution) (which
-will be automatically obtained using `cmake`'s `FetchContent*`).
-
-Build-time dependencies:
-
-- `cmake`
-- `ninja`, `make`, or another CMake-supported build system
-  - CMake defaults to "Unix Makefiles" on POSIX systems
 
 ### Supported Platforms
 
