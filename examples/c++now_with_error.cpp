@@ -1,4 +1,4 @@
-// examples/c++now-with_error.cpp                                     -*-C++-*-
+// examples/c++now_with_error.cpp                                     -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/task.hpp>

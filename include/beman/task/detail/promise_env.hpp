@@ -17,6 +17,9 @@ struct promise_env {
     auto query(const ::beman::execution::get_scheduler_t&) const noexcept -> typename Promise::scheduler_type {
         return this->promise->get_scheduler();
     }
+    auto query(const ::beman::execution::get_start_scheduler_t&) const noexcept -> typename Promise::scheduler_type {
+        return this->promise->get_scheduler();
+    }
     auto query(const ::beman::execution::get_allocator_t&) const noexcept -> typename Promise::allocator_type {
         return this->promise->get_allocator();
     }

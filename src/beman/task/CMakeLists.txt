@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 add_library(beman.task STATIC)
+add_library(beman::task ALIAS beman.task)
 
 target_sources(beman.task PRIVATE task.cpp)
 

@@ -1,4 +1,4 @@
-// examples/rvalue-task.cpp                                           -*-C++-*-
+// examples/rvalue_task.cpp                                           -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/execution.hpp>

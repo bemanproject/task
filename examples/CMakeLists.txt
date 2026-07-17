@@ -18,52 +18,52 @@ if(PROJECT_IS_TOP_LEVEL)
     enable_testing()
 endif()
 
-set(TODO tls-scheduler into_optional issue-start-reschedules loop)
+set(TODO tls_scheduler into_optional issue_start_reschedules loop)
 
 set(ALL_EXAMPLES
     task_scheduler
-    rvalue-task
+    rvalue_task
     customize
-    issue-symmetric-transfer
+    issue_symmetric_transfer
     container
 )
 
 if(NOT MSVC)
     list(
         APPEND ALL_EXAMPLES
-        task-sender
-        alloc-1
-        alloc-2
-        c++now-allocator
-        c++now-cancel
-        c++now-errors
+        task_sender
+        alloc_1
+        alloc_2
+        c++now_allocator
+        c++now_cancel
+        c++now_errors
         alloc
         affinity
-        odd-return
-        dangling-references
-        aggregate-return
-        issue-affine_on
-        c++now-affinity
-        c++now-basic
-        # FIXME: c++now-query
-        c++now-result-types
-        c++now-return
-        # FIXME: c++now-stop_token
-        c++now-with_error
-        co_await-result
-        co_await-task
+        odd_return
+        dangling_references
+        aggregate_return
+        issue_affine
+        c++now_affinity
+        c++now_basic
+        # FIXME: c++now_query
+        c++now_result_types
+        c++now_return
+        # FIXME: c++now_stop_token
+        c++now_with_error
+        co_await_result
+        co_await_task
         error
-        escaped-exception
+        escaped_exception
         friendly
         hello
-        issue-frame-allocator
+        issue_frame_allocator
         # FIXME: query
         result_example
         # FIXME: stop
     )
 endif()
 
-set(xALL_EXAMPLES issue-symmetric-transfer)
+set(xALL_EXAMPLES issue_symmetric_transfer)
 set(xALL_EXAMPLES customize)
 
 message(STATUS "Examples to be built: ${ALL_EXAMPLES}")

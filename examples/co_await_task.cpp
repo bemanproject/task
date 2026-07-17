@@ -1,4 +1,4 @@
-// examples/co_await-task.cpp                                         -*-C++-*-
+// examples/co_await_task.cpp                                         -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/task.hpp>

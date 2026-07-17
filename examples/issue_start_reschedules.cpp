@@ -1,9 +1,9 @@
-// examples/issue-start-reschedules.cpp                               -*-C++-*-
+// examples/issue_start_reschedules.cpp                               -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/task.hpp>
 #include <beman/execution/execution.hpp>
-#include "demo-thread_loop.hpp"
+#include "demo_thread_loop.hpp"
 #include <iostream>
 #include <thread>
 

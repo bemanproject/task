@@ -109,8 +109,9 @@ class task_scheduler {
         };
         template <::beman::execution::scheduler Scheduler>
         struct concrete : base {
-            using sender_tag = decltype(::beman::execution::schedule(std::declval<Scheduler>()));
-            sender_tag sender;
+            using scheduler_t = std::remove_cvref_t<Scheduler>;
+            using sender_t    = decltype(::beman::execution::schedule(std::declval<scheduler_t>()));
+            sender_t sender;
 
             template <::beman::execution::scheduler S>
             concrete(S&& s) : sender(::beman::execution::schedule(std::forward<S>(s))) {}
@@ -119,7 +120,7 @@ class task_scheduler {
             inner_state    connect(state_base* b) override { return inner_state(::std::move(sender), b); }
             task_scheduler get_completion_scheduler() const override {
                 return task_scheduler(::beman::execution::get_completion_scheduler<::beman::execution::set_value_t>(
-                    ::beman::execution::get_env(this->sender)));
+                    ::beman::execution::get_env(this->sender), this->sender));
             }
         };
         poly<base, 4 * sizeof(void*)> inner_sender;
@@ -155,7 +156,7 @@ class task_scheduler {
     };
     template <::beman::execution::scheduler Scheduler>
     struct concrete : base {
-        Scheduler scheduler;
+        std::remove_cvref_t<Scheduler> scheduler;
         template <typename S>
             requires ::beman::execution::scheduler<::std::remove_cvref_t<S>>
         explicit concrete(S&& s) : scheduler(std::forward<S>(s)) {}

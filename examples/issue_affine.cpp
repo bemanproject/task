@@ -1,4 +1,4 @@
-// examples/issue-affine_on.cpp                                       -*-C++-*-
+// examples/issue_affine.cpp                                          -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/task.hpp>

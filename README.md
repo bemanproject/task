@@ -1,13 +1,11 @@
 # beman.task: Beman Library Implementation of `task` (P3552)
-
 <!--
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 -->
 
-![Continuous Integration Tests](https://github.com/bemanproject/task/actions/workflows/ci_tests.yml/badge.svg)
-![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp26.svg)
-![Coverage](https://coveralls.io/repos/github/bemanproject/task/badge.svg?branch=main)
-[![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#the-beman-library-maturity-model)
+<!-- markdownlint-disable line-length -->
+[![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#the-beman-library-maturity-model)![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp26.svg)[![Coverage](https://coveralls.io/repos/github/bemanproject/task/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/task?branch=main)[![Compiler Explorer Example](https://img.shields.io/badge/Try%20it%20on%20Compiler%20Explorer-grey?logo=compilerexplorer&logoColor=67c52a)](https://godbolt.org/z/e1sjsT46r)
+<!-- markdownlint-restore -->
 
 `beman::execution::task<T, Context>` is a class template which
 is used as the the type of coroutine tasks. The corresponding objects
@@ -16,7 +14,7 @@ type which becomes a `set_value_t(T)` completion signatures. The
 second template argument (`Context`) provides a way to configure
 the behavior of the coroutine. By default it can be left alone.
 
-**Implements**: `std::execution::task` proposed in [Add a Coroutine Lazy Type (P3552)](https://wg21.link/P3552).
+**Implements**: [Add a Coroutine Lazy Type (P3552)](https://wg21.link/P3552).
 
 **Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#under-development-and-not-yet-ready-for-production-use)
 

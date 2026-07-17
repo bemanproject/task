@@ -1,4 +1,4 @@
-// examples/issue-frame-allocator.cpp                                 -*-C++-*-
+// examples/issue_frame_allocator.cpp                                 -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/task.hpp>
