@@ -34,22 +34,22 @@ if(NOT MSVC)
         task_sender
         alloc_1
         alloc_2
-        c++now_allocator
-        c++now_cancel
-        c++now_errors
+        cppnow_allocator
+        cppnow_cancel
+        cppnow_errors
         alloc
         affinity
         odd_return
         dangling_references
         aggregate_return
         issue_affine
-        c++now_affinity
-        c++now_basic
-        # FIXME: c++now_query
-        c++now_result_types
-        c++now_return
-        # FIXME: c++now_stop_token
-        c++now_with_error
+        cppnow_affinity
+        cppnow_basic
+        # FIXME: cppnow_query
+        cppnow_result_types
+        cppnow_return
+        # FIXME: cppnow_stop_token
+        cppnow_with_error
         co_await_result
         co_await_task
         error

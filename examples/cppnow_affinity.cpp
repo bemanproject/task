@@ -1,4 +1,4 @@
-// examples/c++now_affinity.cpp                                       -*-C++-*-
+// examples/cppnow_affinity.cpp                                       -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/task.hpp>

@@ -32,7 +32,8 @@ include(FetchContent)
 
 FetchContent_Declare(
     execution
-    FETCHCONTENT_SOURCE_DIR_EXECUTION ${CMAKE_SOURCE_DIR}/../execution
+    FETCHCONTENT_SOURCE_DIR_EXECUTION
+    ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
     GIT_TAG cd3211e
     SYSTEM
@@ -45,6 +46,9 @@ FetchContent_Declare(
         execution_headers
 )
 FetchContent_MakeAvailable(execution)
+
+add_library(beman.task STATIC)
+add_library(beman::task ALIAS beman.task)
 
 add_subdirectory(src/beman/task)
 
