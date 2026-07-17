@@ -3,7 +3,7 @@
 
 #include <beman/execution/execution.hpp>
 #include <beman/task/task.hpp>
-#include "demo-thread_loop.hpp"
+#include "demo_thread_loop.hpp"
 #include <iostream>
 #include <cassert>
 

@@ -10,8 +10,8 @@
 #include <thread>
 #include <utility>
 #include <type_traits>
-#include "demo-scope.hpp"
-#include "demo-thread_loop.hpp"
+#include "demo_scope.hpp"
+#include "demo_thread_loop.hpp"
 
 namespace ex  = beman::execution;
 namespace net = beman::net;

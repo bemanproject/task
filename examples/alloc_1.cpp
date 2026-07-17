@@ -1,4 +1,4 @@
-// examples/alloc-1.cpp                                               -*-C++-*-
+// examples/alloc_1.cpp                                               -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/task.hpp>

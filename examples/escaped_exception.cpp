@@ -1,4 +1,4 @@
-// examples/escaped-exception.cpp                                     -*-C++-*-
+// examples/escaped_exception.cpp                                     -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/task.hpp>

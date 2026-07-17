@@ -32,9 +32,10 @@ include(FetchContent)
 
 FetchContent_Declare(
     execution
-    # FETCHCONTENT_SOURCE_DIR_EXECUTION ${CMAKE_SOURCE_DIR}/../execution
+    FETCHCONTENT_SOURCE_DIR_EXECUTION
+    ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG 7df0f75
+    GIT_TAG cd3211e
     SYSTEM
     FIND_PACKAGE_ARGS
         0.2.0
@@ -46,8 +47,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(execution)
 
-add_subdirectory(src/beman/task)
+add_library(beman.task STATIC)
 add_library(beman::task ALIAS beman.task)
+
+add_subdirectory(src/beman/task)
 
 #===============================================================================
 # NOTE: this must be done before tests! CK

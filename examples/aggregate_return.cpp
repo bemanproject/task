@@ -1,4 +1,4 @@
-// examples/aggregate-return.cpp                                      -*-C++-*-
+// examples/aggregate_return.cpp                                      -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/execution.hpp>

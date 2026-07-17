@@ -1,4 +1,4 @@
-// examples/demo-thread_loop.hpp                                   -*-C++-*-
+// examples/demo_thread_loop.hpp                                   -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #ifndef INCLUDED_EXAMPLES_DEMO_THREAD_LOOP

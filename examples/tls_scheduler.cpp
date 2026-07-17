@@ -1,7 +1,7 @@
 // examples/hello.cpp                                                 -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "demo-tls_scheduler.hpp"
+#include "demo_tls_scheduler.hpp"
 #include <beman/execution/task.hpp>
 #include <beman/execution/execution.hpp>
 #include <iostream>

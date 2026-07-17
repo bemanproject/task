@@ -1,4 +1,4 @@
-// examples/demo-tls_scheduler.hpp                                    -*-C++-*-
+// examples/demo_tls_scheduler.hpp                                    -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #ifndef INCLUDED_EXAMPLES_DEMO_TLS_SCHEDULER
@@ -56,7 +56,7 @@ struct tls_domain {
         using base_t                  = affine_state_base<Rcvr, typename Sch::type>;
         using data_t                  = typename Sch::type;
         using state_t                 = decltype(::beman::execution::connect(
-            ::beman::execution::affine_on(::std::declval<Sndr>(), ::std::declval<Sch>()),
+            ::beman::execution::affine(::std::declval<Sndr>(), ::std::declval<Sch>()),
             ::std::declval<affine_receiver<Rcvr, data_t>>()));
 
         state_t state;
@@ -64,9 +64,9 @@ struct tls_domain {
         template <::beman::execution::sender S, ::beman::execution::scheduler SC, ::beman::execution::receiver R>
         affine_state(S&& s, SC&& sc, R&& r)
             : base_t{::std::forward<R>(r)},
-              state(::beman::execution::connect(
-                  ::beman::execution::affine_on(::std::forward<S>(s), ::std::forward<SC>(sc)),
-                  affine_receiver<Rcvr, data_t>{this})) {}
+              state(
+                  ::beman::execution::connect(::beman::execution::affine(::std::forward<S>(s), ::std::forward<SC>(sc)),
+                                              affine_receiver<Rcvr, data_t>{this})) {}
         auto start() & noexcept -> void {
             std::cout << "affine_state::start\n";
             this->data.save();
@@ -94,8 +94,7 @@ struct tls_domain {
         }
     };
     template <::beman::execution::sender Sndr, typename... Env>
-        requires std::same_as<::beman::execution::tag_of_t<::std::remove_cvref_t<Sndr>>,
-                              ::beman::execution::affine_on_t>
+        requires std::same_as<::beman::execution::tag_of_t<::std::remove_cvref_t<Sndr>>, ::beman::execution::affine_t>
     auto transform_sender(Sndr&& s, const Env&...) const noexcept {
         auto [tag, sch, sndr] = s;
         return affine_sender<decltype(sndr), decltype(sch)>{::beman::execution::detail::forward_like<Sndr>(sndr),

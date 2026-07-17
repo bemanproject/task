@@ -24,8 +24,8 @@ int main() {
     auto edom = ex::detail::get_domain_early(task);
     static_assert(std::same_as<decltype(task)::domain, decltype(edom)>);
     std::cout << "---\n";
-    transform_sender(edom, ex::detail::make_sender(ex::affine_on, ex::inline_scheduler{}, std::move(task)));
+    transform_sender(edom, ex::detail::make_sender(ex::affine, ex::inline_scheduler{}, std::move(task)));
     std::cout << "---\n";
-    auto affine = ex::affine_on(std::move(task), ex::inline_scheduler{});
+    auto affine = ex::affine(std::move(task), ex::inline_scheduler{});
 #endif
 }

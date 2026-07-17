@@ -1,4 +1,4 @@
-// examples/c++now-cancel.cpp                                         -*-C++-*-
+// examples/cppnow_cancel.cpp                                         -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // ----------------------------------------------------------------------------
 

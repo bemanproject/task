@@ -1,4 +1,4 @@
-// examples/async-lock                                                 -*-C++-*-
+// examples/async_lock                                                 -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <iostream>
@@ -103,8 +103,7 @@ int main(int ac, char* av[]) {
         }};
 
         if (1 < ac && av[1] == std::string_view("run-it")) {
-            ex::sync_wait(
-                ex::detail::write_env(work(q), ex::detail::make_env(ex::get_scheduler, ex::inline_scheduler{})));
+            ex::sync_wait(ex::write_env(work(q), ex::detail::make_env(ex::get_scheduler, ex::inline_scheduler{})));
         } else {
             ex::sync_wait(work(q));
         }
