@@ -29,8 +29,8 @@ using sender/receiver facilities to implement version of `hello,
 world`:
 
 ```cpp
-#include <beman/task/task.hpp>
-#include <beman/execution/execution.hpp>
+#include <beman/task.hpp>
+#include <beman/execution.hpp>
 #include <iostream>
 
 namespace ex = beman::execution;

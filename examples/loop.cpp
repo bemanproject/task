@@ -3,8 +3,8 @@
 
 #include <iostream>
 #include <string>
-#include <beman/execution/execution.hpp>
-#include <beman/task/task.hpp>
+#include <beman/execution.hpp>
+#include <beman/task.hpp>
 #include <iostream>
 
 namespace ex = beman::execution;

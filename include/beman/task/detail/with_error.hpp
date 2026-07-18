@@ -10,7 +10,7 @@
 // ----------------------------------------------------------------------------
 /*
  * \brief Tag type used to indicate an error is produced.
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  * \internal
  */
 namespace beman::task::detail {

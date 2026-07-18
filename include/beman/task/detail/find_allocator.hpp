@@ -11,7 +11,7 @@
 namespace beman::task::detail {
 /*!
  * \brief Utility locating an allocator_arg/allocator pair
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  * \internal
  */
 template <typename Allocator>

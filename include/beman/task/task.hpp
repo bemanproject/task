@@ -4,7 +4,7 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_TASK_TASK
 #define INCLUDED_INCLUDE_BEMAN_TASK_TASK
 
-#include <beman/execution/execution.hpp>
+#include <beman/execution.hpp>
 #include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/task_scheduler.hpp>
 #include <beman/task/detail/into_optional.hpp>

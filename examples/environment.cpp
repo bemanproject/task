@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #ifndef _MSC_VER
-#include <beman/task/task.hpp>
-#include <beman/execution/execution.hpp>
-#include <beman/net/net.hpp>
+#include <beman/task.hpp>
+#include <beman/execution.hpp>
+#include <beman/net.hpp>
 #include <chrono>
 #include <string>
 #include <thread>

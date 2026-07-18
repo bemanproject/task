@@ -1,8 +1,8 @@
 // examples/customize.cpp                                             -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/execution/execution.hpp>
-#include <beman/task/task.hpp>
+#include <beman/execution.hpp>
+#include <beman/task.hpp>
 #include <iostream>
 #include <utility>
 #include <cassert>

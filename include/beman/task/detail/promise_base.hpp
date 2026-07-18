@@ -16,7 +16,7 @@
 namespace beman::task::detail {
 /*
  * \brief Helper base class dealing with void vs. value results.
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  * \internal
  */
 template <::beman::task::detail::stoppable Stop, typename Value, typename Environment>

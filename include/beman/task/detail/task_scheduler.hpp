@@ -17,7 +17,7 @@ namespace beman::task::detail {
 
 /*!
  * \brief Type-erasing scheduler
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  *
  * The class `task_scheduler` is used to type-erase any scheduler class.
  * Any error produced by the underlying scheduler except `std::error_code` is turned into

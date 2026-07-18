@@ -16,20 +16,20 @@
 namespace beman::task::detail {
 /**
  * \brief Helper type used as a placeholder for a void result
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  * \internal
  */
 enum void_type : unsigned char {};
 /**
  * \brief Helper type indicating whether a stopped result is possible
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  * \internal
  */
 enum class stoppable { yes, no };
 
 /**
  * \brief Type to hold the result of a coroutine
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  */
 template <::beman::task::detail::stoppable Stop, typename Value, typename Errors>
 class result_type;

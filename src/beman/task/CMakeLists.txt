@@ -10,6 +10,7 @@ target_sources(
         FILE_SET HEADERS
             BASE_DIRS ${PROJECT_SOURCE_DIR}/include
             FILES
+                ${PROJECT_SOURCE_DIR}/include/beman/task.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/execution/task.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/lazy/lazy.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/task/task.hpp
