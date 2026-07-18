@@ -1,8 +1,8 @@
 // examples/container.cpp                                              -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/task/task.hpp>
-#include <beman/execution/execution.hpp>
+#include <beman/task.hpp>
+#include <beman/execution.hpp>
 #include <iostream>
 #include <vector>
 #include <cassert>

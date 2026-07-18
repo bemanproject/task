@@ -16,7 +16,7 @@
 namespace beman::task::detail {
 /*!
  * \brief Utility adding allocator support to type by embedding the allocator
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  *
  * To add allocator support using this class just publicly inherit from
  * allocator_support<Allocator, YourPromiseType>. This utility is probably

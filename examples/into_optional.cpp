@@ -5,8 +5,8 @@
 #include <optional>
 #include <tuple>
 #include <system_error>
-#include <beman/execution/execution.hpp>
-#include <beman/task/task.hpp>
+#include <beman/execution.hpp>
+#include <beman/task.hpp>
 
 namespace ex = beman::execution;
 

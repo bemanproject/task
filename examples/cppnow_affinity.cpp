@@ -1,9 +1,9 @@
 // examples/cppnow_affinity.cpp                                       -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/task/task.hpp>
-#include <beman/execution/execution.hpp>
-#include <beman/execution/stop_token.hpp>
+#include <beman/task.hpp>
+#include <beman/execution.hpp>
+#include <beman/stop_token.hpp>
 #include "demo_thread_loop.hpp"
 #include <condition_variable>
 #include <iostream>

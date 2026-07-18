@@ -12,7 +12,7 @@
 namespace beman::task::detail {
 /*!
  * \brief Utility to get an allocator type from a context
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  * \internal
  */
 template <typename>

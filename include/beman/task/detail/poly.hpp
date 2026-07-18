@@ -14,7 +14,7 @@
 namespace beman::task::detail {
 /*!
  * \brief Utility providing small object optimization and type erasure.
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  * \internal
  */
 template <typename Base, std::size_t Size = 4u * sizeof(void*)>

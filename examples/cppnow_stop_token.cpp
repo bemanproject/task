@@ -1,9 +1,9 @@
 // examples/cppnow_stop_token.cpp                                     -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/task/task.hpp>
-#include <beman/execution/execution.hpp>
-#include <beman/execution/stop_token.hpp>
+#include <beman/task.hpp>
+#include <beman/execution.hpp>
+#include <beman/stop_token.hpp>
 #include <chrono>
 #include <iostream>
 #include <thread>

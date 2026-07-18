@@ -15,7 +15,7 @@
 namespace beman::task::detail {
 /*
  * \brief Helper function creatig thunks for a variant visit.
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  * \internal
  */
 template <std::size_t Start, typename Fun, typename Var, std::size_t... I>
@@ -27,7 +27,7 @@ void sub_visit_thunks(Fun& fun, Var& var, std::index_sequence<I...>) {
 
 /*
  * \brief Helper function visiting a suffix of variant options
- * \headerfile beman/task/task.hpp <beman/task/task.hpp>
+ * \headerfile beman/task.hpp <beman/task.hpp>
  * \internal
  */
 template <std::size_t Start, typename... T>
