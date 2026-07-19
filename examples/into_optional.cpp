@@ -73,7 +73,9 @@ auto my_into_optional(S&& s) {
 int main() {
     queue<double> que;
     ex::sync_wait([](auto& q) -> ex::task<> {
-        static_assert(std::same_as<void, decltype(ex::get_completion_signatures<decltype(ex::just(true) | ex::into_optional)>())>);
+        static_assert(
+            std::same_as<void,
+                         decltype(ex::get_completion_signatures<decltype(ex::just(true) | ex::into_optional)>())>);
         // auto x = co_await (ex::just(true) | ex::into_optional);
         // [[maybe_unused]] std::optional x = co_await (q.async_pop() | ex::into_optional);
         // [[maybe_unused]] std::optional y = co_await ex::into_optional(q.async_pop());

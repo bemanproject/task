@@ -5,7 +5,7 @@
 #include <beman/execution.hpp>
 #include <iostream>
 
-namespace ex  = beman::execution;
+namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
