@@ -33,7 +33,7 @@ int main() {
             };
         };
 
-        auto [result] = ex::sync_wait(ex::detail::write_env(
+        auto [result] = ex::sync_wait(ex::write_env(
                                           []() -> ex::task<std::uint64_t, context> {
                                               auto          token(co_await ex::read_env(ex::get_stop_token));
                                               std::uint64_t count{};

@@ -45,10 +45,10 @@ if(NOT MSVC)
         issue_affine
         cppnow_affinity
         cppnow_basic
-        # FIXME: cppnow_query
+        cppnow_query
         cppnow_result_types
         cppnow_return
-        # FIXME: cppnow_stop_token
+        cppnow_stop_token
         cppnow_with_error
         co_await_result
         co_await_task
@@ -57,9 +57,9 @@ if(NOT MSVC)
         friendly
         hello
         issue_frame_allocator
-        # FIXME: query
+        query
         result_example
-        # FIXME: stop
+        stop
     )
 endif()
 

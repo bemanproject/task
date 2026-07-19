@@ -29,7 +29,7 @@ int main() {
 
     ex::inplace_stop_source source;
     std::thread             thread([&] {
-        ex::sync_wait(ex::detail::write_env(stopping(), ex::detail::make_env(ex::get_stop_token, source.get_token())));
+        ex::sync_wait(ex::write_env(stopping(), ex::detail::make_env(ex::get_stop_token, source.get_token())));
     });
 
     std::this_thread::sleep_for(100ms);
