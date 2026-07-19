@@ -15,6 +15,10 @@ template <typename... S>
 struct multi_sender {
     using sender_concept        = ex::sender_tag;
     using completion_signatures = ex::completion_signatures<S...>;
+    template <typename...>
+    static consteval auto get_completion_signatures() {
+        return completion_signatures{};
+    }
 
     template <typename Receiver>
     auto connect(Receiver&& receiver) const {
@@ -69,8 +73,12 @@ auto my_into_optional(S&& s) {
 int main() {
     queue<double> que;
     ex::sync_wait([](auto& q) -> ex::task<> {
-        // auto x = co_await ex::just(true) | into_optional;
-        [[maybe_unused]] std::optional x = co_await (q.async_pop() | ex::into_optional);
-        [[maybe_unused]] std::optional y = co_await ex::into_optional(q.async_pop());
+        static_assert(
+            std::same_as<void,
+                         decltype(ex::get_completion_signatures<decltype(ex::just(true) | ex::into_optional)>())>);
+        // auto x = co_await (ex::just(true) | ex::into_optional);
+        // [[maybe_unused]] std::optional x = co_await (q.async_pop() | ex::into_optional);
+        // [[maybe_unused]] std::optional y = co_await ex::into_optional(q.async_pop());
+        co_return;
     }(que));
 }
