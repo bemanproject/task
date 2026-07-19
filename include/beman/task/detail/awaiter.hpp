@@ -24,8 +24,8 @@ struct awaiter_scheduler_receiver {
 
 template <typename Awaiter,
           typename ParentPromise,
-          bool =
-              requires(const ParentPromise& p) { ::beman::execution::get_start_scheduler(::beman::execution::get_env(p)); }>
+          bool = requires(
+              const ParentPromise& p) { ::beman::execution::get_start_scheduler(::beman::execution::get_env(p)); }>
 struct awaiter_op_t {
     using state_type =
         decltype(::beman::execution::connect(::beman::execution::schedule(::beman::execution::get_start_scheduler(
@@ -73,8 +73,8 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
         assert(this->parent);
         assert(this->scheduler);
         if constexpr (requires {
-                          *this->scheduler !=
-                              ::beman::execution::get_start_scheduler(::beman::execution::get_env(this->parent.promise()));
+                          *this->scheduler != ::beman::execution::get_start_scheduler(
+                                                  ::beman::execution::get_env(this->parent.promise()));
                       }) {
             if (*this->scheduler !=
                 ::beman::execution::get_start_scheduler(::beman::execution::get_env(this->parent.promise()))) {

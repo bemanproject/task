@@ -73,7 +73,9 @@ struct state : bt::state_base<T, env<E...>> {
         return this->ev;
     }
     auto do_get_start_scheduler() -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
-    auto do_set_start_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
+    auto do_set_start_scheduler(scheduler_type) -> scheduler_type override {
+        return scheduler_type(ex::inline_scheduler());
+    }
 };
 
 template <typename T>
