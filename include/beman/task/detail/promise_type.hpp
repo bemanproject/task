@@ -97,10 +97,10 @@ class promise_type
     }
     auto           notify_complete() -> ::std::coroutine_handle<> { return this->get_state()->complete(); }
     scheduler_type change_scheduler(scheduler_type other) {
-        return this->get_state()->set_scheduler(::std::move(other));
+        return this->get_state()->set_start_scheduler(::std::move(other));
     }
 
-    auto get_scheduler() const noexcept -> scheduler_type { return this->get_state()->get_scheduler(); }
+    auto get_start_scheduler() const noexcept -> scheduler_type { return this->get_state()->get_start_scheduler(); }
     auto get_allocator() const noexcept -> allocator_type { return this->get_state()->get_allocator(); }
     auto get_stop_token() const noexcept -> stop_token_type { return this->get_state()->get_stop_token(); }
     auto get_environment() const noexcept -> const Environment& {

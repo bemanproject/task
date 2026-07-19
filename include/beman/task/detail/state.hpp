@@ -56,8 +56,8 @@ struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::s
         else
             return allocator_type{};
     }
-    auto do_get_scheduler() -> scheduler_type override { return this->scheduler; }
-    auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
+    auto do_get_start_scheduler() -> scheduler_type override { return this->scheduler; }
+    auto do_set_start_scheduler(scheduler_type other) -> scheduler_type override {
         return ::std::exchange(this->scheduler, other);
     }
     stop_token_type do_get_stop_token() override {

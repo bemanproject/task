@@ -24,17 +24,17 @@ struct awaiter_scheduler_receiver {
 
 template <typename Awaiter,
           typename ParentPromise,
-          bool =
-              requires(const ParentPromise& p) { ::beman::execution::get_scheduler(::beman::execution::get_env(p)); }>
+          bool = requires(
+              const ParentPromise& p) { ::beman::execution::get_start_scheduler(::beman::execution::get_env(p)); }>
 struct awaiter_op_t {
     using state_type =
-        decltype(::beman::execution::connect(::beman::execution::schedule(::beman::execution::get_scheduler(
+        decltype(::beman::execution::connect(::beman::execution::schedule(::beman::execution::get_start_scheduler(
                                                  ::beman::execution::get_env(::std::declval<const ParentPromise&>()))),
                                              ::std::declval<awaiter_scheduler_receiver<Awaiter>>()));
 
     awaiter_op_t(const ParentPromise& p, Awaiter* aw)
         : state(::beman::execution::connect(
-              ::beman::execution::schedule(beman::execution::get_scheduler(::beman::execution::get_env(p))),
+              ::beman::execution::schedule(beman::execution::get_start_scheduler(::beman::execution::get_env(p))),
               awaiter_scheduler_receiver<Awaiter>{aw})) {}
     state_type state;
     auto       start() noexcept -> void { ::beman::execution::start(this->state); }
@@ -73,11 +73,11 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
         assert(this->parent);
         assert(this->scheduler);
         if constexpr (requires {
-                          *this->scheduler !=
-                              ::beman::execution::get_scheduler(::beman::execution::get_env(this->parent.promise()));
+                          *this->scheduler != ::beman::execution::get_start_scheduler(
+                                                  ::beman::execution::get_env(this->parent.promise()));
                       }) {
             if (*this->scheduler !=
-                ::beman::execution::get_scheduler(::beman::execution::get_env(this->parent.promise()))) {
+                ::beman::execution::get_start_scheduler(::beman::execution::get_env(this->parent.promise()))) {
                 this->reschedule.emplace(this->parent.promise(), this);
                 this->reschedule->start();
                 return ::std::noop_coroutine();
@@ -96,8 +96,8 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
         else
             return allocator_type{};
     }
-    auto do_get_scheduler() -> scheduler_type override { return *this->scheduler; }
-    auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
+    auto do_get_start_scheduler() -> scheduler_type override { return *this->scheduler; }
+    auto do_set_start_scheduler(scheduler_type other) -> scheduler_type override {
         return ::std::exchange(*this->scheduler, other);
     }
     auto do_get_stop_token() -> stop_token_type override { return {}; }

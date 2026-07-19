@@ -157,11 +157,13 @@ struct test_task : beman::task::detail::state_base<int, environment> {
     allocator_type  do_get_allocator() override { return allocator_type{}; }
     stop_token_type do_get_stop_token() override { return this->source.get_token(); }
     environment&    do_get_environment() override { return this->env; }
-    auto            do_get_scheduler() -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
-    auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
+    auto do_get_start_scheduler() -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
+    auto do_set_start_scheduler(scheduler_type) -> scheduler_type override {
+        return scheduler_type(ex::inline_scheduler());
+    }
 
     beman::task::detail::task_scheduler scheduler{beman::execution::inline_scheduler{}};
-    beman::task::detail::task_scheduler query(beman::execution::get_scheduler_t) const noexcept {
+    beman::task::detail::task_scheduler query(beman::execution::get_start_scheduler_t) const noexcept {
         return this->scheduler;
     }
 };

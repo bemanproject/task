@@ -31,13 +31,15 @@ class state_base : public ::beman::task::detail::result_type<::beman::task::deta
         assert(this);
         return this->do_get_environment();
     }
-    auto get_scheduler() -> scheduler_type { return this->do_get_scheduler(); }
-    auto set_scheduler(scheduler_type other) -> scheduler_type { return this->do_set_scheduler(other); }
+    auto get_start_scheduler() -> scheduler_type { return this->do_get_start_scheduler(); }
+    auto set_start_scheduler(scheduler_type other) -> scheduler_type { return this->do_set_start_scheduler(other); }
 
   protected:
     template <::beman::execution::scheduler Scheduler, typename Env>
     static auto from_env(const Env& env) {
-        if constexpr (requires { Scheduler(::beman::execution::get_scheduler(env)); }) {
+        if constexpr (requires { Scheduler(::beman::execution::get_start_scheduler(env)); }) {
+            return Scheduler(::beman::execution::get_start_scheduler(env));
+        } else if constexpr (requires { Scheduler(::beman::execution::get_scheduler(env)); }) {
             return Scheduler(::beman::execution::get_scheduler(env));
         } else {
             return Scheduler();
@@ -45,12 +47,12 @@ class state_base : public ::beman::task::detail::result_type<::beman::task::deta
     }
 
     // NOLINTBEGIN(portability-template-virtual-member-function)
-    virtual auto do_complete() -> std::coroutine_handle<>                 = 0;
-    virtual auto do_get_allocator() -> allocator_type                     = 0;
-    virtual auto do_get_stop_token() -> stop_token_type                   = 0;
-    virtual auto do_get_environment() -> Environment&                     = 0;
-    virtual auto do_get_scheduler() -> scheduler_type                     = 0;
-    virtual auto do_set_scheduler(scheduler_type other) -> scheduler_type = 0;
+    virtual auto do_complete() -> std::coroutine_handle<>                       = 0;
+    virtual auto do_get_allocator() -> allocator_type                           = 0;
+    virtual auto do_get_stop_token() -> stop_token_type                         = 0;
+    virtual auto do_get_environment() -> Environment&                           = 0;
+    virtual auto do_get_start_scheduler() -> scheduler_type                     = 0;
+    virtual auto do_set_start_scheduler(scheduler_type other) -> scheduler_type = 0;
     // NOLINTEND(portability-template-virtual-member-function)
 
     virtual ~state_base() = default;
