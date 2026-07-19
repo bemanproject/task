@@ -47,10 +47,10 @@ class state_base : public ::beman::task::detail::result_type<::beman::task::deta
     }
 
     // NOLINTBEGIN(portability-template-virtual-member-function)
-    virtual auto do_complete() -> std::coroutine_handle<>                 = 0;
-    virtual auto do_get_allocator() -> allocator_type                     = 0;
-    virtual auto do_get_stop_token() -> stop_token_type                   = 0;
-    virtual auto do_get_environment() -> Environment&                     = 0;
+    virtual auto do_complete() -> std::coroutine_handle<>                       = 0;
+    virtual auto do_get_allocator() -> allocator_type                           = 0;
+    virtual auto do_get_stop_token() -> stop_token_type                         = 0;
+    virtual auto do_get_environment() -> Environment&                           = 0;
     virtual auto do_get_start_scheduler() -> scheduler_type                     = 0;
     virtual auto do_set_start_scheduler(scheduler_type other) -> scheduler_type = 0;
     // NOLINTEND(portability-template-virtual-member-function)
