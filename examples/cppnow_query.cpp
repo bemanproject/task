@@ -5,8 +5,7 @@
 #include <beman/execution.hpp>
 #include <iostream>
 
-namespace ex  = beman::execution;
-namespace exd = beman::execution::detail;
+namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
@@ -61,6 +60,6 @@ ex::task<void, fancy> with_fancy_env() {
 } // namespace
 
 int main() {
-    ex::sync_wait(exd::write_env(with_env(), exd::make_env(get_value, 17)));
-    ex::sync_wait(exd::write_env(with_fancy_env(), exd::make_env(get_value, 17)));
+    ex::sync_wait(ex::write_env(with_env(), ex::detail::make_env(get_value, 17)));
+    ex::sync_wait(ex::write_env(with_fancy_env(), ex::detail::make_env(get_value, 17)));
 }
