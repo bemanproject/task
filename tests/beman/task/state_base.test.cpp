@@ -38,8 +38,8 @@ struct state : beman::task::detail::state_base<int, environment> {
         this->got_environment = true;
         return this->env;
     }
-    auto do_get_scheduler() -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
-    auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
+    auto do_get_start_scheduler() -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
+    auto do_set_start_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(ex::inline_scheduler()); }
 };
 } // namespace
 
