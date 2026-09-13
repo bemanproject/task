@@ -4,8 +4,10 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 -->
 
 <!-- markdownlint-disable line-length -->
-[![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#the-beman-library-maturity-model)![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp26.svg)[![Coverage](https://coveralls.io/repos/github/bemanproject/task/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/task?branch=main)[![Compiler Explorer Example](https://img.shields.io/badge/Try%20it%20on%20Compiler%20Explorer-grey?logo=compilerexplorer&logoColor=67c52a)](https://godbolt.org/z/anYY59nYd)
+[![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_retired.svg)](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#the-beman-library-maturity-model)![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp26.svg)[![Coverage](https://coveralls.io/repos/github/bemanproject/task/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/task?branch=main)[![Compiler Explorer Example](https://img.shields.io/badge/Try%20it%20on%20Compiler%20Explorer-grey?logo=compilerexplorer&logoColor=67c52a)](https://godbolt.org/z/anYY59nYd)
 <!-- markdownlint-restore -->
+
+**This library has been integrated into beman.execution; its functionality can be found there, but the separate library is now retired.**
 
 `beman::execution::task<T, Context>` is a class template which
 is used as the the type of coroutine tasks. The corresponding objects
@@ -16,7 +18,7 @@ the behavior of the coroutine. By default it can be left alone.
 
 **Implements**: [Add a Coroutine Lazy Type (P3552)](https://wg21.link/P3552).
 
-**Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#under-development-and-not-yet-ready-for-production-use)
+**Status**: [Retired. No longer maintained or actively developed.](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#retired-no-longer-maintained-or-actively-developed)
 
 ## License
 
