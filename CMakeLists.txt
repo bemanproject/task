@@ -40,10 +40,8 @@ FetchContent_Declare(
     FIND_PACKAGE_ARGS
         0.2.0
         EXACT
-        NAMES
-        beman.execution
-        COMPONENTS
-        execution_headers
+        NAMES beman.execution
+        COMPONENTS execution_headers
 )
 FetchContent_MakeAvailable(execution)
 
